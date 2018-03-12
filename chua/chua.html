@@ -1,0 +1,142 @@
+<!doctype html public "-//IETF//DTD HTML 3.0//EN">
+<html>
+<head>
+
+<title>Chua Circuit actor</title>
+
+</head>
+<body>
+
+<h2>Chua Actor</h2>
+
+The chua suite (chuaActor, chuaHand, chuaAlg).<p>
+
+To use the chua implementation, load chua.so and create an actor of type ChuaActor.
+
+<h3>ChuaActor messages</h3>
+
+In addition to the messages understood by all generator actors, the ChuaActor understands the following messages:
+
+<dl>
+	<dt>SetChuaR <tt>hActor x</tt>
+                        <dd>Set value of R in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaR <tt>hActor x</tt>
+                        <dd>Set value of R in Chua circuit of all children to <tt>x</tt>, and set the default value of R for all future children.
+
+	<dt>SetChuaR0 <tt>hActor x</tt>
+                        <dd>Set value of R0 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaR0 <tt>hActor x</tt>
+                        <dd>Set value of R0 in Chua circuit of all children to <tt>x</tt>, and set the default value of R0 for all future children.
+
+	<dt>SetChuaC1 <tt>hActor x</tt>
+                        <dd>Set value of C1 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaC1 <tt>hActor x</tt>
+                        <dd>Set value of C1 in Chua circuit of all children to <tt>x</tt>, and set the default value of C1 for all future children.
+
+	<dt>SetChuaC2 <tt>hActor x</tt>
+                        <dd>Set value of C2 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaC2 <tt>hActor x</tt>
+                        <dd>Set value of C2 in Chua circuit of all children to <tt>x</tt>, and set the default value of C2 for all future children.
+
+	<dt>SetChuaL <tt>hActor x</tt>
+                        <dd>Set value of L in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaL <tt>hActor x</tt>
+                        <dd>Set value of L in Chua circuit of all children to <tt>x</tt>, and set the default value of L for all future children.
+
+	<dt>SetChuaBPH1 <tt>hActor x</tt>
+                        <dd>Set value of BPH1 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaBPH1 <tt>hActor x</tt>
+                        <dd>Set value of BPH1 in Chua circuit of all children to <tt>x</tt>, and set the default value of BPH1 for all future children.
+
+	<dt>SetChuaBPH2 <tt>hActor x</tt>
+                        <dd>Set value of BPH2 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaBPH2 <tt>hActor x</tt>
+                        <dd>Set value of BPH2 in Chua circuit of all children to <tt>x</tt>, and set the default value of BPH2 for all future children.
+
+	<dt>SetChuaBP1 <tt>hActor x</tt>
+                        <dd>Set value of BP1 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaBP1 <tt>hActor x</tt>
+                        <dd>Set value of BP1 in Chua circuit of all children to <tt>x</tt>, and set the default value of BP1 for all future children.
+
+	<dt>SetChuaBP2 <tt>hActor x</tt>
+                        <dd>Set value of BP2 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaBP2 <tt>hActor x</tt>
+                        <dd>Set value of BP2 in Chua circuit of all children to <tt>x</tt>, and set the default value of BP2 for all future children.
+
+	<dt>SetChuaM0 <tt>hActor x</tt>
+                        <dd>Set value of M0 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaM0 <tt>hActor x</tt>
+                        <dd>Set value of M0 in Chua circuit of all children to <tt>x</tt>, and set the default value of M0 for all future children.
+
+	<dt>SetChuaM1 <tt>hActor x</tt>
+                        <dd>Set value of M1 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaM1 <tt>hActor x</tt>
+                        <dd>Set value of M1 in Chua circuit of all children to <tt>x</tt>, and set the default value of M1 for all future children.
+
+	<dt>SetChuaM2 <tt>hActor x</tt>
+                        <dd>Set value of M2 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaM2 <tt>hActor x</tt>
+                        <dd>Set value of M2 in Chua circuit of all children to <tt>x</tt>, and set the default value of M2 for all future children.
+
+	<dt>SetChuaM3 <tt>hActor x</tt>
+                        <dd>Set value of M3 in Chua circuit for new instances created by this actor to <tt>x</tt>.
+        <dt>SetAllChuaM3 <tt>hActor x</tt>
+                        <dd>Set value of M3 in Chua circuit of all children to <tt>x</tt>, and set the default value of M3 for all future children.
+
+	<dt>ResetAllChuaState
+			<dd>Resets the state of all Chua children.
+</dl>
+
+
+<h3>chua handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the chua algorithm understands the following messages:
+
+<dl>
+	<dt>SetChuaR <tt>hSound x <i>time</i></tt>
+			<dd>Set the R value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of R over the specified duration.
+
+	<dt>SetChuaR0 <tt>hSound x <i>time</i></tt>
+			<dd>Set the R0 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of R0 over the specified duration.
+
+	<dt>SetChuaC1 <tt>hSound x <i>time</i></tt>
+			<dd>Set the C1 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of C1 over the specified duration.
+
+	<dt>SetChuaC2 <tt>hSound x <i>time</i></tt>
+			<dd>Set the C2 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of C2 over the specified duration.
+
+	<dt>SetChuaL <tt>hSound x <i>time</i></tt>
+			<dd>Set the L value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of L over the specified duration.
+
+	<dt>SetChuaBPH1 <tt>hSound x <i>time</i></tt>
+			<dd>Set the BPH1 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of BPH1 over the specified duration.
+
+	<dt>SetChuaBPH2 <tt>hSound x <i>time</i></tt>
+			<dd>Set the BPH2 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of BPH2 over the specified duration.
+
+	<dt>SetChuaBP1 <tt>hSound x <i>time</i></tt>
+			<dd>Set the BP1 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of BP1 over the specified duration.
+
+	<dt>SetChuaBP2 <tt>hSound x <i>time</i></tt>
+			<dd>Set the BP2 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of BP2 over the specified duration.
+
+	<dt>SetChuaM0 <tt>hSound x <i>time</i></tt>
+			<dd>Set the M0 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of M0 over the specified duration.
+
+	<dt>SetChuaM1 <tt>hSound x <i>time</i></tt>
+			<dd>Set the M1 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of M1 over the specified duration.
+
+	<dt>SetChuaM2 <tt>hSound x <i>time</i></tt>
+			<dd>Set the M2 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of M2 over the specified duration.
+
+	<dt>SetChuaM3 <tt>hSound x <i>time</i></tt>
+			<dd>Set the M3 value of the Chua circuit to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new value of M3 over the specified duration.
+
+	<dt>ResetChuaState <tt>hSound</tt>
+			<dd>Reset the state of this Chua circuit.
+
+</dl>
+
+
+</body>
+</html>

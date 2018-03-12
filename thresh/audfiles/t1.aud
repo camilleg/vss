@@ -1,0 +1,45 @@
+/* BROKEN Audfile!!!
+ */
+  
+//	test audfile for the switching actor.
+//LoadDSO fm.so;
+LoadDSO test.so;
+LoadDSO swThresh.so;
+
+out = Create TestActor;
+Print out "----------------------------------------------------------------";
+
+s2 = Create SwitchActor;
+IfTrue s2;			// Case s 1;
+    AddMessage s2 Print out "s2_IfTrue";
+IfFalse s2;			// Case s 0;
+    AddMessage s2 Print out "s2_IfFalse";
+
+
+s = Create SwitchActor;
+Case s 0;
+    AddMessage s Print out "s:Case_0";
+    AddMessage s SendAndEval s2 [ *0 ];
+
+Case s 1;
+    AddMessage s Print out "s:Case_1";
+    AddMessage s SendAndEval s2 [ *0 ];
+
+
+Print out "----------------------Sends-------------------------";
+SendAndEval s [ 1 ];		// SendData s [ 1 ]; Eval s;
+SendAndEval s [ 0 ];
+SetGates s ">" 50;		// also can take ranges: SetGates 0 3 ">" 10; 
+SendAndEval s [ 10 ];
+SendAndEval s [ 51 ];
+
+SetGates s 0 4 ">=" 10;
+PrintAll s;
+SendAndEval s [ 0 9 10 11 20 ];
+SetInput s 0 10;
+Eval s;
+
+SendAndEval s [ 10 10 ];
+
+/*
+ */

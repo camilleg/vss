@@ -1,0 +1,51 @@
+SetPrintCommands 2;
+
+LoadDSO "crowd.so";
+x1 = Create CrowdActor;
+x2 = Create CrowdActor;
+x3 = Create CrowdActor;
+
+LoadDSO "msgGroup.so";
+mgAP = Create MessageGroup;
+
+SetDirectory x1 "/nfs/atlantia/usr2/projects/audio/adg/sounds/prosonus/instr";
+SetDirectory x2 "/nfs/atlantia/usr2/projects/audio/adg/sounds/prosonus/instr";
+SetDirectory x3 "/nfs/atlantia/usr2/projects/audio/adg/sounds/prosonus/instr";
+
+SetFile x1 "synthloop.aiff";            // this one doesn't loop
+SetFile x2 "metal_triad_power.E1.aiff"; // this one loops quietly
+SetFile x3 "metal_triad_power.E1.aiff"; // this one doesn't loop, and is loud
+
+SetGain x1 -16;
+
+SetGain x2 -25;
+SetRate x2 .95 1.05;
+SetMaxNum x2 5;
+
+SetGain x3 -10;
+SetRate x3 .5 2.;
+SetMaxNum x3 2;
+
+SetPrintCommands 2;
+
+PlayCrowd x2 [ 1001 0 1 2, 1002 3 4 5, 1003 6 7 8 ];
+Play x1;
+sleep 2;
+
+sleep .1; Play x3;
+sleep .1; Play x3 1 2 6;
+sleep .1; Play x3 1 2 6;
+sleep 2;
+
+mgMove2 = Create MessageGroup;
+AddMessage mgMove2 PlayCrowd x2 [*0 to *$];
+
+SendData mgMove2 [ 1003 999 999 999, 1001 0 1 2, 1002 3 4 5 ];
+sleep 1;
+SendData mgMove2 [ 1003 999 999 999 ];
+sleep 1;
+SendData mgMove2 [ 1003 999 999 999, 1001 0 1 2, 1002 3 4 5 
+	1004 0 0 0, 1005 0 0 0, 1006 0 0 0, 1007 0 0 0 ];
+
+sleep .3; Play x3;
+sleep .3; Play x3 -9 -8 -7;

@@ -1,0 +1,22 @@
+.5  1.  .5  .15  10.  .25  0.  0.  0.  0. 
+6  20.  18.  17.  15.  13.  14.  0.  0.  0.
+6  .82  .82  .63  .72  .53  0.41  0.  0.  0.
+6  50.  56.  61.  68.  72.  78.  0.  0.  0.
+3  6.  1.7  0.63
+
+Format of preset data file:
+
+1. There must be exactly 44 data. Everything after the 44th data is ignored.
+   So feel free to put anything after the data, like comments on the preset.
+
+2. Data must be separated by space, tab or return. A 5-line format like the
+   above is recommended.
+
+3. The sequence of the data must be as followed:
+
+1		2		3	4	  5	    6	  7 8 9 10
+RevMix		RevGain		RevTime	RevBright DampRatio Pole
+EarlyRefNum	EarlyRefDelay...
+EarlyRefNum	EarlyRefCoeff...
+CombNum		CombDelay...
+AllPassNum	AllPassDelay...

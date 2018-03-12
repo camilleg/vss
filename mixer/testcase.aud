@@ -1,0 +1,55 @@
+// This is the .aud file for testing the mixer actor
+
+SetPrintCommands 2;
+
+// Load the DSOs we need
+LoadDSO msgGroup.so;
+LoadDSO mixer.so;
+LoadDSO add.so;
+
+// Create an additive actor as source
+aAdd = Create AddActor;
+sAdd1 = BeginSound aAdd SetFreq 261, SetAmp 0; //C4
+sAdd2 = BeginSound aAdd SetFreq 392, SetAmp 0; //G4
+sAdd3 = BeginSound aAdd SetFreq 522, SetAmp 0; //C5
+sAdd4 = BeginSound aAdd SetFreq 654, SetAmp 0; //E5
+sAdd5 = BeginSound aAdd SetFreq 784, SetAmp 0; //G5
+sAdd6 = BeginSound aAdd SetFreq 1044, SetAmp 0; //C6
+sAdd7 = BeginSound aAdd SetFreq 1308, SetAmp 0; //E6
+sAdd8 = BeginSound aAdd SetFreq 1568, SetAmp 0; //G6
+sleep 1;
+
+faderAmp = Create MessageGroup;
+faderGain = Create MessageGroup;
+faderMatrix = Create MessageGroup;
+
+aMi = Create MixerActor;
+sMi = BeginSound aMi;
+
+SetNumberOfInputs sMi 8;
+SetAllInputs sMi [sAdd1 sAdd2 sAdd3 sAdd4 sAdd5 sAdd6 sAdd7 sAdd8];
+SetPause sMi 0;
+
+AddMessage faderAmp SetMatrixMode sMi 0;
+AddMessage faderAmp SetAllFaderAmp sMi [*0 *1 *2 *3 *4 *5 *6 *7] *8;
+
+AddMessage faderGain SetMatrixMode sMi 0;
+AddMessage faderGain SetAllFaderGain sMi [*0 *1 *2 *3 *4 *5 *6 *7] *8;
+
+AddMessage faderMatrix SetMatrixMode sMi 1;
+
+AddMessage faderMatrix SetMatrixOutCol sMi 1 [*0 0.0 0.0 0.0 *4 0.0 0.0 0.0] *8;
+AddMessage faderMatrix SetMatrixOutCol sMi 2 [0.0 *1 0.0 0.0 0.0 *5 0.0 0.0] *8;
+AddMessage faderMatrix SetMatrixOutCol sMi 3 [0.0 0.0 *2 0.0 0.0 0.0 *6 0.0] *8;
+AddMessage faderMatrix SetMatrixOutCol sMi 4 [0.0 0.0 0.0 *3 0.0 0.0 0.0 *7] *8;
+
+/*
+AddMessage faderMatrix SetMatrixInRow sMi 1 [*0 0.0 0.0 0.0 0.0 0.0 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 2 [0.0 *1 0.0 0.0 0.0 0.0 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 3 [0.0 0.0 *2 0.0 0.0 0.0 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 4 [0.0 0.0 0.0 *3 0.0 0.0 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 5 [0.0 0.0 0.0 0.0 *4 0.0 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 6 [0.0 0.0 0.0 0.0 0.0 *5 0.0 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 7 [0.0 0.0 0.0 0.0 0.0 0.0 *6 0.0];
+AddMessage faderMatrix SetMatrixInRow sMi 8 [0.0 0.0 0.0 0.0 0.0 0.0 0.0 *7];
+*/

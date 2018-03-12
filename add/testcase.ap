@@ -1,0 +1,44 @@
+audpanel.title: "Additive Synthesis Demo 1: Partials in integer ratio"
+audpanel.sliders: 4
+audpanel.presets: ("OverallControls" "PartialAmplitudes" "FreqDeviation" "AbsFreq")
+
+OverallControls.messageGroup: "OverallControls"
+OverallControls.interval: 0.025
+OverallControls.labels: 		("Amplitude" "BaseFreq" "Tilt" "Time")
+OverallControls.minValues: 		(0.0 		100.0 	0.0 	0.0)
+OverallControls.maxValues: 		(1.0 		5000.0 	1.0 	5.0)
+OverallControls.initialValues: 		(0.5 		500.0	0.0	0.0)
+OverallControls.defaultValues: 		(0.5 		500.0	0.0	0.0)
+OverallControls.mappings: (0 1 2 3 )
+OverallControls.parameters: 4
+
+PartialAmplitudes.messageGroup: "PartialAmplitudes"
+PartialAmplitudes.interval: 0.025
+PartialAmplitudes.labels: 		("a0" "a1" "a2" "Time")
+PartialAmplitudes.minValues: 		(0.0 0.0 0.0 0.0)
+PartialAmplitudes.maxValues: 		(0.5 0.5 0.5 5.0)
+PartialAmplitudes.initialValues: 	(0.1 0.1 0.1 0.0)
+PartialAmplitudes.defaultValues: 	(0.1 0.1 0.1 0.0)
+PartialAmplitudes.mappings: (0 1 2 3 )
+PartialAmplitudes.parameters: 4
+
+FreqDeviation.messageGroup: "FreqDeviation"
+FreqDeviation.interval: 0.025
+FreqDeviation.labels: 		("fd0" "fd1" "fd2" "Time")
+FreqDeviation.minValues: 	(-1.0 -1.0 -1.0 0.0)
+FreqDeviation.maxValues: 	(1.0 1.0 1.0 5.0)
+FreqDeviation.initialValues: 	(0.0 0.0 0.0 0.0)
+FreqDeviation.defaultValues: 	(0.0 0.0 0.0 0.0)
+FreqDeviation.mappings: (0 1 2 3)
+FreqDeviation.parameters: 4
+
+AbsFreq.messageGroup: "AbsFreq"
+AbsFreq.interval: 0.025
+AbsFreq.labels: 		("af0" "af1" "af2" "Time")
+AbsFreq.minValues: 		(100.0 100.0 100.0 0.0)
+AbsFreq.maxValues: 		(5000.0 5000.0 5000.0 5.0)
+AbsFreq.initialValues: 		(1000.0 2000.0 3000.0 0.0)
+AbsFreq.defaultValues: 		(1000.0 2000.0 3000.0 0.0)
+AbsFreq.mappings: (0 1 2 3 )
+AbsFreq.parameters: 4
+

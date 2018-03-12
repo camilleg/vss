@@ -1,0 +1,65 @@
+SetGear PRNDL_Parked;
+LoadDSO msgGroup.so;
+LoadDSO map.so;
+LoadDSO fm.so;
+
+SetPrintCommands 1;
+
+h2D = Create HidimMapper; Debug h2D 1;
+h3D = Create HidimMapper; Debug h3D 1;
+fmA = Create FmActor;
+fm = BeginSoundPaused fmA ScaleAmp .1;
+mgFM = Create MessageGroup;
+
+AddMessage mgFM SetAmp fm *0 .04;
+AddMessage mgFM SetCarFreq fm *1 .02;
+AddMessage mgFM SetCMratio fm *2 .02;
+AddMessage mgFM SetModIndex fm *3 .02;
+
+
+SetDims h2D 2 4;
+SetNumPoints h2D 6;
+SetLowPoints h2D [ .3 .3, .3 .7,    .5 .3, .51 .7,    .7 .3, .7 .699 ];
+SetHighPoints h2D [ 0.1 110 1 1,   0.1 220 1 5,
+					0.1 220 2 5,   .5 440 2 5,
+					0.1 220 2 5,   .5 440 2 5 ];
+
+SetDims h3D 3 4;
+SetNumPoints h3D 6;
+SetLowPoints h3D [ .3 .3 .3, .3 .3 .7,    .5 .5 .5, .7,.7,.7,    .3 .7 .3, .7 .3 .3 ];
+SetHighPoints h3D [ 0.1 110 1 1,   0.1 220 1 5,
+					0.1 220 2 5,   .5 440 2 5,
+					0.1 220 2 5,   .5 440 2 5 ];
+
+
+mg2D = Create MessageGroup;
+AddMessage mg2D ScaleAmp fm *0;
+
+mg2D_Hidim_Start = Create MessageGroup;
+mg2D_Hidim_Stop = Create MessageGroup;
+mg2D_Hidim_Move = Create MessageGroup;
+
+
+AddMessage mg2D_Hidim_Move MapAndSend h2D SendData mgFM @[*0 *1];
+
+mg3D = Create MessageGroup;
+AddMessage mg3D ScaleAmp fm *0;
+AddMessage mg3D MapAndSend h3D SendData mgFM @[*1 *2 *3];
+
+mg2D_GA = Create MessageGroup;
+AddMessage mg2D_GA UseGeneticAlgorithm h2D;
+mg2D_Sammon = Create MessageGroup;
+AddMessage mg2D_Sammon UseSammonsMapping h2D;
+mg2D_ComputeLodim = Create MessageGroup;
+AddMessage mg2D_ComputeLodim ComputeLowPoints h2D;
+
+mg3D_GA = Create MessageGroup;
+AddMessage mg3D_GA UseGeneticAlgorithm h3D;
+mg3D_Sammon = Create MessageGroup;
+AddMessage mg3D_Sammon UseSammonsMapping h3D;
+mg3D_ComputeLodim = Create MessageGroup;
+AddMessage mg3D_ComputeLodim ComputeLowPoints h3D;
+
+SetGear PRNDL_Drive;
+SetPause fm 0;
+SetPrintCommands 0;

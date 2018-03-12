@@ -1,0 +1,46 @@
+// Test the LoopActor
+
+SetPrintCommands 1;
+
+LoadDSO control.so;
+LoadDSO msgGroup.so;
+LoadDSO debug.so;
+
+loop = Create LoopActor;
+pr = Create PrintfActor;
+
+
+mg = Create MessageGroup;
+SetMessageGroup loop mg;
+SetColor pr cyan;
+AddMessage mg printf pr "Tick:_%f\n" *0;
+
+// Create message groups for the interaction
+APgen = Create MessageGroup;
+APgen_NumLoops = Create MessageGroup;
+APgen_Swing = Create MessageGroup;
+APgen_Debug = Create MessageGroup;
+APdata = Create MessageGroup;
+APdata_Nolimit = Create MessageGroup;
+APtime = Create MessageGroup;
+APstep = Create MessageGroup;
+APstep_Limit = Create MessageGroup;
+APstep_Nolimit = Create MessageGroup;
+
+
+// Set up the slider interactions
+
+AddMessage APgen_NumLoops SetNumLoops loop *0;
+AddMessage APgen_Swing SetSwing loop *0;
+AddMessage APgen_Debug SetDebug loop *0;
+
+AddMessage APdata SetDataStart loop *0;
+AddMessage APdata SetDataStep  loop *1;
+AddMessage APdata SetDataLimit loop *2;
+AddMessage APdata_Nolimit SetNoDataLimit loop;
+
+AddMessage APtime SetTimeStep  loop *0;
+AddMessage APtime SetTimeLimit loop *1;
+
+AddMessage APstep_Limit SetStepLimit loop *0;
+AddMessage APstep_Nolimit SetStepLimit loop -1;

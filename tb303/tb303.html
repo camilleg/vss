@@ -1,0 +1,80 @@
+<html> <head> <title>Tb303 actor</title> </head>
+<body>
+
+<h2>A TB303 emulator</h2>
+
+The Tb303 suite emulates the classic Roland TB-303 "Bass Line" analog synth.
+(Just the synth, not the sequencer;  VSS has a separate sequencer actor.)
+
+To use the Tb303 implementation, load tb303.so and create an actor of type Tb303Actor.
+<p>
+Note that it won't make any sound after you send the BeginSound command
+until you also send the Retrigger command.  So the usual order of commands
+is
+<ol>
+<li>hSound = BeginSoundPaused SetFoo 42.0 SetBar 43.0 ... ;
+<li>Retrigger hSound;
+<li>SetPause hSound 0;
+</ol>
+
+<h3>Tb303Actor messages</h3>
+
+In addition to the messages understood by all generator actors, the Tb303Actor understands the following messages.
+If the optional parameter <tt>time</tt> is specified in any of the following messages, then
+the corresponding parameter is linearly modulated from the old value to the specified value over the
+duration of <tt>time</tt> seconds after receipt of the command. In the case of the commands
+SetAll[Param] (which set the value for all handlers spawned by a particular actor),
+the default [Param] is always set immediately on receipt of the command, regardless of
+<tt>time</tt>.
+
+<dl>
+	<dt>SetFreq <tt>hActor x</tt>
+	<br>SetAllFreq <tt>hActor x <i>time</i></tt>
+		<dd>Set the default frequency for new instances to <tt>x</tt>.
+	<dt>SetFilterCutoff <tt>hActor x</tt>
+	<br>SetAllFilterCutoff <tt>hActor x <i>time</i></tt>
+		<dd>Set the default filter cutoff for new instances to <tt>x</tt>.
+	<dt>SetResonance <tt>hActor x</tt>
+	<br>SetAllResonance <tt>hActor x <i>time</i></tt>
+		<dd>Set the default resonance for new instances to <tt>x</tt>.
+	<dt>SetEnvMod <tt>hActor x</tt>
+	<br>SetAllEnvMod <tt>hActor x <i>time</i></tt>
+		<dd>Set the default envelope modulation for new instances to <tt>x</tt>.
+	<dt>SetEnvDecay <tt>hActor x</tt>
+	<br>SetAllEnvDecay <tt>hActor x <i>time</i></tt>
+		<dd>Set the default envelope decay for new instances to <tt>x</tt>.
+
+</dl>
+
+<h3>Tb303 handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the tb303 algorithm understands the following messages:
+
+<dl>
+	<dt>Retrigger <tt>hSound</tt>
+		<dd>Play the attack portion of a sound (the phreeeeoooooooo part before
+		it settles down to the steady-state portion).
+	<dt>SetFreq <tt>hSound x <i>time</i></tt>
+		<dd>Set the frequency to <tt>x</tt> Hz (10 to 1000 works best; default 110).
+	<dt>SetFilterCutoff <tt>hSound x <i>time</i></tt>
+		<dd>Set the "vowel color" to <tt>x</tt> (0 to 1, default 0);
+		from 0 to 1, the sound goes through oo, oh, ah, ee and gets louder
+		at the same time.
+	<dt>SetResonance <tt>hSound x <i>time</i></tt>
+		<dd>Set the narrowness of the filter to <tt>x</tt> (0 to 1, default 0).
+		At higher values you can hear individual harmonics during the
+		attack of a sound.
+	<dt>SetEnvMod <tt>hSound x <i>time</i></tt>
+		<dd>Set the amount of "modulation" in the attack envelope to <tt>x</tt>
+		(0 to 1, default 0).  At higher values, the attack starts higher
+		and finishes on a lower (less buzzy, more sinetone) steady-state sound.
+	<dt>SetEnvDecay <tt>hSound x <i>time</i></tt>
+		<dd>Set the duration of the attack portion to <tt>x</tt>
+		(0 to 1, default 0).  0 corresponds to about 1/10 second,
+		1 to about 5 or 6 seconds.
+</dl>
+
+(All these funky names are what the original Roland box used.)
+
+</body>
+</html>

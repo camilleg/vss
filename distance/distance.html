@@ -1,0 +1,138 @@
+
+<!doctype html public "-//IETF//DTD HTML 3.0//EN">
+<html>
+<head>
+
+<title>Localization actor</title>
+
+</head>
+<body>
+
+<h2>A spatial localization actor</h2>
+
+<h3> Background </h3>
+
+Spatial localization of a sound source in 3D is extremely useful for VR and interactive applications 
+in general. Besides simply adding realism to virtual worlds, spatialized sound can generally provide 
+sonic cues to convey spatially-interpreted information in situaltions where visual cues are lacking, 
+insufficient, or just simply unavailable. For instance, in a VR application, a user may be navigating 
+through a dataset, and may need to determine the next navigational motion relative to the position of 
+a reference point in space. However, the user's full visual acuity and attention may be already fully 
+occupied in the continuous interpretation of the data. Here, a localized sound beacon can function 
+much like a lighthouse, guiding the user sonically toward the new navigational point. 
+<p>
+Also, spatial cues can be used to dissociate, or disambiguate, groups of sound sources with similar 
+sonic character, such as when one is in the midst of a group of people talking. By spreading out each 
+sound source into a unique position in sonic space, the sound sources may then be perceived 
+individually, even if they are almost identical in character. This application is highly useful for 
+telecollaborative sessions involving three or more people. Here, the conversational flow may continue 
+freely, even if more than one person is speaking.
+<p>
+In either case, by exploiting the natural ability of the auditory system to perceive and separate 
+individual sound sources by their spatial position, completely new functionality is enabled. And, at 
+the very least, virtual objects can be made to emit sounds that actually seem like they are coming 
+from their location in virtual space.
+
+<h3> Technical: Algorithm </h3>
+
+The LocalizeActor's processing algorithm is implemented to optimize localization performance against 
+computational complexity. Primary consideration was given to the premise that vss algorithm plug-ins 
+should generally be able to run in real time, and not require specialized hardware to do so. Closely 
+following is the preference that at least two or three instances of the algorithm be able to run in 
+real time. This completely ruled out the HRTF types of processing, at least for current state of 
+development in available hardware platforms. These types of algorithms allow for localization of 
+sounds in full 3-D space, including from overhead and behind, using just two loudspeakers or 
+headphones, but at the expense of heavy amounts of processing (specifically, long convolutions), which 
+currently require the use of dedicated DSP cards. Therefore, a simpler type of processing was employed 
+using a modified cross-term cancellation method. This method makes use of the sensitivity of the 
+auditory system to inter-aural ampltude and delay differences, to "steer" the sound's perceived 
+direction and distance of emanation. It provides the ability to spread the perceived planar soundfield 
+emanating from a pair of speakers far beyond the section otherwise confined between the speakers, to a
+full plane in front of the listener. Adding two more speakers behind the listener, the soundfield plane 
+extends in every azimuth direction around the listener. With eight speakers positioned, for example, at 
+the inside vertices of a cubic space centered around the listener, the soundfield becomes a volume so 
+that sounds may be differentiated overhead as well as underneath. The algorithm scales in complexity 
+with the number of output channels, and at all configuration points provides a dramatic improvement 
+over simple amplitude panning while coming in at a relatively small computational expense compared to 
+full-blown HRTFs.
+<p>
+The algorithm is implemented according to the following system block diagram:
+<p>
+<CENTER><IMG SRC="localizeAlgBlockDiag1.gif"></CENTER>
+<p>
+The input signal arrives from the source generator or processor actor output, to be processed by the 
+localization algorithm, in this case into four output loudspeaker channels. (The four-channel case 
+represented here is easily reducible to the two-channel case by deleting the lower two loudspeaker 
+channels. It may also be extended to eight channels by repeating the portion to the right of the 
+panner for the lower four loudspeaker channels.) The localization is controlled by two parameters, 
+Distance and Direction. The Distance parameter varies from 0 to 1, where 0 corresponds to no distance 
+(i.e. the object is in your head, between your ears), and 1 corresponds to the object being at infinity, 
+or at least at the sonic equivalent of the "clipping plane". Direction varies between -1 and 1, with 
+0 corresponding to "straight ahead", -0.5 to "straight left", +0.5 to "straight right", and +/- 1 
+directly behind.
+<p>
+Direction figure
+<p>
+The input first passes through a distance modeler Hd set up to increasingly attenuate the amplitude 
+and dampen the high frequencies of the input with increasing amounts of Distance. This promotes the 
+illusion that a sound source is receding as the Distance is increasing. The signal then distributed 
+through a panner, in response to Direction, into 4 channels (or 2 or 8, depending on how vss is 
+initialized). The panner is a constant-power type so that the perceived loudness of the signal is 
+independent of Direction. The front and rear left-right signal pairs are then passed through recursive 
+cross-term cancelers to perform the stereo-to-planar spreading. The amount of spreading is controlled 
+by Distance in the 4 and 8 channel case, and by both Distance and Direction in the 2-channel case. The 
+spreading is generally controlled so as to reduce it with increasing distance, until it disappears at a 
+distance of 0.5. This produces a strong near-field distance cue which varies continuously from a 
+between-the-ears experience at zero Distance, to, at Distance = 0.5, a definite positioning of the 
+source along a circle circimscribing the speaker locations in space. (With eight channels, the source 
+appears along the surface of a circumscribing sphere.) For two channels, the circle is "squashed" and 
+all localization behind the listener is made to pass through the head. Processing through Hd then 
+becomes the dominant distance cue at Distances greater than 0.5.
+
+<h3>Usage</h3>
+
+To use the localization actor, load localize.so and create an actor of type LocalizeActor.
+
+<h3>LocalizeActor messages</h3>
+
+In addition to the messages understood by all processor actors, the LocalizeActor understands the 
+following messages:
+
+<dl>
+</dl>
+
+<h3>LocalizeActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the LocalizeActor 
+algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetInput <tt>hSound</tt>
+		<dd>Set the input to zero (i.e., silence the input).
+	<dt>SetDirection <tt>hSound x <i>time</i></tt>
+		<dd>Set the perceived direction of the sound source, relative to the listener, to 
+		<tt>x</tt>. Range is normalized to [-1,1], with 0 mapping to straight ahead, -0.5 
+		mapping to directly left, +0.5 mapping to directly right, and +/-1 mapping to 
+		directly behind. If <tt>time</tt> is specified, modulate to the new direction over 
+		the specified duration.
+	<dt>SetDistance <tt>hSound x <i>time</i></tt>
+		<dd>Set the perceived distance of the sound source, relative to the listener, to 
+		<tt>x</tt>. Range is normalized to [0,1], with 0 mapping to "no distance", i.e., 
+		the sound source is "in the head, between the ears", and 1 mapping to infinite 
+		distance, i.e., the object is at the clipping plane. If <tt>time</tt> is specified, 
+		modulate to the new distance over the specified duration.
+	<dt><i>For tuning purposes only</i>
+	<dt>SetA <tt>hSound x <i>time</i></tt>
+		<dd>Tune the optimal cross-cancellation gain, setting it to <tt>x</tt>. Range is 
+		between [-1,1], with roughly -0.6 being default. If <tt>time</tt> is specified, 
+		modulate to the new distance over the specified duration.
+	<dt>SetT <tt>hSound x <i>time</i></tt>
+		<dd>Tune the optimal cross-cancellation delay, setting it to <tt>x</tt> milliseconds. 
+		Range is between [0,1] millisecond, with roughly 0.2 being default. If <tt>time</tt> 
+		is specified, modulate to the new distance over the specified duration.
+</dl>
+
+</body>
+</html>

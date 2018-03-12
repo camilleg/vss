@@ -1,0 +1,33 @@
+audpanel.title: "Filtered Noise Synthesis Slider Demo"
+audpanel.sliders: 8
+audpanel.presets: ("ModifyNoise" "ModifyFilter1" "ModifyFilter2")
+
+ModifyNoise.messageGroup: "ModifyNz"
+ModifyNoise.interval: 0.025
+ModifyNoise.labels: 		("Amp0" "BandWidth" 	"Order" "Null" 	"Null" 	"Null"	"Null" 	"Null")
+ModifyNoise.minValues: 		(0.0  	0.0  		0.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+ModifyNoise.maxValues: 		(1.0  	10000.0  	2.0  	1.0  	1.0  	1.0  	1.0  	1.0)
+ModifyNoise.initialValues: 	(0.5  	5000.0		1.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+ModifyNoise.mappings: (0 1 2 3 4 5 6 7)
+ModifyNoise.parameters: 8
+ModifyNoise.defaultValues: 	(0.5  	5000.0		1.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+
+ModifyFilter1.messageGroup: "ModifyF1"
+ModifyFilter1.interval: 0.025
+ModifyFilter1.labels: 		("Amp1"	"Fc"	"LPGn"	"HPGn"	"APGn"	"Null"	"Null"	"Null")
+ModifyFilter1.minValues: 	(0.0  	0.0  	0.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+ModifyFilter1.maxValues: 	(1.0  	10000.  1.0  	1.0  	1.0  	1.0  	1.0  	1.0)
+ModifyFilter1.initialValues: 	(0.0  	200.0  	1.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+ModifyFilter1.mappings: (0 1 2 3 4 5 6 7)
+ModifyFilter1.parameters: 8
+ModifyFilter1.defaultValues: 	(0.0  	200.0  		1.0  	0.0  	0.0  	0.0  	0.0  	0.0)
+
+ModifyFilter2.messageGroup: "ModifyF2"
+ModifyFilter2.interval: 0.025
+ModifyFilter2.labels: 		("Amp2"	"Fc"	"Reson"	"LPGn"	"BPGn"	"HPGn"	"APGn"	"NGn")
+ModifyFilter2.minValues: 	(0.0  	0.0  	0.01  	0.0  	0.0  	0.0  	0.0  	0.0)
+ModifyFilter2.maxValues: 	(1.0  	10000.	50.  	1.0  	1.0  	1.0  	1.0  	1.0)
+ModifyFilter2.initialValues: 	(0.0  	1000. 	1.0  	1.0  	0.0  	0.0  	0.0  	0.0)
+ModifyFilter2.mappings: (0 1 2 3 4 5 6 7)
+ModifyFilter2.parameters: 8
+ModifyFilter2.defaultValues: 	(0.0  	1000. 	1.0  	1.0  	0.0  	0.0  	0.0  	0.0)

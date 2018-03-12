@@ -1,0 +1,37 @@
+audpanel.title: "MixerActor Demo"
+audpanel.sliders: 9 
+audpanel.presets: ( "faderGain" "faderAmp" "faderMatrix")
+
+faderAmp.messageGroup: "faderAmp"
+faderAmp.interval: 0.1
+faderAmp.labels: ("channel 1" "channel 2" "channel 3" "channel 4" 
+"channel 5" "channel 6" "channel 7" "channel 8" "time")
+faderAmp.minValues:	(-2.0 -2.0 -2.0 -2.0 -2.0 -2.0 -2.0 -2.0 0.)
+faderAmp.maxValues:	(2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 5.0)
+faderAmp.initialValues:	(0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.)
+faderAmp.defaultValues:	(0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.)
+faderAmp.mappings: (0 1 2 3 4 5 6 7 8)
+faderAmp.parameters: 9
+
+faderGain.messageGroup: "faderGain"
+faderGain.interval: 0.1
+faderGain.labels: ("channel 1" "channel 2" "channel 3" "channel 4" 
+"channel 5" "channel 6" "channel 7" "channel 8" "time")
+faderGain.minValues:	(-60.0 -60.0 -60.0 -60.0 -60.0 -60.0 -60.0 -60.0 0.)
+faderGain.maxValues:	(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 5.)
+faderGain.initialValues:	(-30.0 -30.0 -30.0 -30.0 -30.0 -30.0 -30.0 -30.0 0.)
+faderGain.defaultValues:	(-30.0 -30.0 -30.0 -30.0 -30.0 -30.0 -30.0 -30.0 0.)
+faderGain.mappings: (0 1 2 3 4 5 6 7 8)
+faderGain.parameters: 9
+
+faderMatrix.messageGroup: "faderMatrix"
+faderMatrix.interval: 0.1
+faderMatrix.labels: ("channel 1" "channel 2" "channel 3" "channel 4" 
+"channel 5" "channel 6" "channel 7" "channel 8" "time")
+faderMatrix.minValues:	(-2.0 -2.0 -2.0 -2.0 -2.0 -2.0 -2.0 -2.0 0.)
+faderMatrix.maxValues:	(2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 5.0)
+faderMatrix.initialValues:	(0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.)
+faderMatrix.defaultValues:	(0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.)
+faderMatrix.mappings: (0 1 2 3 4 5 6 7 8)
+faderMatrix.parameters: 9
+

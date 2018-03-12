@@ -1,0 +1,26 @@
+SetPrintCommands 0;
+
+LoadDSO "msgGroup.so";
+mgAP = Create MessageGroup;
+
+LoadDSO "debug.so";
+pr = Create PrintfActor;
+
+
+mg1 = Create MessageGroup;
+AddMessage mg1 printf pr "we_got_%f_%f_%f_now\n" *0 *1 *2;
+
+LoadDSO "basic.so";
+basic = Create BasicActor;
+Debug basic 0;
+Do basic load \""dsos/basic/x.bas"\";
+Do basic print 7*8.001;
+Do basic "print 42: print 56: y=57";
+Do basic "list:run";
+SendFloats basic mg1 "y=59:print y;";
+SendFloats basic mg1 "print sqrt(y), 1/y, -53;";
+
+
+SetPrintCommands 2;
+
+KillServer;

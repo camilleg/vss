@@ -1,0 +1,13 @@
+audpanel.title: "InputActor Demo"
+audpanel.sliders: 6
+audpanel.presets: ("Wonk")
+
+Wonk.messageGroup: "tweak"
+Wonk.interval: 0.025
+Wonk.labels: ("Input Amp" "Output Amp" "ModIndex" "Pan" "Elev" "-")
+Wonk.minValues: (0.0  0.0  0.01  -1.0  -1.0  0.0)
+Wonk.maxValues: (1.5  1.5 5.0 1.0 1.0 0.0)
+Wonk.initialValues: (0.7  0.0  1.5  0.0  0.0  0.0)
+Wonk.mappings: (0 1 2 3 4 5)
+Wonk.parameters: 6
+Wonk.defaultValues: (0.5  0.5  1.5  0.0  0.0  0.0)

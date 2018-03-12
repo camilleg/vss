@@ -1,0 +1,61 @@
+<html> <head> <title>Pentatonic actor</title> </head> <body>
+
+<h3>A simple wind-chime actor</h3>
+
+The PentaActor simulates a wind chime with controllable tonal center,
+randomness, density, and one user-defined parameter (typically duration).
+It does not make sound itself, but calls a user-defined message group for each
+"chime"; this message group does the actual sound production.<p>
+
+To use the PentaActor, load pentatonic.so and create an actor of type PentaActor.
+
+<h3>PentaActor messages</h3>
+
+In addition to the messages understood by all actors, the PentaActor understands the following messages:
+
+<dl>
+	<dt>SetMessageGroup <tt>hActor "name"</tt>
+			<dd>Set the sound-producing message group to the one with
+			name <tt>name</tt>.  The parameters sent to the message group are:
+			<ul>
+				<li>*0 = frequency in Hz
+				<li>*1 = amplitude
+				<li>*2 = value
+				<li>*3 = random value in the range +-0.9, useful for panning.
+			</ul>
+			The message group may of course ignore any or all of these
+			parameters.
+	<dt>SetIrregularity <tt>hActor x</tt>
+			<dd>Set the irregularity of chime-occurrences.  0 or less
+			produces a steady pulse; greater values of x produce greater
+			irregularity.  As x approaches 1, arbitrarily small and
+			arbitrarily large pauses between chimes can occur.  This is
+			computed with what can be grandly referred to as Goudeseune's
+			improvement to the Xenakis-Poisson-Myhill algorithm.
+
+	<dt>SetHueExact <tt>hActor x</tt>
+			<dd>Choose one of twelve possible pentatonic pitch sets for
+			the chimes, exactly.  x is an integer from 0 to 11 inclusive.
+	<dt>SetHue <tt>hActor x</tt>
+			<dd>Choose one of the twelve pitch sets, as x (floating point) ranges from 0 to 1.
+	<dt>SetSaturation <tt>hActor x</tt>
+			<dd>Set the mean number of chimes per second to x (x must be positive).  Default is 1.
+	<dt>SetValue <tt>hActor x</tt>
+			<dd>Set this user-defined parameter, passed verbatim to <tt>*2</tt>
+			in the aforementioned message group.  Duration of a chime is one
+			useful interpretation of this value.
+	<dt>SetAmp <tt>hActor x</tt>
+		<dd>Set a scaling factor for amplitudes passed to <tt>*1</tt>
+		of the message group.  Defaults to unity.
+	<dt>SetWidth <tt>hActor x</tt>
+			<dd>Set the average width of the effective pitch set used, x
+			between 0 and 1 (default 0.25).  Smaller values produce a pitch distribution
+			more nearly Gaussian (and also somewhat more expensive to compute);
+			unity produces a uniform pitch distribution.
+	<dt>SetLowestFreq <tt>hActor freq</tt>
+			<dd>Set the lowest frequency for the chimes, in Hz (20 to
+			8820 Hz).  Defaults to 220 Hz.
+</dl>
+
+</body>
+</html>

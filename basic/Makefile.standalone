@@ -1,0 +1,13 @@
+CFLAGS = -n32 -O2 -mips3 -woff 1240 -anach
+# CFLAGS = -O -mips2 -woff 3348
+
+basic:	basic.o p2clib.o
+	CC $(CFLAGS) -o $@ basic.o p2clib.o -lm
+
+p2clib.o: p2clib.c++
+	CC $(CFLAGS) -c p2clib.c++
+basic.o: basic.c++
+	CC $(CFLAGS) -c basic.c++
+
+clean:	
+	rm -f *.o basic

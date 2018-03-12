@@ -1,0 +1,63 @@
+<html> <head> <title>Analog actor</title> </head>
+<body>
+
+<h2>A Retro Analog Synth emulator</h2>
+
+Under construction.
+<p>
+To use the Analog implementation, load tb303.so and create an actor of type AnalogActor.
+<p>
+
+<h3>AnalogActor messages</h3>
+
+In addition to the messages understood by all generator actors, the AnalogActor understands the following messages.
+If the optional parameter <tt>time</tt> is specified in any of the following messages, then
+the corresponding parameter is linearly modulated from the old value to the specified value over the
+duration of <tt>time</tt> seconds after receipt of the command. In the case of the commands
+SetAll[Param] (which set the value for all handlers spawned by a particular actor),
+the default [Param] is always set immediately on receipt of the command, regardless of
+<tt>time</tt>.
+
+<dl>
+	<dt>SetFreq <tt>hActor x</tt>
+	<br>SetAllFreq <tt>hActor x <i>time</i></tt>
+		<dd>Set the default frequency for new instances to <tt>x</tt>.
+	<dt>SetFilterCutoff <tt>hActor x</tt>
+	<br>SetAllFilterCutoff <tt>hActor x <i>time</i></tt>
+		<dd>Set the default filter cutoff for new instances to <tt>x</tt>.
+	<dt>SetResonance <tt>hActor x</tt>
+	<br>SetAllResonance <tt>hActor x <i>time</i></tt>
+		<dd>Set the default resonance for new instances to <tt>x</tt>.
+	<dt>SetEnvMod <tt>hActor x</tt>
+	<br>SetAllEnvMod <tt>hActor x <i>time</i></tt>
+		<dd>Set the default envelope modulation for new instances to <tt>x</tt>.
+	<dt>SetEnvDecay <tt>hActor x</tt>
+	<br>SetAllEnvDecay <tt>hActor x <i>time</i></tt>
+		<dd>Set the default something-or-other for new instances to <tt>x</tt>.
+
+</dl>
+
+<h3>Analog handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the tb303 algorithm understands the following messages:
+
+<dl>
+	<dt>SetFreq <tt>hSound x <i>time</i></tt>
+		<dd>Set the frequency to <tt>x</tt> Hz.
+	<dt>SetFilterCutoff <tt>hSound x <i>time</i></tt>
+		<dd>Set the "vowel color" to <tt>x</tt> (0 to 1, default 0);
+		from 0 to 1, the sound goes through oo, oh, ah, ee and gets louder
+		at the same time.
+	<dt>SetResonance <tt>hSound x <i>time</i></tt>
+		<dd>Set the narrowness of the filter to <tt>x</tt> (0 to 1, default 0).
+		At higher values you can hear individual harmonics.
+	<dt>SetEnvMod <tt>hSound x <i>time</i></tt>
+		<dd>Set how much of "modulation" SetEnvDecay does to <tt>x</tt>
+		(0 to 1, default 0).
+	<dt>SetEnvDecay <tt>hSound x <i>time</i></tt>
+		<dd>Set something or other to <tt>x</tt>
+		(0 to 1, default 0).  It's kind of hard to say what this does.
+</dl>
+
+</body>
+</html>

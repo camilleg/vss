@@ -1,0 +1,12 @@
+audpanel.title: "Parallel-port LED test case"
+audpanel.sliders: 4
+audpanel.presets: ("X")
+
+X.messageGroup: "mgAP"
+X.interval: 0.025
+X.labels: ("brightness" "hue" "period" "duty cycle")
+X.minValues: (0.0  0.0  0.0  0.0)
+X.maxValues: (1.0  1.0  0.5  1.0)
+X.initialValues: (0.5  0.5  1.0  1.0)
+X.mappings: (0 1 2 3)
+X.parameters: 4

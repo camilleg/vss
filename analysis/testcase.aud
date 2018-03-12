@@ -1,0 +1,77 @@
+SetPrintCommands 1;
+
+LoadDSO fm.so;
+LoadDSO perry.so;
+LoadDSO msgGroup.so;
+LoadDSO later.so;
+fm = Create FmActor;
+vln = Create BowedActor;
+later = Create LaterActor;
+
+// audpanel notes:
+// n1 freq from 200 to 2000
+// mute nMod yes or no
+
+n1 = BeginSound vln SetFreq 330 SetMute 0 SetMute 1 SetReverb 0
+	SetBowPressure 100 SetBowPosition 100 SetVibFreq 40 SetVibGain 5;
+
+n2 = BeginSound vln SetFreq 440 SetMute 0 SetMute 1 SetReverb 0
+	SetBowPressure 100 SetBowPosition 100 SetVibFreq 40 SetVibGain 5;
+
+LoadDSO mixer.so;
+mmm = Create MixerActor;
+SetFaderAmp mmm 2;
+mm = BeginSound mmm SetNumberOfInputs 2 SetPan 1;
+SetInputs mm [n1 n2];
+SetAllFaderAmp mm [.4 .4];
+
+MGt = Create MessageGroup; // attack-transient
+MGa1 = Create MessageGroup; // attack
+MGs1 = Create MessageGroup; // sustain (pitch-tracking)
+MGr1 = Create MessageGroup; // release1 = Create MessageGroup; // attack
+MGa2 = Create MessageGroup; // attack
+MGs2 = Create MessageGroup; // sustain (pitch-tracking)
+MGr2 = Create MessageGroup; // release
+
+LoadDSO analyzer.so;
+aaa = Create PitchAnalyzer;
+aa = BeginSound aaa;
+SetMessageGroupTransient aa MGt;
+SetMessageGroupsAttack aa MGa1 MGa2;
+SetMessageGroupsTrack aa MGs1 MGs2;
+SetMessageGroupsRelease aa MGr1 MGr2;
+SetInput aa mm;
+
+
+nTransient = BeginSound fm SetCarFreq 1280 SetModIndex 20 SetAmp 0;
+nMod1 = BeginSound fm SetCarFreq 1280 SetModIndex 6 SetAmp 0 ScaleAmp .001 SetPan -1;
+nMod2 = BeginSound fm SetCarFreq 1280 SetModIndex 6 SetAmp 0 ScaleAmp .001 SetPan -1;
+
+AddMessage MGt SetAmp nTransient .0;
+AddMessage MGt AddMessage later .05 SetAmp nTransient 0 .1;
+
+AddMessage MGa1 SetCarFreq nMod1 *1 .02;
+AddMessage MGa1 SetAmp nMod1 *2 .02;
+AddMessage MGs1 SetCarFreq nMod1 *1 .02;
+AddMessage MGs1 SetAmp nMod1 *2 .02;
+AddMessage MGr1 SetAmp nMod1 0 .02;
+
+AddMessage MGa2 SetCarFreq nMod2 *1 .02;
+AddMessage MGa2 SetAmp nMod2 *2 .02;
+AddMessage MGs2 SetCarFreq nMod2 *1 .02;
+AddMessage MGs2 SetAmp nMod2 *2 .02;
+AddMessage MGr2 SetAmp nMod2 0 .02;
+
+//;; SetFreq n1 2000 0;
+//;; SetFreq n1 200 3;
+//;; sleep 3.5;
+
+// message groups for audpanel
+MGAPpitch = Create MessageGroup;
+AddMessage MGAPpitch SetFreq n1 *0 .02;
+AddMessage MGAPpitch SetFreq n2 *1 .02;
+
+AddMessage MGAPpitch SetChannelNum mm 1;
+AddMessage MGAPpitch SetOneFaderAmp mm *2 0; //.01;
+AddMessage MGAPpitch SetChannelNum mm 2;
+AddMessage MGAPpitch SetOneFaderAmp mm *3 0; //.01;

@@ -1,0 +1,47 @@
+<html> <head> <title>ProcessActor</title> </head>
+<body>
+
+<h2>An example of a process actor</h2>
+
+The Process suite (processActor, processHand, processAlg) implements a
+"do-nothing" process actor which accepts an input and copies it unchanged
+to its output.  As an example of a modifying message, it accepts one
+parameter "ModIndex" which scales the amplitude of its output.  It is
+intended as a starting point for writing other process actors.<p>
+
+To use this process implementation (just to prove that it works, we suppose),
+load process.so and create an actor of type ProcessActor.
+
+<h3>ProcessActor messages</h3>
+
+In addition to the messages understood by all generator actors, the ProcessActor understands the following messages:
+
+<dl>
+	<dt>SetModIndex <tt>hActor x</tt>
+		<dd>Set the default index of modulation for new instances
+created by this actor to <tt>x</tt>.
+	<dt>SetAllModIndex <tt>hActor x <i>time</i></tt>
+		<dd>Set the index of modulation of all children to <tt>x</tt>,
+		and set the default index for all future children.
+		If <tt>time</tt> is specified, children will modulate to the new
+		index over the specified duration. Default index is always
+		set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>ProcessActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for
+the ProcessActor understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetModIndex <tt>hSound x <i>time</i></tt>
+		<dd>Set the index of modulation to <tt>x</tt>.  If
+		<tt>time</tt> is specified, move to the new index over the
+		specified duration.
+</dl>
+
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+SetPrintCommands 1;
+
+LoadDSO input.so;
+ia = Create InputActor;
+i = BeginSound ia SetMute 1;
+
+LoadDSO amplAnalyzer.so;
+aaa = Create AmplitudeAnalyzer;
+aa = BeginSound aaa;
+SetInput aa i;
+
+LoadDSO fm.so;
+fm = Create FmActor;
+
+LoadDSO msgGroup.so;
+mg1 = Create MessageGroup;
+nMod = BeginSound fm SetModIndex 3;
+SetAmp nMod .1;
+
+LoadDSO map.so;
+map = Create LinearMapper;
+SetDomainAndRange map 0 .7   100 600;
+
+SetMessageGroup aa mg1;
+AddMessage mg1 MapAndSend map SetCarFreq nMod @*0 .005;
+AddMessage mg1 SetAmp nMod *0 .005;
+
+SetRate aa 200;
+
+sleep 5;

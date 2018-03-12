@@ -1,0 +1,65 @@
+h = Create HidimMapActor;
+fmA = Create FmActor;
+fm = BeginSoundPaused fmA;
+mg2 = Create MessageGroup;
+
+AddMessage mg2 SetAmp fm *0 .04;
+AddMessage mg2 SetCarFreq fm *1 .02;
+AddMessage mg2 SetCMratio fm *2 .02;
+AddMessage mg2 SetModIndex fm *3 .02;
+
+SetDims h 2 4;
+SetNumPoints h 4;
+SetLowPoints h [ 0 0, 0 1, 1 0, 1 .999 ];
+
+SetHighPoints h [ 0.1 220 1 1,   0.1 440 1 5,   0.1 220 2 5,   .5 440 2 5 ];
+
+// 2D is under reconstruction, in MCMap::Delaunay2D() mcspace.c++
+
+MapAndSend h SendData mg2 @[ .7 .4];
+SetPause fm 0;
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .4 .4 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .3 .9 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .0 .4 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .02 .4 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .02 .8 ];
+sleep .5;
+
+
+
+SetDims h 3 4;
+SetNumPoints h 4;
+SetLowPoints h [ 0 0 0, 0 0 1, 0 1 0, 1 0 0 ];
+
+SetHighPoints h [ 0.1 220 1 1,   0.1 440 1 5,   0.1 220 2 5,   .5 440 2 5 ];
+
+// 2D is under reconstruction, in MCMap::Delaunay2D() mcspace.c++
+
+MapAndSend h SendData mg2 @[ .7 .4 .9];
+SetPause fm 0;
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .4 .4 .0 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .3 .9 .2 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .0 .4 .2 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .02 .4 .2 ];
+sleep .5;
+
+MapAndSend h SendData mg2 @[ .02 .8 .2 ];
+sleep .5;

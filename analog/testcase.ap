@@ -1,0 +1,13 @@
+audpanel.title: "Analog Synth"
+audpanel.sliders: 6
+audpanel.presets: ("X")
+
+X.messageGroup: "mgAP"
+X.interval: 0.025
+X.labels: 		("Amp" "Freq" "FilterCutoff" "Resonance" "EnvMod" "EnvDecay")
+X.minValues: 		(0.0  	60.0  	0.0  	0.0		0.0		0.0)
+X.maxValues: 		(1.0  	2000.0 	1.0  	1.0  	1.0		1.0)
+X.initialValues: 	(0.1  	440.0  	0.5  	0.5  	0.5		0.5)
+X.mappings: (0 1 2 3 4 5)
+X.type: (3 3 3 3 3 3)
+X.parameters: 6

@@ -1,0 +1,15 @@
+audpanel.title: "State Machine Demo"
+audpanel.sliders: 4
+audpanel.presets: ("sm")
+
+sm.messageGroup: "mgTrigger"
+sm.interval: 0.025
+sm.type:	(1 1 1 1)
+sm.labels: 
+( "Door0" "Door1" "Door2" "Door3" )
+sm.minValues:	(0.0 0.0 0.0 0.0)
+sm.maxValues:	(0.0 0.0 0.0 0.0)
+sm.initialValues:	(0.0 0.0 0.0 0.0)
+sm.defaultValues:	(0.0 0.0 0.0 0.0)
+sm.mappings: 	(-1 -1 -1 -1)
+sm.parameters:	4

@@ -1,0 +1,40 @@
+audpanel.title: "VSS generator-actor test"
+audpanel.sliders: 6
+audpanel.presets: ("mgPan" "mgXYZ" "mgChn" "mgCh2")
+
+mgPan.messageGroup: "mgPan"
+mgPan.interval: 0.025
+mgPan.labels: ("Car Freq" "Amp" "ModIndex" "Pan" "-" "-")
+mgPan.minValues: (0.0  0.0  0.0  -1.0  0.0  0.0)
+mgPan.maxValues: (1000.0  1.0 50.0 1.0 1.0 1.0)
+mgPan.initialValues: (200.0  0.0  1.5  0.0  0.0  0.0)
+mgPan.mappings: (0 1 2 3 -1 -1)
+mgPan.parameters: 6
+
+mgXYZ.messageGroup: "mgXYZ"
+mgXYZ.interval: 0.025
+mgXYZ.labels: ("Car Freq" "Amp" "ModIndex" "X" "Y" "Z")
+mgXYZ.minValues: (0.0  0.0  0.0       -5.0  0.0 -5.0)
+mgXYZ.maxValues: (1000.0  1.0 50.0     5.0 10.0  5.0)
+mgXYZ.initialValues: (200.0 0.5 1.5    0.0  5.0  0.0)
+mgXYZ.mappings: (0 1 2 3 4 5)
+mgXYZ.parameters: 6
+
+mgChn.messageGroup: "mgChn"
+mgChn.interval: 0.025
+mgChn.labels: ("Car Freq" "Amp" "ModIndex" "0" "1" "-")
+mgChn.minValues: (0.0  0.0  0.0        0.0  0.0  0.0)
+mgChn.maxValues: (1000.0  1.0 50.0     1.0  1.0  0.0)
+mgChn.initialValues: (200.0 0.5 1.5    0.5  0.5  0.0)
+mgChn.mappings: (0 1 2 3 4 -1)
+mgChn.parameters: 6
+
+mgCh2.messageGroup: "mgCh2"
+mgCh2.interval: 0.025
+mgCh2.labels: ("Car Freq" "Amp" "ModIndex" "channel" "-" "-")
+mgCh2.minValues: (0.0  0.0  0.0        0.0  0.0  0.0)
+mgCh2.maxValues: (1000.0  1.0 50.0     2.0  1.0  0.0)
+mgCh2.initialValues: (200.0 0.5 1.5    0.0  0.5  0.0)
+mgCh2.type:     (3 3 3 2 -1 -1)
+mgCh2.mappings: (0 1 2 3 -1 -1)
+mgCh2.parameters: 6

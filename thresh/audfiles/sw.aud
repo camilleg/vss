@@ -1,0 +1,6 @@
+LoadDSO "msgGroup.so";
+LoadDSO "swThresh.so";
+
+t = Create ThresholdActor;
+s = Create SwitchActor;
+

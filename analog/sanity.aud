@@ -1,0 +1,15 @@
+myLaterHandler = Create LaterActor;
+VibesActor = Create AnalogActor;
+SetAmp VibesActor 0.0;
+SetResonance VibesActor 1.0;
+
+VibesOn = Create MessageGroup;
+AddMessage VibesOn BeginSound VibesActor SetFreq *0 SetAmp *1;
+AddMessage VibesOn myLaterHandler 0.5 Delete *?;
+
+VibesFadeOffOn = Create MessageGroup;
+AddMessage VibesFadeOffOn SetAmp *3 0.0;
+AddMessage VibesFadeOffOn Delete *2;
+AddMessage VibesFadeOffOn BeginSound VibesActor SetFreq *0;
+AddMessage VibesFadeOffOn myLaterHandler 0.5 Delete *?;
+AddMessage VibesFadeOffOn SetAmp *? *1;

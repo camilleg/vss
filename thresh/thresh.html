@@ -1,0 +1,64 @@
+<HTML> <HEAD> <TITLE>Threshold Actor</TITLE> </HEAD>
+<BODY>
+
+<h2>Threshold Actor</h2>
+
+The ThresholdActor stores a list of thresholds against which a stream of data can be tested to trigger events.  A set of messages can be attached to each threshold, to be sent when the data stream crosses the threshold.<p>
+
+The messages are stored in <a href="msgGroup.html">MessageGroups</a> with each threshold, so the messages may use the MessageGroup indexing scheme (with the '*' symbol). When a datum from the stream is sent to the threshold actor, it may be sent with a data array that will be passed on to the MessageGroups associated with threshold crossings.<p>
+
+To use the ThresholdActor, load msgGroup.so and then load thresh.so and create an actor of type ThresholdActor. You do not need to create any MessageGroups, as the ThresholdActor manages its own groups. You <b>must</b> load the MessageGroup dso, however, or the ThresholdActor dso will not load.<p>
+
+<h3>ThresholdActor messages</h3>
+
+In addition to the messages understood by all actors, the ThresholdActor understands the following messages:
+
+<dl>
+	<DT>AddThreshold <tt>hActor x message</tt>
+			<DD>Create a new threshold at <tt>x</tt>, or add <tt>message</tt> to the MessageGroup associated with an existing threshold at <tt>x</tt>. <tt>message</tt> will be sent whenever the data stream crosses with threshold in either direction (i.e. changes from greater than to less than or from less than to greater than). 
+
+	<DT>AddThresholdGT <tt>hActor x message</tt>
+	<DT>AddThresholdLT <tt>hActor x message</tt>
+	<DT>AddThresholdGTEQ <tt>hActor x message</tt>
+	<DT>AddThresholdLTEQ <tt>hActor x message</tt>
+	<DT>AddThresholdEQ <tt>hActor x message</tt>
+			<DD>Create a new threshold at <tt>x</tt>, or add <tt>message</tt> to the MessageGroup associated with an existing threshold at <tt>x</tt>. <tt>message</tt> will be sent whenever the data stream crosses with threshold in a direction specified by the last two or four characters of the message name (AddThreshXX or AddThreshXXXX). The tests associated with each message are <i>greater than</i>, <i>less than</i>, <i>greater than or equal to</i>, <i>less than or equal to</i>, and <i>equal to</i>, respectively. Whenever a datum is received for which a threshold's test returns true, and for which the previously sent datum (or initial value) tested false, the associated messages will be sent.
+
+	<DT>SetInitialVal <tt>hActor x</tt>
+			<DD>Set the initial value of the data stream to <tt>x</tt>. This does not trigger any messages. Since threshold <b>crossings</b> (i.e. <b>changes</b> of state) are detected, the ThresholdActor must have some initial state against which to compare the state established by the first stream datum in order to determine whether there has been a crossing. If no initial state is specified, 0.0 is assumed. The state may be initialized at any time.
+
+	<DT>TestThresholds <tt>hActor x <i>c</i></tt>
+			<DD>Test <tt>x</tt> against all thresholds. For any thresholds that are crossed, send the data array <tt>[z1 z2 z3 ...]</tt> to the corresponding MessageGroup. If no data array is specified, then the MessageGroups receive an empty (NULL) array.
+
+	<DT>SetNoRedundancies <tt>hActor f </tt>
+			<DD>Set no-redundancy mode to true or false, as flag <tt>f</tt>
+			is true or false.  In this mode, the actor will send at most one
+			message, even if several thresholds are crossed at once (since
+			the previous <tt>TestThresholds</tt> message).
+			In particular, of the messages which would have been sent,
+			the only one which is sent will be the
+			"last" one, in the sense of whether the value is rising or falling.
+
+	<DT>LimitRate <tt>hActor t </tt>
+			<DD>Wait at least <tt>t</tt> seconds between sending messages.
+			If a message is sent and a second one "should" be sent before
+			<tt>t</tt> seconds have elapsed, the second one will wait until
+			the time has elapsed and then it will be sent, a little "late".
+			<br>
+			If a <i>third</i> message "should" be sent before
+			<tt>t</tt> seconds have elapsed, the second one will be discarded
+			and only the third one will be sent when the proper time arrives.
+			<br>
+			Side effect: this forces the actor into no-redundancy mode.
+
+	<DT>AddPrefixMessage <tt>hActor message </tt>
+			<DD>Send <tt>message</tt> immediately before sending any other message or group of messages.
+
+	<DT>AddSuffixMessage <tt>hActor message </tt>
+			<DD>Send <tt>message</tt> immediately after sending any other message or group of messages.
+
+</dl>
+
+
+</BODY>
+</HTML>

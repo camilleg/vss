@@ -1,0 +1,76 @@
+SetPrintCommands 1;
+
+LoadDSO fm.so;
+LoadDSO add.so;
+LoadDSO msgGroup.so;
+LoadDSO later.so;
+fm = Create FmActor;
+add = Create AddActor;
+later = Create LaterActor;
+
+n1 = BeginSound add SetFreq 2000 SetMute 0 SetAmp .5;
+//n2 = BeginSound add SetFreq 350 SetMute 1 SetAmp .5;
+SetAmplPartials n1 [ .1 .14 .03 .03 .02];
+//SetAmplPartials n2 [ .1 .14 .03 .03 .02];
+
+// n = BeginSound fm SetCarFreq 200 SetModIndex 0 SetAmp .3;
+
+//LoadDSO mixer.so;
+//mmm = Create MixerActor;
+//SetFaderLin mmm 1;
+//mm = BeginSound mmm SetNumberOfInputs 2;
+//SetInputs mm [n1 n2];
+
+MGt = Create MessageGroup; // attack-transient
+MGa = Create MessageGroup; // attack
+MGs = Create MessageGroup; // sustain (pitch-tracking)
+MGr = Create MessageGroup; // release
+
+LoadDSO analyzer.so;
+aaa = Create PitchAnalyzer;
+aa = BeginSound aaa;
+SetMessageGroupTransient aa MGt;
+SetMessageGroupsAttack aa MGa;
+SetMessageGroupsTrack aa MGs;
+SetMessageGroupsRelease aa MGr;
+//SetInput aa mm;
+SetInput aa n1;
+
+
+nTransient = BeginSound fm SetCarFreq 1280 SetModIndex 20 SetAmp 0;
+nMod = BeginSound fm SetCarFreq 1280 SetModIndex 6 SetAmp .0 ScaleAmp .001;
+
+AddMessage MGt SetAmp nTransient .0;
+AddMessage MGt AddMessage later .05 SetAmp nTransient 0 .1;
+
+AddMessage MGa SetCarFreq nMod *1 .02;
+AddMessage MGa SetAmp nMod *2 .02;
+AddMessage MGs SetCarFreq nMod *1 .02;
+AddMessage MGs SetAmp nMod *2 .02;
+AddMessage MGr SetAmp nMod 0 .02;
+
+/*
+LoadDSO "partialsAnalyzer.so";
+hAnalyzer = Create PartialsAnalyzer;
+analyzer = BeginSound hAnalyzer;
+SetInput analyzer n;
+Measure analyzer;
+*/
+
+
+//SetAmplPartials n [ .1 0 0 .8] 1;
+SetFreq n1 200 6;
+sleep 1.0;
+SetMute nMod 1;
+sleep 1.0;
+SetMute nMod 0;
+sleep 1.0;
+SetMute nMod 1;
+sleep 1.0;
+SetMute nMod 0;
+sleep 1.0;
+SetMute nMod 1;
+sleep 1.0;
+SetMute nMod 0;
+//SetAmplPartials n [ .7 .1 .1 .05 .02];
+sleep 1.2;

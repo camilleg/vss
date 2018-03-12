@@ -1,0 +1,183 @@
+//pragma filter "/lib/cpp -P"
+
+//#define LATENCY_TEST
+//#define LATENCY_TEST_2
+#define STRAIGHT_AHEAD_TB303
+#ifdef LATENCY_TEST
+
+SetGear PRNDL_Parked;
+LoadDSO input.so;
+LoadDSO process.so;
+//LoadDSO debug.so;
+//pr = Create PrintfActor;
+hInpActor = Create InputActor;
+hInpSound = BeginSound hInpActor SetMute 1 SetAmp .9;
+p = Create ProcessActor;
+s = BeginSound p SetInput hInpSound SetAmp 0.9;
+LoadDSO msgGroup.so;
+mgAP = Create MessageGroup;
+SetGear PRNDL_Drive;
+
+#endif
+#ifdef LATENCY_TEST_2
+
+SetGear PRNDL_Parked;
+LoadDSO input.so;
+LoadDSO msgGroup.so;
+LoadDSO add.so;
+LoadDSO analyzer.so;
+
+
+hInpActor = Create InputActor;
+hInpSound = BeginSound hInpActor SetMute 1 SetAmp .5;
+
+hPA = Create PitchAnalyzer;
+tracker = BeginSound hPA;
+MGt = Create MessageGroup; // attack-transient
+MGa = Create MessageGroup; // attack
+MGs = Create MessageGroup; // sustain (pitch-tracking)
+MGr = Create MessageGroup; // release
+SetMessageGroupTransient tracker MGt;
+SetMessageGroupsAttack   tracker MGa;
+SetMessageGroupsTrack    tracker MGs;
+SetMessageGroupsRelease  tracker MGr;
+SetInput tracker hInpSound;
+
+add = Create AddActor;
+n1 = BeginSound add SetAmp 0;
+SetAmplPartials n1 [.2 .1 .1 .02 .1 .2 .02 .1];
+
+AddMessage MGa SetAmp  n1 *2 .000;
+AddMessage MGa SetFreq n1 *1 .000;
+AddMessage MGs SetAmp  n1 *2 .02;
+AddMessage MGs SetFreq n1 *1 .02;
+AddMessage MGr SetAmp  n1  0 .05;
+
+mgAP = Create MessageGroup;
+SetGear PRNDL_Drive;
+
+
+#endif
+#ifdef STRAIGHT_AHEAD_TB303
+
+SetGear PRNDL_Parked;
+
+/*
+// try add, added to this:
+LoadDSO add.so;
+add = Create AddActor;
+n1 = BeginSound add SetAmp 0;
+SetAmplPartials n1 [.2 .1 .1 .02 .1 .2 .02 .1];
+*/
+
+
+SetPrintCommands 1;
+
+LoadDSO tb303.so;
+LoadDSO msgGroup.so;
+LoadDSO input.so;
+LoadDSO analyzer.so;
+//LoadDSO spacepad.so;
+LoadDSO map.so;
+//LoadDSO basic.so;
+LoadDSO debug.so;
+
+pr = Create PrintfActor;
+
+aInp = Create InputActor;
+sInp = BeginSound aInp SetMute 1 SetAmp .5;
+MGas = Create MessageGroup;
+MGt = Create MessageGroup; // attack-transient
+MGa = Create MessageGroup; // attack
+MGs = Create MessageGroup; // sustain (pitch-tracking)
+MGr = Create MessageGroup; // release
+
+// (later: ft16 pan slightly left, ft32 right.)
+//ft16 = Create LinearMapper; SetDomainAndRange ft16 0 1 0 .5;
+ft32 = Create LinearMapper; SetDomainAndRange ft32 0 1 0 .25;
+
+aTb303 = Create Tb303Actor;
+s1 = BeginSoundPaused aTb303;
+//	SetAmp .5
+//	SetFreq 110
+//	SetFilterCutoff .5
+//	SetResonance 1
+//	SetEnvMod 1
+//	SetEnvDecay 0;
+//	//;; Something's not getting initialized, if we leave these out.
+
+// attack -> retrigger
+// amp -> amp
+// freq -> freq/4 via linearmapper.
+
+//AddMessage MGas SetAmp n1 *2 .01;
+//AddMessage MGas SetFreq n1 *1 .01;
+AddMessage MGas SetAmp s1 *2 .02;
+AddMessage MGas MapAndSend ft32 SetFreq s1 @*1 .02;
+AddMessage MGs SendData MGas [*0 *1 *2];
+AddMessage MGa SendData MGas [*0 *1 *2];
+AddMessage MGa Retrigger s1;
+AddMessage MGr SetAmp s1 0 .06;
+
+// filtercutoff 1..0 ee-ah-oh-oo ff-pp
+// amp 0..1 -> SetFilterCutoff .3 .. 1
+
+map1 = Create LinearMapper; SetDomainAndRange map1 0 1 .5 1;
+AddMessage MGas MapAndSend map1 SetFilterCutoff s1 @*2 .08;
+//AddMessage MGas MapAndSend map1 printf pr @*2;
+
+
+//////////////////////////////////////////////////////////////////////
+
+hPA = Create PitchAnalyzer;
+tracker = BeginSound hPA;
+SetMessageGroupTransient tracker MGt;
+SetMessageGroupsAttack   tracker MGa;
+SetMessageGroupsTrack    tracker MGs;
+SetMessageGroupsRelease  tracker MGr;
+SetInput tracker sInp;
+
+MGspad = Create MessageGroup;
+AddMessage MGspad printf pr "xyz:_%.1f_%.1f_%.1f\n" *0 *1 *2;
+// do something else with *0 *1 *2
+
+/*
+aSpa = Create SpacepadActor;
+SetMessageGroup aSpa MGspad;
+SetReportMode aSpa 5;
+StartReporting aSpa;
+*/
+
+// audpanel
+
+mgAP = Create MessageGroup;
+mgAP_Retrigger = Create MessageGroup;
+
+//AddMessage mgAP SetAmp s1 *0;
+//AddMessage mgAP SetFreq s1 *1;
+//AddMessage mgAP SetFilterCutoff s1 *2 .02;
+AddMessage mgAP SetResonance s1 *3;
+AddMessage mgAP SetEnvMod s1 *4;
+AddMessage mgAP SetEnvDecay s1 *5;
+
+AddMessage mgAP_Retrigger Retrigger s1;
+
+SetPause s1 0;
+
+// SetResonance 1 to .3:  hear indiv. high harmonics descending;
+// 0: not much happens during attack, mildly buzzy attack into sinetone.
+// control this with position
+
+// SetEnvMod: 0, no attack.  as it gets bigger, attack starts higher
+// and finishes on a lower (less buzzy, more sinetone) steady-state sound.
+// control this with position
+
+// SetEnvDecay 0..1 attack takes from .1 sec to about 6 sec.
+// leave this at zero.
+
+mgAP_Record = Create MessageGroup;
+AddMessage mgAP_Record EnableOfile *0 "/tmp/vssout.raw" 20000000;
+
+SetGear PRNDL_Drive;
+
+#endif

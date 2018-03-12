@@ -1,0 +1,30 @@
+// noise.aud
+// This is the .aud file for the "noise" demo of sliderX
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO noise.so;
+LoadDSO ring.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the noise actor
+aNz = Create NoiseActor;
+sNz = BeginSound aNz SetCutoff 200. SetOrder 1;
+
+// Create, set up the ring-mod actor
+aRm = Create RingModActor;
+sRm = BeginSound aRm SetModFreq 300. SetModIndex 0.2;
+SetInput sRm sNz;
+
+// Create message groups for the interaction
+ModifyNz 	= Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage ModifyNz SetAmp sNz *0;
+AddMessage ModifyNz SetCutoff sNz *1;
+AddMessage ModifyNz SetOrder sNz *2;
+AddMessage ModifyNz SetAmp sRm *3;
+AddMessage ModifyNz SetModFreq sRm *4;
+AddMessage ModifyNz SetModIndex sRm *5;

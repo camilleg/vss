@@ -1,0 +1,63 @@
+audpanel.title: "Reverberator Slider Demo"
+audpanel.sliders: 7 
+audpanel.presets: ( "Overall" "ERdelay" "ERcoeff" "CombDelay" "APdelay" "Preset" )
+
+Overall.messageGroup: "Overall"
+Overall.interval: 0.025
+Overall.labels: ("revMix" "revGain" "revTime" "revBright" "dampRatio" "pole" "null" )
+Overall.minValues:	(0.0 0.0 0.0 0.0 1.0 -0.5 0.0 )
+Overall.maxValues:	(1.0 10.0 1.0 1.0 30.0 0.5 0.0 )
+Overall.initialValues:	(0.5 1.0 0.3 0.15 1.0 0.0 0.0 )
+Overall.defaultValues:	(0.5 1.0 0.3 0.15 1.0 0.0 0.0 )
+Overall.mappings: (0 1 2 3 4 5 6 )
+Overall.parameters: 7
+
+ERdelay.messageGroup: "ERdelay"
+ERdelay.interval: 0.025
+ERdelay.labels: ("EarlyRefNum" "delay1" "delay2" "delay3" "delay4" "delay5" "delay6" )
+ERdelay.minValues:	(0.0 0.1 0.1 0.1 0.1 0.1 0.1 )
+ERdelay.maxValues:	(6.0 500.0 500.0 500.0 500.0 500.0 500.0 )
+ERdelay.initialValues:	(2.0 20.0 23.0 30.0 35.0 39.0 41.0 )
+ERdelay.defaultValues:	(2.0 20.0 23.0 30.0 35.0 39.0 41.0 )
+ERdelay.mappings: (0 1 2 3 4 5 6)
+ERdelay.parameters: 7
+
+ERcoeff.messageGroup: "ERcoeff"
+ERcoeff.interval: 0.025
+ERcoeff.labels: ("null" "coeff1" "coeff2" "coeff3" "coeff4" "coeff5" "coeff")
+ERcoeff.minValues:	(0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+ERcoeff.maxValues:	(0.0 1.0 1.0 1.0 1.0 1.0 1.0)
+ERcoeff.initialValues:	(0.0 0.82 0.818 0.635 0.719 0.642 0.413)
+ERcoeff.defaultValues:	(0.0 0.82 0.818 0.635 0.719 0.642 0.413)
+ERcoeff.mappings: (0 1 2 3 4 5 6)
+ERcoeff.parameters: 7
+
+CombDelay.messageGroup: "CombDelay"
+CombDelay.interval: 0.025
+CombDelay.labels: ("CombNum" "Cdelay1" "Cdelay2" "Cdelay3" "Cdelay4" "Cdelay5" "Cdelay6")
+CombDelay.minValues:	(1.0 0.1 0.1 0.1 0.1 0.1 0.1 )
+CombDelay.maxValues:	(6.0 100.0 100.0 100.0 100.0 100.0 100.0 )
+CombDelay.initialValues:(4.0 50.0 56.0 61.0 68.0 72.0 78.0 )
+CombDelay.defaultValues:(4.0 50.0 56.0 61.0 68.0 72.0 78.0 )
+CombDelay.mappings: (0 1 2 3 4 5 6)
+CombDelay.parameters: 7
+
+APdelay.messageGroup: "APdelay"
+APdelay.interval: 0.025
+APdelay.labels: ("AllPassNum" "APdelay1" "APdelay2" "APdelay3" "null" "null" "null" )
+APdelay.minValues:	(0.0 0.1 0.1 0.1 0.0 0.0 0.0)
+APdelay.maxValues:	(3.0 10.0 10.0 10.0 0.0 0.0 0.0 )
+APdelay.initialValues:(1.0 6.0 1.7 0.6 0.0 0.0 0.0 )
+APdelay.defaultValues:(1.0 6.0 1.7 0.6 0.0 0.0 0.0 )
+APdelay.mappings: (0 1 2 3 4 5 6)
+APdelay.parameters: 7
+
+Preset.messageGroup: "Preset"
+Preset.interval: 0.025
+Preset.labels: ("Preset" "null" "null" "null" "null" "null" "null" )
+Preset.minValues:	(0.0 0.0 0.0 0.0 0.0 0.0 0.0 )
+Preset.maxValues:	(4.0 0.0 0.0 0.0 0.0 0.0 0.0 )
+Preset.initialValues:	(0.0 0.0 0.0 0.0 0.0 0.0 0.0 )
+Preset.defaultValues:	(0.0 0.0 0.0 0.0 0.0 0.0 0.0 )
+Preset.mappings: (0 1 2 3 4 5 6 )
+Preset.parameters: 7

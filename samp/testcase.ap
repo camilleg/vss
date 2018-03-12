@@ -1,0 +1,13 @@
+audpanel.title: "SampleActor Demo"
+audpanel.sliders: 1 
+audpanel.presets: ( "test"  )
+
+test.messageGroup: "test"
+test.interval: 0.025
+test.labels: ("loop" )
+test.minValues:	(0.0 )
+test.maxValues:	(1.0 )
+test.initialValues:	(0.0)
+test.defaultValues:	(0.0)
+test.mappings: (0  )
+test.parameters: 1

@@ -1,0 +1,20 @@
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO samp.so;
+LoadDSO msgGroup.so;
+
+// Create a sample actor to play sound file
+aSa = Create SampleActor;
+// SetDirectory aSa "c:/temp/";
+LoadFile aSa "dsos/reverb/guitar.wav";
+sleep .5;
+
+sSa = BeginSoundPaused aSa SetFile "dsos/reverb/guitar.wav";
+
+
+test = Create MessageGroup;
+
+AddMessage test Rewind sSa; 
+AddMessage test SetLoop sSa *0;
+AddMessage test SetPause sSa 0;

@@ -1,0 +1,48 @@
+// This is the .aud file for testing the filter actor
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO noise.so;
+LoadDSO filter.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the noise actor
+aNz = Create NoiseActor;
+sNz = BeginSound aNz SetCutoff 5000. SetOrder 1;
+
+// Create, set up the first-order filter actor
+aF1 = Create Order1FilterActor;
+sF1 = BeginSound aF1;
+SetInput sF1 sNz;
+
+// Create, set up the second-order filter actor
+aF2 = Create BiQuadFilterActor;
+sF2 = BeginSound aF2;
+SetInput sF2 sF1;
+
+// Create message groups for the interaction
+ModifyNz = Create MessageGroup;
+ModifyF1 = Create MessageGroup;
+ModifyF2 = Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage ModifyNz SetAmp sNz *0;
+AddMessage ModifyNz SetCutoff sNz *1;
+AddMessage ModifyNz SetOrder sNz *2;
+// filter 1
+AddMessage ModifyF1 SetAmp sF1 *0;
+AddMessage ModifyF1 SetFrequency sF1 *1;
+AddMessage ModifyF1 SetLowPassGain sF1 *2;
+AddMessage ModifyF1 SetHighPassGain sF1 *3;
+AddMessage ModifyF1 SetAllPassGain sF1 *4;
+// filter 2
+AddMessage ModifyF2 SetAmp sF2 *0;
+AddMessage ModifyF2 SetFrequency sF2 *1;
+AddMessage ModifyF2 SetResonance sF2 *2;
+AddMessage ModifyF2 SetLowPassGain sF2 *3;
+AddMessage ModifyF2 SetBandPassGain sF2 *4;
+AddMessage ModifyF2 SetHighPassGain sF2 *5;
+AddMessage ModifyF2 SetAllPassGain sF2 *6;
+AddMessage ModifyF2 SetNotchGain sF2 *7;

@@ -1,0 +1,54 @@
+<html> <head> <title>Message groups</title> </head>
+<body>
+<h2>Message Groups</h2>
+
+The MessageGroup is the mechanism for grouping parameterized messages to be sent all at once when a block of data is received. The messages may be completely specified, or may have some of their parameters (only floating point numbers please) replaced by the <tt>*</tt> symbol, followed by an integer. The integer is an index into a data array. When the MessageGroup receives a data array, indices in the stored messages are replaced by data from the array (at the specified index point), and the messages are sent. If an index exceeds the length of the data array, the message containing that index is not sent. Indices are 'C' style (start at 0). Messages are only sent when a data array is received by the MessageGroup. The data in the array may be used more than once, or not at all.<p>
+
+When a message sent by MessageGroup causes a new handle to be generated (e.g., Create, BeginSound) that would have been passed back to the client had the client sent the message, that handle is stored temporarily with the MessageGroup.
+Subsequent messages in that MessageGroup can refer to this handle with the <tt>*?</tt> symbol.
+This handle is remembered only while processing the current data array; it's replaced each time a new handle is generated.
+So to create a handler and send it message Foo with arguments from a data array, one could use the following messages:
+
+<pre>
+	AddMessage hMG BeginSound hGenerator;
+	AddMessage hMG Foo *? *1 *3;
+</pre> 
+
+Every time an array is sent to this MessageGroup, a new handler is created for hGenerator, and the message Foo is sent to the new handler with the second and fourth array elements as arguments.<p>
+
+To use MessageGroups, load msgGroup.so and create an actor of type MessageGroup. MessageGroups are also used in the AUDupdate mechanism.<p>
+
+Special note for AUDupdate:  <i>other</i> actors can also use the <tt>*1 *3</tt> kind
+of notation to access the values of the data array passed to a message group
+via AUDupdate, even if those actors are not themselves MessageGroup actors.
+In this case, <tt>*3</tt> for example refers to the fourth argument of the
+last AUDupdate sent to any message group at all.
+Use this with care:  you might not realize that another
+AUDupdate happened in the meantime which clobbered the datum you needed.
+Or there might have been fewer than four elements in the AUDupdate array
+to begin with.<p>
+
+New abbreviation:  anywhere you can write <tt>*2 *3 *4 *5 *6</tt>,
+you can replace that with <tt>*2 to *6</tt>.  Also, <tt>*$</tt> in
+this context (<tt>*0 to *$</tt>, <tt>*1 to *$</tt>, etc.) means the
+last parameter passed in from AUDupdate.  You can use this to work with
+messages with an unknown or variable number of parameters.<p>
+
+<h3>MessageGroup messages</h3>
+
+In addition to the messages understood by all actors, the MessageGroup understands the following messages:
+
+<dl>
+	<dt>AddMessage <tt>hActor message</tt>
+			<dd>Add <tt>message</tt> to the list of paramterized messages to be sent when a data array is received.
+	<dt>SendData <tt>hActor [ x1, x2, x3... ]</tt>
+			<dd><tt>[ x1, x2, x3... ]</tt> is an array of floating point data to be used to construct complete messages from the parameterized versions the MessageGroup has stored. The MessageGroup will construct and send as many of its messages as possible. Messages indexing data beyond the length of the data array <tt>[ x1, x2, x3... ]</tt> are not sent.
+
+	<dt>ScheduleData <tt>hActor [t1, t2, t3...] [x1, y1...] [x2, y2...] [...] ...</tt>
+		<dd>Receive data arrays as above with time offsets <tt>[t1, t2, t3...]</tt>. Receive <tt>[x1, y1...]</tt> at <tt>t1</tt>, <tt>[x2, y2...]</tt> at <tt>t2</tt>, etc. Time offsets are relative to the time of receipt of the ScheduleData message.
+</dl>
+
+
+</body>
+</html>
+

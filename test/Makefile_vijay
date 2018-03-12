@@ -1,0 +1,90 @@
+PRJ_BASE=vss_TestActor
+ALL_SRCS=Makefile* dependfile _todo.vj *.c++ *.h *.aud
+
+# VSS/DSO paths
+VSS_DEV_DIR=/nfs/atlantia/usr2/projects/audio/dev
+VSS_DSO_DIR=$(VSS_DEV_DIR)/srv62/dsos
+INSTALL_DIR=$(VSS_DSO_DIR)/tester
+VSS_EXE=$(VSS_DEV_DIR)/srv
+
+# Misc paths
+MASTER_BASE=/afs/ncsa/projects/audio/vj/src
+MASTER_DIR=$(MASTER_BASE)/vss/dsos/TestActor
+WORK_DIR=/usr/tmp/vj/vss/dsos/TestActor
+BU_DIR=$(HOME)/Bak
+
+SRC_ZIP=$(PRJ_BASE).zip
+BIN_ZIP=$(PRJ_BASE)_bin.zip
+
+before_all:	all
+do:	all
+
+fbu:
+	zip -u $(SRC_ZIP) $(ALL_SRCS)
+bu:	fbu
+	cp -p $(SRC_ZIP) $(BU_DIR)
+mbu:	fbu
+	cp -p $(SRC_ZIP) $(MASTER_DIR)
+ex-mbu:	mbu
+	(cd $(MASTER_DIR); unzip -uo $(SRC_ZIP))
+
+
+#--------------- Makefile.common ---------------
+CC              = CC
+#	flags for speed
+# CFLAGS          = -n32 -O2   -mips3 -DDEBUG $(INC) -float -fullwarn -ptused
+ CFLAGS          = $(INC) -n32 -O3  -TARG:processor=r10000 -TARG:platform=ip27 -float  -fullwarn -ptused  -O3  -TENV:X=4  -OPT:IEEE_arithmetic=3  -OPT:alias=typed  -LNO:opt=1  -woff 1174,1169 -DDEBUG 
+
+LD_FLAGS= -shared -n32
+#	flags for debugging
+#CFLAGS         = -O -g -mips2 -DVERBOSE -DDEBUG $(INC) -float -fullwarn -ptused
+
+cFLAGS          = $(CFLAGS) -Xcpluscomm
+DSODIR          = $(VSS_DSO_DIR)/../../dso
+STLDIR		= $(VSS_DSO_DIR)/../../stl
+INC             = -I. -I$(DSODIR) -I$(STLDIR)
+
+.SUFFIXES:  .o .c++
+
+.c.o:
+	cc -c $(cFLAGS) $<
+
+.c++.o:
+	$(CC) -c $(CFLAGS) $<
+
+depend:
+	$(CC) -c -M $(CFLAGS) *.c++ | grep -v /usr/include > dependfile
+
+check :
+	- check
+
+include dependfile
+
+#--------------- Regular makefile stuff ---------------
+
+DSO		= test.so
+OBJS	= testActor.o 
+
+all: $(DSO)
+
+clean:
+	-rm -f $(DSO)
+	-rm -f *.o
+
+$(DSO): $(OBJS)
+	CC $(LD_FLAGS) -woff 85,134 $(OBJS) -o $@
+#	ld $(LD_FLAGS) -woff 85,134 $(OBJS) -o $@
+
+#--------------- VSJ ---------------
+ALL_BINS=$(DSO)
+
+run_vss:
+	(cd $(VSS_DEV_DIR)/srv; ./vss)
+fbu-bin:
+	zip -u $(BIN_ZIP) $(ALL_BINS)
+mbu-bin:    fbu-bin
+	cp -p $(BIN_ZIP) $(MASTER_DIR)/
+ex-mbu-bin: mbu-bin
+	(cd $(MASTER_DIR); unzip -uo $(BIN_ZIP))
+
+install: ex-mbu-bin

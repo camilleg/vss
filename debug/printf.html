@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>Printf actor</title>
+</head>
+<body>
+<h2>A debugging tool</h2>
+
+The PrintfActor lets you add your own debugging messages to
+what VSS (the server) can print out with the <tt>SetPrintCommands</tt>
+message.
+<br>
+(If you want to print debugging messages on the client
+side, just use your own printf's.)
+<br>
+SGI only: if you like, you can specify different colors
+to distinguish particular debugging messages.
+<p>
+
+To use the PrintfActor, load debug.so and create an actor of type PrintfActor.
+
+<h3>PrintfActor messages</h3>
+
+In addition to the messages understood by all actors, the PrintfActor understands the following message:
+
+<dl>
+	<dt>SetColor <tt>hActor color</tt>
+		<dd>Set the color of text to be printed.<br>
+		<tt>color</tt> should be one of the following:<br>
+		<tt>nil black red green yellow blue magenta cyan white</tt><br>
+		where <tt>nil</tt> means the default color for your terminal window.
+
+	<dt>SetFile <tt>hActor "filename"</tt>
+		<dd>Redirect output to a file, instead of to standard error.
+		The file is erased if it already exists (fopen(filename, "w")).
+		Output is flushed after every <tt>printf</tt> command (see below).
+
+	<dt>printf <tt>hActor [format string] [z1] [z2] [z3] [z4]</tt>
+		<dd>Print a line on VSS's standard error (or to a file).
+		At least one argument must be supplied.
+		<p>
+		If the format string is omitted,
+		then the <tt>zi</tt> arguments must be numeric (integer
+		or floating point) and will be printed out with a space
+		separating them and a trailing newline.
+		<p>
+		If the format string is supplied,
+		then it is used printf-style to format any subsequent floating-point arguments.
+		<p>
+		Because of present parsing limitations, the format string
+		must be surrounded by double quotes, and spaces in the
+		string must be rendered as underscore characters.  If you
+		put literal whitespace in the format string, a syntax error
+		will occur.  (Sorry.)  Also, \n meaning newline is recognized
+		only at the end of the format string.
+
+</dl>
+
+<h3>Examples</h3>
+
+<tt>LoadDSO debug.so;<br>pr = Create PrintfActor;<br></tt>
+
+<dl>
+
+<dt><b>Plain output of numbers, convenient for quick debugging:</b><br>
+<dd><p><tt>
+	LoadDSO msgGroup.so;<br>
+	m = Create MessageGroup;<br>
+	AddMessage m ... ;<br>
+	AddMessage m printf pr *0 *1 *5;
+	</tt>
+
+<p>
+<dt><b>Fancy formatting:</b><br>
+<dd><p><tt>
+	printf pr "foo:_%.2f_bar:%g\n" 19.42 5;
+	</tt>
+	<br>will print:<br>
+	<tt>foo: 19.42 bar:5<br>
+	</tt><br>
+
+
+</body>
+</html>

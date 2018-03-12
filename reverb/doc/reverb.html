@@ -1,0 +1,630 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE>VSS Reverberator</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Zheng Hua (Geoffrey)">
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+</HEAD>
+<BODY>
+
+<H1 ALIGN=CENTER>Reverberation Actor</H1>
+
+<P>last updated: Geoffrey Zheng, September 20, 1998</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2>Background</H2>
+
+<P>The artificial reverberation actor is based upon M. R. Schroeder's classical
+comb/all-pass filter network reverberator, and some other sources described
+at the end of this document. This kind of artificial reverberator is designed
+to imitate both the time and frequency responses of real reverberation
+of all sorts of environment, mainly enclosures like room and concert hall.
+Based on acoustics and experiments, a lot factors characterize enclosure
+reverberation. A network consists of cascaded reverberation units is appropriate
+to realize these characteristics.</P>
+
+<P>The reverberator always map all the channels of the sound source down to 1 
+before all calculation. The localization actor can be used AFTER the reverberator 
+to localize sound.</P>
+
+<P>All the technical details of the reverberation network is described
+in a <A HREF="technical.html">separate file</A> for more inquisitive users.
+The following parameters can to be set by actor and handler messages for general
+use: </P>
+
+<TABLE BORDER=1 >
+<CAPTION></CAPTION>
+
+<TR>
+<TD ALIGN=CENTER WIDTH="200"><B>Parameter</B></TD>
+
+<TD align="center"><B>Message</B></TD>
+
+<TD ALIGN=CENTER WIDTH="300"><B>Valid range</B></TD>
+
+<TD align="center"><B>Description</B></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="mix"></A><I>Reverberation mix</I></TD>
+
+<TD><TT>SetMix</TT></TD>
+
+<TD align="center">[0,1]</TD>
+
+<TD>The balance between dry (direct) and wet sound (reverberation). Setting
+it to 1 yields purely wet, and 0 purely dry.</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="gain"></A><I>Reverberation gain</I></TD>
+
+<TD><TT>SetGain</TT></TD>
+
+<TD align="center">[0,10]</TD>
+
+<TD>Scaling of reverberation sound BEFORE it is mixed with the dry sound.
+The bigger value the louder reerberation. Be aware that clipping may occur
+if the gain is too high. Combinations of reverberation gain and mix can
+produce arbitrary distance perception of the sound source.</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="t60"></A><I>Reverberation time</I></TD>
+
+<TD><TT>SetTime</TT></TD>
+
+<TD align="center">(0,1]</TD>
+
+<TD>Length of reverberation. The actual reverberation time depends on the
+subtle interation between almost all parameters including <I>revberation
+mix, gain, time, brightness</I>, and the volume that the sound is playing.
+The bigger value the longer reverberation. With default values, set the
+time to 1 will produce an approximate 15-second reverberation.</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="bright"></A><I>Reverberation brightness</I></TD>
+
+<TD><TT>SetBright</TT></TD>
+
+<TD align="center">(0,1]</TD>
+
+<TD>Brightness of reverberation. The bigger value, the brighter reverberation
+sounds. However, value greater than 0.4 is not recommended, because it
+will lead to annoying ringing and metallic sound. A &quot;warm&quot; reverberation
+can be produced by setting brightness low and raising the reverberation
+gain.</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="damp"></A><I>Damp ratio</I></TD>
+
+<TD><TT>SetDampRatio</TT></TD>
+
+<TD align="center">[1,30]</TD>
+
+<TD>Ratio of low-frequency reverberation time to high-frequency reverberation
+time. For any kind of enclosure, high-frequency components of a sound decay
+away faster than low-frequency components. The bigger value, the faster
+high-frequency components die out than low-frequency components.</TD>
+</TR>
+</TABLE>
+
+<P>The following table lists other parameters for more advanced user to
+have more controls over the reverberation. <P>
+<A NAME="note"></A>Please note one thing special about the <I><B>early
+reflection</B> delays</I>. The amount of delay of each early reflection
+denotes the amount of milliseconds that reflection will be heard after
+the PREVIOUS reflection, but not the original sound, with the exception
+of the first reflection. So if there're 3 early reflections and their delays
+are a, b, c respectively, they will be heard at a, a+b and a+b+c milliseconds
+after the original sound. Also for saving memory, the maximum delay is
+500ms. (With 22050Hz sampling rate, a 500ms float data delay line requires
+22050*0.5*4 = 44KByte of memory. With maximum number of early reflections,
+comb filters and all-pass filters, the ReverbActor requires about 313KB
+memory.) If any reflection delay longer than 500ms is required,
+multiple reflection delays can be added up, with the coefficients to be
+zeroes except the last one, as the preset <B><TT>Canyon</TT></B>.</P>
+
+<TABLE BORDER=1 >
+<TR>
+<TD ALIGN=CENTER WIDTH="500"><B>Parameter</B></TD>
+
+<TD align="center"><B>Message</B></TD>
+
+<TD align="center"><B>Valid range</B></TD>
+
+<TD align="center"><B>Description</B></TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="pole"></A><I>Input bandpass filter pole</I></TD>
+
+<TD><TT>SetPole</TT></TD>
+
+<TD align="center">[-0.5,0.5]</TD>
+
+<TD>Pole position of the input bandpass filter. The bigger value, the low
+center frequency of the filter.</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><A NAME="ef"></A><I><B>Early reflection<BR>
+</B>Number<BR>
+Delay<BR>
+Coefficients</I><BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+<TT>SetEarlyRefNum<BR>
+SetEarlyRefDelay<BR>
+SetEarlyRefCoeff</TT></TD>
+
+<TD align="center" VALIGN=TOP><BR>
+[0,6]<BR>
+<A HREF="#note">[0.1,500](ms)<BR>
+</A>[0,1]</TD>
+
+<TD>Parameters controlling early reflections. Early reflection is simply
+a delayed and scaled version of the original sound. </TD>
+</TR>
+
+<TR>
+<TD><A NAME="comb"></A><I><B>Comb filter<BR>
+</B>Number<BR>
+Delay </I></TD>
+
+<TD><BR>
+<TT>SetCombNum<BR>
+SetCombDelay</TT></TD>
+
+<TD align="center" VALIGN=TOP><BR>
+[0,6]<BR>
+[0.1,100](ms)</TD>
+
+<TD>Parameters controlling comb filters.</TD>
+</TR>
+
+<TR>
+<TD><A NAME="ap"></A><I><B>All-pass filter<BR>
+</B>Number<BR>
+Delay</I></TD>
+
+<TD><BR>
+<TT>SetAllPassNum<BR>
+SetAllPassDelay</TT></TD>
+
+<TD align="center" VALIGN=TOP><BR>
+[0,3]<BR>
+[0.1,10](ms)</TD>
+
+<TD>Parameters controlling all-pass filters.</TD>
+</TR>
+</TABLE>
+
+<P><A NAME="preset"></A>To find the right combination of all the parameters
+above for a specific kind of reverberation is not trivial. 5 presets are
+provided as a starting point for further adjustment for individual requirements:</P>
+
+<TABLE BORDER=1 >
+<TR>
+<TD><B><I>Preset name </I></B></TD>
+
+<TD width="18%">
+<CENTER><P><B><TT>Default</TT></B> </P></CENTER>
+</TD>
+
+<TD width="18%">
+<CENTER><P><B><TT>SmallRoom</TT></B> </P></CENTER>
+</TD>
+
+<TD width="18%">
+<CENTER><P><B><TT>Hall</TT></B> </P></CENTER>
+</TD>
+
+<TD width="18%">
+<CENTER><P><B><TT>Echo</TT></B> </P></CENTER>
+</TD>
+
+<TD width="18%">
+<CENTER><P><B><TT>Canyon</TT></B> </P></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD><B><I>Description </I></B></TD>
+
+<TD>Default values for a moderate reverberation with mininum computational
+load.</TD>
+
+<TD>Reverberation in a small-size room. </TD>
+
+<TD>Reverberation in a midium-size hall. </TD>
+
+<TD>Reverberation with distinct echoes. </TD>
+
+<TD>Reverberation in a grand canyon. </TD>
+</TR>
+
+<TR>
+<TD><I>Reverberation mix </I></TD>
+
+<TD>0.5</TD>
+
+<TD>0.4 </TD>
+
+<TD>0.5 </TD>
+
+<TD>0.5 </TD>
+
+<TD>0.75 </TD>
+</TR>
+
+<TR>
+<TD><I>Reverberation gain </I></TD>
+
+<TD>1.</TD>
+
+<TD>1. </TD>
+
+<TD>1. </TD>
+
+<TD>1. </TD>
+
+<TD>1.5 </TD>
+</TR>
+
+<TR>
+<TD><I>Reverberation time </I></TD>
+
+<TD>0.3</TD>
+
+<TD>0.2 </TD>
+
+<TD>0.5 </TD>
+
+<TD>0.5 </TD>
+
+<TD>0.7 </TD>
+</TR>
+
+<TR>
+<TD><I>Reverberation brightness </I></TD>
+
+<TD>0.15</TD>
+
+<TD>0.15 </TD>
+
+<TD>0.15 </TD>
+
+<TD>0.15 </TD>
+
+<TD>0.1 </TD>
+</TR>
+
+<TR>
+<TD><I>Damp ratio </I></TD>
+
+<TD>1.</TD>
+
+<TD>5.</TD>
+
+<TD>8.</TD>
+
+<TD>8.</TD>
+
+<TD>10.</TD>
+</TR>
+
+<TR>
+<TD><I>Pole </I></TD>
+
+<TD>0.</TD>
+
+<TD>0.25 </TD>
+
+<TD>0.25 </TD>
+
+<TD>0.25 </TD>
+
+<TD>0.45 </TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><I>Early reflection<BR>
+</I>Number<BR>
+Delay<BR>
+Coefficients</TD>
+
+<TD VALIGN=TOP><BR>
+2<BR>
+20. 18.<BR>
+.82 .63</TD>
+
+<TD VALIGN=TOP><BR>
+5<BR>
+20. 23. 30. 35. 39<BR>
+.82 .82 .63 .72 .53<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+5<BR>
+20. 23. 30. 35. 39<BR>
+.82 .82 .63 .72 .53<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+0</TD>
+
+<TD><BR>
+6<BR>
+500. 500. 450. 450. 400. 400.<BR>
+0. .92 0. .8 0. .6<BR>
+</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><I>Comb filter<BR>
+</I>Number<BR>
+Delay</TD>
+
+<TD VALIGN=TOP><BR>
+4<BR>
+50. 56. 61 .68</TD>
+
+<TD VALIGN=TOP><BR>
+6<BR>
+50. 56. 61. 68. 72. 78.<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+6<BR>
+50. 56. 61. 68. 72. 78.<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+1<BR>
+100.<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+6<BR>
+50. 56. 61. 68. 72. 78.<BR>
+</TD>
+</TR>
+
+<TR>
+<TD VALIGN=TOP><I>All-pass filter<BR>
+</I>Number<BR>
+Delay</TD>
+
+<TD VALIGN=TOP><BR>
+1<BR>
+6.</TD>
+
+<TD VALIGN=TOP><BR>
+1<BR>
+6.<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+3<BR>
+6. 1.7 .63<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+3<BR>
+6. 1.7 .63<BR>
+</TD>
+
+<TD VALIGN=TOP><BR>
+3<BR>
+6. 1.7 .63<BR>
+</TD>
+</TR>
+</TABLE>
+
+<P>To play with all the parameters, use the standard testcase audpanel by
+running <TT> make test </TT> at command prompt. Five message groups are dedicated
+to adjust all parameters. The first contains all &quot;global&quot; parameters
+including RevMix, RevGain, RevTime, RevBright, DampRatio, Pole, EarlyRefNum,
+CombNum and AllPassNum. It is recommended to use the &quot;hit&quot; button
+instead of check &quot;Send when changed&quot;. The second message group
+contains early reflection delays, the third for early reflection coefficients,
+the fourth for comb filter and all-pass filter delays, the fifth for preset.</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2>Usage</H2>
+
+<P>To use the reverberation actor, load <TT>reverb.so</TT> and create an
+actor of type <TT>ReverbActor</TT>. Then create a handler of the actor
+using <TT>BeginSound</TT>, and use <TT>SetInput </TT>to direct a sound
+source through the reverberator. It is recommended to use <TT>sleep</TT>
+command after creating a ReverbActor handler or setting preset to give
+time for allocating memory and setup reverberator.</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2>ReverbActor messages</H2>
+
+<P>In addition to the messages understood by all generator actors, the
+ReverbActor understands the following messages: </P>
+
+<DL>
+<DT><B>SetMix </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#mix">reverberation mix</A> for new instances
+createdby this actor to <TT>x</TT>. Valid range is [0,1].</DD>
+
+<DT><B>SetAllMix </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the reverberation mix of all children to <TT>x</TT>, and set the
+default effect mix for all future children. If <I><TT>time </TT></I>is
+specified, children will modulate to the new value over the specified duration.
+Default value is always set immediately regardless of time. </DD>
+
+<DT><B>SetTime </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#t60">reverberation time</A> for new instances
+created by this actor to <TT>x</TT>. Valid range is (0,1].</DD>
+
+<DT><B>SetAllTime </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the reverberation time of all children to <TT>x</TT>, and set the
+default value for all future children. </DD>
+
+<DT><B>SetGain </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#gain">reverberation gain</A> for new instances
+created by this actor to <TT>x</TT>. Valid range is (0,10].</DD>
+
+<DT><B>SetAllGain </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the reverberation gain of all children to <TT>x</TT>, and set the
+default value for all future children. </DD>
+
+<DT><B>SetBright </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#bright">reverberation brightness</A> for new instances
+created by this actor to <TT>x</TT>. Valid range is (0,1].</DD>
+
+<DT><B>SetAllBright </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the reverberation brightness of all children to <TT>x</TT>, and set the
+default value for all future children. </DD>
+
+<DT><B>SetDampRatio </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#damp">damp ratio</A> for new instances
+created by this actor to <TT>x</TT>. Valid range is [1,30].</DD>
+
+<DT><B>SetAllDampRatio </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the damp ratio of all children to <TT>x</TT>, and set the
+default value for all future children. </DD>
+
+<DT><B>SetPole </B><TT>hActor x </TT></DT>
+
+<DD>Set the default <A HREF="#pole">pole</A> for new instances
+created by this actor to <TT>x</TT>. Valid range is [-0.5,0.5].</DD>
+
+<DT><B>SetAllPole </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the pole of all children to <TT>x</TT>, and set the
+default value for all future children. </DD>
+</DL>
+
+<H2>ReverbActor handler messages</H2>
+
+<P>In addition to the messages understood by all handlers, the handler
+for the ReverbActor understands the following messages: </P>
+
+<DL>
+<DT><B>SetIdle </B><TT>hHandler boolean</TT></DT>
+<DD>Set the handler idle state, 1 is idle, 0 is not. An idle handler doesn't do 
+anything except receiving messages until it is set not to be idle. SetIdle can
+be used to reduce ReverbActor's machine usage when it is not currently in use.</DD>
+
+<DT><B>SetInput </B><TT>hHandler</TT> <TT>hSound </TT></DT>
+
+<DD>Set the input to come through the handler <TT>hHandler</TT>. </DD>
+
+<DT><B>SetPreset </B><TT>hHandler x</TT> </DT>
+
+<DT><B>SetPresetNum </B><TT>hHandler x</TT> </DT>
+
+<DT><B>SetPresetFile </B><TT>hHandler x</TT> </DT>
+
+<DD>Set this handler to use preset x. <A HREF="#preset">Available presets</A>
+are described above. <TT>SetPreset</TT> accepts preset name Default, SmallRoom,
+Hall, Echo or Canyon. <TT>SetPresetNum</TT> accepts preset number 0 to
+4. <TT>SetPresetFile</TT> accepts preset data file name. A <A HREF="preset.dat">sample
+data file</A> is given.<BR><BR></DD>
+
+<DT><B>SetMix </B><TT>hHandler x <I>time</I></TT></DT>
+
+<DD>Set the <A HREF="#mix">reverberation mix</A> for this handler to x.
+If <I><TT>time</TT> </I>is specified, move to the new value over the specified
+duration. </DD>
+
+<DT><B>SetGain </B><TT>hHandler</TT> <TT>x <I>time</I></TT> </DT>
+
+<DD>Set the <A HREF="#gain">reverberation gain</A> for this handler to
+<TT>x</TT>. Valid range is (0,10].</DD>
+
+<DT><B>SetTime </B><TT>hHandler</TT> <TT>x <I>time</I></TT> </DT>
+
+<DD>Set the <A HREF="#t60">reverberation time</A> for this handler to <TT>x</TT>.
+Valid range is (0,1].</DD>
+
+<DT><B>SetBright </B><TT>hHandler</TT> <TT>x <I>time</I></TT></DT>
+
+<DD>Set the <A HREF="#bright">reverberation brightness</A> for this handler
+to x. Valid range is (0,1].</DD>
+
+<DT><B>SetDampRatio </B><TT>hHandler</TT> <TT>x <I>time</I></TT></DT>
+
+<DD>Set the <A HREF="#damp">damp ratio</A> for this handler to x. Valid
+range is [1,30].</DD>
+
+<DT><B>SetPole </B><TT>hHandler</TT> <TT>x <I>time</I></TT></DT>
+
+<DD>Set the <A HREF="#pole">pole</A> for this handler to x. Valid range
+is [-0.5,0.5].<BR><BR></DD>
+
+<DT><B>SetEarlyRefNum </B><TT>hHandler</TT> <TT>x</TT></DT>
+
+<DD>Set the number of <A HREF="#ef">early reflections</A> for this handler
+to x. Valid range is [0,6]. 0 will let sound through directly. If no early
+reflection delays and coefficients are specified afterwards, default values
+will be used.</DD>
+
+<DT><B>SetEarlyRefDelay </B><TT>hHandler</TT> <TT>[x1 x2 x3 ...]</TT></DT>
+
+<DD>Set the early reflection delays. Valid range is from [0.1,500](ms).
+The number of delays must agree with the number previously set by SetEarlyRefNum.
+If delays provided are less than the number of early reflections, default
+values will be used. If more, the first several ones will be taken.</DD>
+
+<DT><B>SetEarlyRefCoeff </B><TT>hHandler</TT> <TT>[x1 x2 x3 ...]</TT></DT>
+
+<DD>Set the early reflection coefficients. Valid range is [0,1]. The number
+of coefficients must agree with the number previously set by SetEarlyRefNum.
+If coefficients provided are less than the number of early reflections,
+default values will be used. If more, the first several ones will be taken.</DD>
+
+<DT><B>SetCombNum </B><TT>hHandler</TT> <TT>x</TT></DT>
+
+<DD>Set the number of <A HREF="#comb">comb filters</A> for this handler
+to x. Valid range is [1,6].</DD>
+
+<DT><B>SetCombDelay </B><TT>hHandler</TT> <TT>[x1 x2 x3 ...]</TT></DT>
+
+<DD>Set the comb filter delays. Valid range is [0.1,100](ms). The number
+of delays must agree with the number previously set by SetCombNum. If delays
+provided are less than the number of comb filters, default values will
+be used. If more, the first several ones will be taken.</DD>
+
+<DT><B>SetAllPassNum </B><TT>hHandler</TT> <TT>x</TT></DT>
+
+<DD>Set the number of <A HREF="#ap">all-pass filters</A> for this handler
+to x. Valid range is [0,3]. 0 will let sound through directly. If no all-pass
+delays are specified afterwards, default values will be used.</DD>
+
+<DT><B>SetAllPassDelay</B> <TT>hHandler</TT> <TT>[x1 x2 x3 ...]</TT></DT>
+
+<DD>Set the all-pass filter delays. Valid range is [0.1,10](ms). The number
+of delays must agree with the number previously set by SetAllPassNum. If
+delays provided are less than the number of all-pass filters, default values
+will be used. If more, the first several ones will be taken.</DD>
+</DL>
+
+</BODY>
+</HTML>

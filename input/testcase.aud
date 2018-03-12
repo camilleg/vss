@@ -1,0 +1,19 @@
+SetPrintCommands 1;
+
+LoadDSO input.so;
+LoadDSO msgGroup.so;
+LoadDSO ring.so;
+
+aInp = Create InputActor;
+sInp = BeginSound aInp SetMute 0;
+
+h = Create RingModActor;
+r = BeginSound h SetModIndex 0 SetModFreq 200;
+SetInput r sInp;
+
+tweak = Create MessageGroup;
+AddMessage tweak SetAmp sInp *0 .01;
+AddMessage tweak SetAmp r *1 .01;
+AddMessage tweak SetModIndex r *2 .01;
+AddMessage tweak SetPan sInp *3 .01;
+AddMessage tweak SetElev sInp *4 .01;

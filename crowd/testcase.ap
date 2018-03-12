@@ -1,0 +1,13 @@
+audpanel.title: "nil audpanel"
+audpanel.sliders: 1
+audpanel.presets: ("X")
+
+X.messageGroup: "mgAP"
+X.interval: 0.025
+X.labels: ("-")
+X.minValues: (0.0)
+X.maxValues: (1.5)
+X.initialValues: (0.4)
+X.mappings: (0)
+X.type: (0)
+X.parameters: 1

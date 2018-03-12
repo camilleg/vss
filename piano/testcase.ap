@@ -1,0 +1,15 @@
+audpanel.title: "PianoActor Demo"
+audpanel.sliders: 9 
+audpanel.presets: ( "piano")
+
+piano.messageGroup: "piano"
+piano.interval: 0.1
+piano.types:	(3 3 3 3 3 2 0 0 3)
+piano.labels: 		("Amp" 	"attnAmp" "freq" "dyna" "inhar" "chord" "" "" "dur"  )
+piano.minValues:	(0.0 	0.0 	27.5 	0.0 	0.0 	0.0 	0.0 0.0 0.3 )
+piano.maxValues:	(1.0 	1.0 	3510.0 	127.0 	1.0 	10.0 	0.0 0.0 20.0 )
+piano.initialValues:	(0.5 	0.0 	110.0 	120.0 	0.1 	0.0 	0.0 0.0 1.0 )
+piano.defaultValues:	(0.5 	0.0 	110.0 	120.0 	0.1 	0.0 	0.0 0.0 1.0 )
+piano.mappings: (0 1 2 3 4 5 6 7 8)
+piano.parameters: 9
+

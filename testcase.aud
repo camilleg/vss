@@ -1,0 +1,44 @@
+// VSS generator-actor test
+
+SetPrintCommands 2; 
+LoadDSO fm.so;
+LoadDSO msgGroup.so;
+
+aFm = Create FmActor;
+sFm0 = BeginSound aFm SetCarFreq 200.0, SetAmp 0.0, SetModIndex 1.5, SetMCratio 1.0;
+sFm1 = BeginSound aFm SetCarFreq 200.0, SetAmp 0.0, SetModIndex 1.5, SetMCratio 1.0;
+sFm2 = BeginSound aFm SetCarFreq 200.0, SetAmp 0.0, SetModIndex 1.5, SetMCratio 1.0;
+sFm3 = BeginSound aFm SetCarFreq 200.0, SetAmp 0.0, SetModIndex 1.5, SetMCratio 1.0;
+
+// SetPan
+mgPan = Create MessageGroup;
+	AddMessage mgPan SetCarFreq sFm0 *0 0.05;
+	AddMessage mgPan SetAmp sFm0 *1 0.05;
+	AddMessage mgPan SetModIndex sFm0 *2 0.05;
+	AddMessage mgPan SetPan sFm0 *3 0.05;
+
+// SetXYZ
+mgXYZ = Create MessageGroup;
+	AddMessage mgXYZ SetCarFreq sFm1 *0 0.05;
+	AddMessage mgXYZ SetAmp sFm1 *1 0.05;
+	AddMessage mgXYZ SetModIndex sFm1 *2 0.05;
+	AddMessage mgXYZ SetXYZ sFm1 *3 *4 *5 0.05;
+
+// SetChannelAmps
+mgChn = Create MessageGroup;
+	AddMessage mgChn SetCarFreq sFm2 *0 0.05;
+	AddMessage mgChn SetAmp sFm2 *1 0.05;
+	AddMessage mgChn SetModIndex sFm2 *2 0.05;
+	AddMessage mgChn SetChannelAmps sFm2 [*3 *4];
+//	AddMessage mgChn SetChannelAmps sFm2 [0 0 0 *3 *4 0 0 1];
+//	This previous line is for 8-channel mode.
+
+// SetChannelAmps
+mgCh2 = Create MessageGroup;
+mgCh2_channel = Create MessageGroup;
+	AddMessage mgCh2 SetCarFreq sFm3 *0 0.05;
+	AddMessage mgCh2 SetAmp sFm3 *1 0.05;
+	AddMessage mgCh2 SetModIndex sFm3 *2 0.05;
+	AddMessage mgCh2_channel SetChannel sFm3 *0;
+
+SetPrintCommands 2;

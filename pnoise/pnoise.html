@@ -1,0 +1,72 @@
+<html> <head> <title>PseudoNoise actor</title> </head>
+<body>
+
+<h2>A simple pseudo-noise implementation</h2>
+
+The PseudoNoise suite implements a basic colored noise synthesis algorithm, along with its 
+associated handler and actor. The noise is psueudo-random or repetitive. Various 
+amounts of filtered, non-repetitive "random" noise can be introduced to modulate or "break up" 
+the repetitiveness of the resulting sound.<p>
+
+PseudoNoise uses three parameters: "Cutoff", "Modulation Cutoff", and "Modulation Index". Cutoff 
+controls the frequency at which the noise spectrum falls off.
+Specifically, a cutoff of 1000 Hz produces an output spectrum whose half-power point occurs at roughly 300 Hz.
+Modulation Cutoff controls the cutoff frequency of the random modulating noise, in similar fashion to Cutoff.
+. Modulation Index ranges 
+from 0 to 10 and controls the overall amount of random modulation applied to the repetitive noise.<p>
+
+To use the PseudoNoise implementation, load pnoise.so and create an actor of type PseudoNoiseActor.
+
+<h3>PseudoNoiseActor messages</h3>
+
+In addition to the messages understood by all generator actors, the PseudoNoiseActor understands the following messages:
+
+<dl>
+	<dt>SetCutoff <tt>hActor x</tt>
+			<dd>Set the default cutoff frequency for new instances created by this actor 
+			to <tt>x</tt> Hz.
+	<dt>SetAllCutoff <tt>hActor x <i>time</i></tt>
+			<dd>Set the cutoff frequency of all children to <tt>x</tt> Hz,
+			and set the default value for all future children.
+			If <tt>time</tt> is specified, children will modulate to the new value over the specified duration (in seconds).
+			Default cutoff is always set immediately regardless of <tt>time</tt>.
+	<dt>SetModCutoff <tt>hActor x</tt>
+			<dd>Set the default modulation cutoff frequency for new instances created 
+			by this actor to <tt>x</tt> Hz.
+	<dt>SetAllModCutoff <tt>hActor x <i>time</i></tt>
+			<dd>Set the modulation cutoff frequency of all children to <tt>x</tt> Hz,
+			and set the default mod cutoff for all future children. If <tt>time</tt> 
+			is specified, children will modulate to the new mod cutoff over the 
+			specified duration. Default mod cutoff is always set immediately regardless 
+			of <tt>time</tt>.
+	<dt>SetModIndex <tt>hActor x</tt>
+			<dd>Set the default modulation index for new instances created by this actor 
+			to <tt>x</tt> (in the range 0 to 10).
+	<dt>SetAllModIndex <tt>hActor x <i>time</i></tt>
+			<dd>Set the modulation index of all children to <tt>x</tt> (between 0 and 10; default 0),
+			and set the default value for all future children.
+			If <tt>time</tt> is specified, children will modulate to the new value over the specified duration (in seconds).
+			Default modulation index is always set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>PseudoNoise handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the pseudonoise algorithm understands the following messages:
+
+<dl>
+	<dt>SetCutoff <tt>hSound x <i>time</i></tt>
+			<dd>Set the cutoff frequency to <tt>x</tt> Hz.
+			If <tt>time</tt> is specified, move to the new value over <tt>time</tt> seconds.
+	<dt>SetModCutoff <tt>hSound x <i>time</i></tt>
+			<dd>Set the modulation cutoff frequency to <tt>x</tt> Hz.
+			If <tt>time</tt> is specified, move to the new value over <tt>time</tt> seconds.
+			Note that this message has no audible effect if SetModIndex below is still zero.
+	<dt>SetModIndex <tt>hSound x <i>time</i></tt>
+			<dd>Set the modulation index to <tt>x</tt> (between 0 and 10).
+			If <tt>time</tt> is specified, move to the new value over <tt>time</tt> seconds.
+			Default value is zero.
+</dl>
+
+
+</body>
+</html>

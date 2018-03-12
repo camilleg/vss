@@ -1,0 +1,82 @@
+// Open Sound Control interface, client and server
+
+SetPrintCommands 0;
+
+LoadDSO opensoundctrl.so;
+LoadDSO msgGroup.so;
+
+LoadDSO debug.so;
+pr = Create PrintfActor;
+
+LoadDSO fm.so;
+aFm = Create FmActor;
+sFm = BeginSound aFm SetAmp .5;
+
+// Server stuff. ////////////////////////////////////////////////
+//
+// Start up a server on port 7005 on this machine.
+// Accept the messages listed below, to send commands to mg1 and sFm.
+
+srv=Create OSCServer;
+Debug srv 1; // enable debugging spew
+mg1 = Create MessageGroup;
+AddMessage mg1 printf pr *0 *1 *2;
+
+AddrCmdActor srv "/foo/bar"   SendData mg1;
+AddrCmdActor srv "/foo/dummy" SendData sFm; // deliberately incorrect
+AddrCmdActor srv "/foo/freq"  SetFreq sFm;
+AddrCmdActor srv "/foo/mod"   SetModIndex sFm;
+AddrCmdActor srv "/foo/amp"   SetAmp sFm;
+
+// Hey, we're not using this.  Get it outta here.
+AddrRemove srv "/foo/bar";
+
+// Silly boy, message groups take SendData, fm handlers don't!
+// Correct it.
+AddrCmdActor srv "/foo/dummy" SendData mg1;
+
+// Now that we're set up correctly, listen to the outside world.
+// (We could do AddrCmdActor and AddrRemove while running, of course.)
+mgAP_start_srv = Create MessageGroup;
+mgAP_stop_srv = Create MessageGroup;
+AddMessage mgAP_start_srv Init srv 7005;
+AddMessage mgAP_stop_srv Term srv;
+
+// Client stuff. ////////////////////////////////////////////////
+//
+// Connect to a server running on (surprise!) this same machine, port 7005.
+// Send messages in response to slider-wiggling,
+// in a format which the (above-defined) server will accept.
+
+mgAP = Create MessageGroup;
+mgAP_Connect = Create MessageGroup;
+mgAP_Disconnect = Create MessageGroup;
+
+cli = Create OSCActor;
+Debug cli 1; // enable debugging spew
+
+// SendData wants [] around the array of floats: build that string explicitly.
+AddMessage mgAP Addr cli "/foo/dummy";
+AddMessage mgAP String cli \""["\";
+/*
+These 3 lines are equivalent to the single "Floats" line immediately after.
+AddMessage mgAP Float cli *0;
+AddMessage mgAP Float cli *1;
+AddMessage mgAP Float cli *2;
+*/
+AddMessage mgAP Floats cli [*0 *1 *2];
+AddMessage mgAP String cli \""  ] "\";
+AddMessage mgAP Send cli;
+
+AddMessage mgAP Addr cli "/foo/freq";
+AddMessage mgAP Floats cli [*0 1.0]; // 1.0 seconds long -- slow gliss
+AddMessage mgAP Send cli;
+AddMessage mgAP Addr cli "/foo/mod";
+AddMessage mgAP Float cli *1;
+AddMessage mgAP Send cli;
+AddMessage mgAP AddrFloatSend cli "/foo/amp" *2; // shortcut syntax
+
+AddMessage mgAP_Connect Init cli localhost 7005;
+
+AddMessage mgAP_Disconnect Term cli;
+SetPrintCommands 2;

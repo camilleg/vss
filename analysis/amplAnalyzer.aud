@@ -1,0 +1,53 @@
+SetPrintCommands 1;
+
+LoadDSO add.so;
+add = Create AddActor;
+n = BeginSound add SetFreq 200;
+SetAmplPartials n [ .1 ];
+
+LoadDSO analyzer.so;
+aaa = Create AmplitudeAnalyzer;
+aa = BeginSound aaa;
+SetInput aa n;
+
+LoadDSO msgGroup.so;
+mg1 = Create MessageGroup;
+nMod = BeginSound add SetFreq 1280;
+SetAmplPartials nMod [ .1 ];
+
+SetMessageGroup aa mg1;
+AddMessage mg1 SetAmplPartials nMod [ 0 ] 0; // a blip, so we hear it
+AddMessage mg1 SetAmplPartials nMod [ *0 ] .05;
+
+SetRate aa 20;
+
+SetAmplPartials n [ .25 ];
+sleep .8;
+
+SetAmplPartials n [ .1 ] .2;
+sleep .8;
+
+SetAmplPartials n [ .002 ];
+sleep .8;
+
+SetAmplPartials n [ .47 ] .5;
+sleep 2.;
+
+
+/*
+Analyze aa; sleep .3;
+
+SetAmplPartials n [ .9 ];
+Analyze aa; sleep .3;
+
+Analyze aa; sleep .3;
+
+SetAmplPartials n [ .3 ];
+Analyze aa; sleep .3;
+
+SetAmplPartials n [ 98.6 ];
+Analyze aa; sleep .3;
+
+SetAmplPartials n [ .002 ];
+Analyze aa; sleep .3;
+*/

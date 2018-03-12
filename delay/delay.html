@@ -1,0 +1,68 @@
+<html> <head> <title>Delay actor</title> </head>
+<body>
+
+<h2>A delay actor</h2>
+
+The output of this actor is the same as its input, but delayed by a short
+amount of time.  Optionally this output can be fed back into its input,
+resulting in a decaying train of echos instead of just one echo.
+<br>
+<p>
+To use the delay actor, load delay.so and create an actor of type DelayActor.
+
+<h3>DelayActor messages</h3>
+
+In addition to the messages understood by all generator actors, the DelayActor understands the following messages:
+
+<dl>
+	<dt>SetDelay <tt>hActor x</tt>
+		<dd>Set the default delay for new instances created by this actor to <tt>x</tt> seconds.
+	<dt>SetAllDelay <tt>hActor x <i>time</i></tt>
+		<dd>Set the delay of all children to <tt>x</tt>, and set the default delay for all future children. If <tt>time</tt> is specified, children will modulate to the new delay over the specified duration. Default delay is always set immediately regardless of <tt>time</tt>.
+	<dt>SetFeedback <tt>hActor x</tt>
+		<dd>Set the default amount of feedback for new instances created by this actor to <tt>x</tt>.
+	<dt>SetAllFeedback <tt>hActor x <i>time</i></tt>
+			<dd>Set the amount of feedback of all children to <tt>x</tt>, and set the default amount of feedback for all future children. If <tt>time</tt> is specified, children will modulate to the new value over the specified duration. Default amount of feedback is always set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>DelayActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the DelayActor algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetDelay <tt>hSound x <i>time</i></tt>
+		<dd>Set the delay length to <tt>x</tt> seconds.
+		If <tt>time</tt> is specified, modulate to the new value over the specified duration.
+	<dt>SetFeedback <tt>hSound x <i>time</i></tt>
+		<dd>Set the amount of feedback to <tt>x</tt>, which should be at least 0 but strictly less than 1.
+		If <tt>time</tt> is specified, modulate to the new value over the specified duration.
+	<dt>Clear <tt>hSound</tt>
+		<dd>Set all the samples stored the delay line to zero.  (Useful if feedback is greater than zero and you want to instantly silence the train of echos.)
+</dl>
+
+<h3>Examples</h3>
+
+<tt>LoadDSO delay.so;<br>a = Create DelayActor;<br></tt>
+
+<dl>
+
+<dt><b>Play a varying FM sound with a half-second echo:</b><br>
+<dd><p><tt>
+	LoadDSO fm.so; aFm = Create FmActor; sFm = BeginSound aFm;<br>
+	// SetMute sFm 1; </tt>// Uncomment this to hear <i>only</i> the echo and not the original sound.<tt><br>
+	delay = BeginSound a SetDelay .5 SetInput sFm;<br>
+	// SetFeedback delay 0.97; </tt>// Uncomment this to hear a train of echos.<tt><br>
+	SetFreq sFm 1000 2;<br>
+	sleep 3;<br>
+	SetAmp sFm 0 1;<br>
+	sleep 2;<br>
+	SetAmp sFm .4 <br>
+	sleep 5;<br>
+	</tt>
+
+
+
+</body>
+</html>

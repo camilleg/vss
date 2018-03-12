@@ -1,0 +1,46 @@
+SetPrintCommands 1;
+
+LoadDSO tb303.so;
+LoadDSO msgGroup.so;
+
+aTb303 = Create Tb303Actor;
+s1 = BeginSoundPaused aTb303;
+//	SetAmp .5
+//	SetFreq 110
+//	SetFilterCutoff .5
+//	SetResonance 1
+//	SetEnvMod 1
+//	SetEnvDecay 0;
+//	//;; Something's not getting initialized, if we leave these out.
+
+
+
+// audpanel
+
+mgAP = Create MessageGroup;
+mgAP_Retrigger = Create MessageGroup;
+
+AddMessage mgAP SetAmp s1 *0;
+AddMessage mgAP SetFreq s1 *1;
+AddMessage mgAP SetFilterCutoff s1 *2 .02;
+AddMessage mgAP SetResonance s1 *3;
+AddMessage mgAP SetEnvMod s1 *4;
+AddMessage mgAP SetEnvDecay s1 *5;
+
+AddMessage mgAP_Retrigger Retrigger s1;
+
+SetPause s1 0;
+
+// SetResonance 1 to .3:  hear indiv. high harmonics descending;
+// 0: not much happens during attack, mildly buzzy attack into sinetone.
+// control this with position
+
+// SetEnvMod: 0, no attack.  as it gets bigger, attack starts higher
+// and finishes on a lower (less buzzy, more sinetone) steady-state sound.
+// control this with position
+
+// SetEnvDecay 0..1 attack takes from .1 sec to about 6 sec.
+// leave this at zero.
+
+mgAP_Record = Create MessageGroup;
+AddMessage mgAP_Record EnableOfile *0 "/tmp/vssout.raw" 20000000;

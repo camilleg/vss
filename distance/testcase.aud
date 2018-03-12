@@ -1,0 +1,38 @@
+// This is the .aud file for testing the distance actor
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO noise.so;
+LoadDSO distance.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the noise actor
+aNz = Create NoiseActor;
+sNz = BeginSound aNz SetAmp 0. SetCutoff 10000. SetOrder 0;
+
+// Create, set up the distance actor
+aD1 = Create DistanceActor;
+sD1 = BeginSound aD1 SetInput sNz SetAmp 0. SetDistance 0.;
+
+// Create message groups for the interaction
+ModifyNz = Create MessageGroup;
+ModifyD1 = Create MessageGroup;
+ModifyD2 = Create MessageGroup;
+
+// Set up the slider interaction
+
+// noise generator
+AddMessage ModifyNz SetAmp sNz *0;
+AddMessage ModifyNz SetCutoff sNz *1;
+AddMessage ModifyNz SetOrder sNz *2;
+
+// distance
+AddMessage ModifyD1 SetAmp sD1 *0;
+AddMessage ModifyD1 SetDistance sD1 *1;
+AddMessage ModifyD1 SetDirection sD1 *2;
+
+AddMessage ModifyD2 SetAmp sD1 *0;
+AddMessage ModifyD2 SetPan sD1 *1;
+AddMessage ModifyD2 SetElev sD1 *2;

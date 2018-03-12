@@ -1,0 +1,64 @@
+//LoadDSO "fm.so";
+LoadDSO "test.so";
+LoadDSO "swThresh.so";
+
+out = Create TestActor;
+Print out "----------------------------------------------------------------";
+
+/* Test some of the histogram and counting protocol. */
+
+s = Create SwitchActor;
+Init s 5 AND;
+
+Case s 0;
+    AddMessage s Print out "Case-0";
+
+Case s 1;
+    AddMessage s Print out "Case-1";
+Case s 2;
+    AddMessage s Print out "Case-2";
+Case s 3;
+    AddMessage s Print out "Case-3";
+
+// SendData s [ 1.5 1.5 1.5 1.5 ];
+// SetInputs s 0 3 1.5;  SetInputs s 1.5;
+// SetInput s 2 1.5;
+
+// SetTestVals s 0 3 1.1;  SetTestVals s 1.1;
+// SetTestVal s 2 1.5;
+
+PrintAll s;
+Add s [ 0 1 2 3 4 ];		// #5: Add s [ 1 ] 4;
+PrintAll s;
+Subtract s [ 0 1 2 3 4 ];
+PrintAll s;
+
+SetTestVals s 1;
+PrintAll s;
+SetTestVals s 2 4 2;
+PrintAll s;
+
+Print out "---------------Before_MultiEval";
+SendData s [ 0 1 2 3 4];
+PrintAll s;
+
+Print out "---------------MultiEval";
+MultiEval s;
+
+Print out "---------------RollOverflow";
+RollOverflow s;
+
+Print out "---------------PrintAll";
+PrintAll s;
+
+SendData s [ 0 1 2 3 4 ];
+SetTestVals s 2.5; 
+
+Print out "---------------RollOver";
+ResetOverflow s;
+
+PrintAll s;
+
+AssertGates s [ 0 0 0 0 0 ];
+SendData    s [ 0 1 2 3 4 ];
+AssertGates s [ 0 0 0 1 1 ];

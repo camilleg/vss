@@ -1,0 +1,9 @@
+SetPrintCommands 2;
+
+LoadDSO sm.so;
+a = Create SmActor;
+setPresetFile a "test.gr";
+setDoorNum a 1;
+initDoor a 1 1;
+triggerDoor a 1;
+

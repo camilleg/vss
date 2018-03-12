@@ -1,0 +1,13 @@
+audpanel.title: "Pitch-tracking Demo"
+audpanel.sliders: 4
+audpanel.presets: ("X")
+
+X.messageGroup: "MGAPpitch"
+X.interval: 0.05
+X.labels: ("Pitch 1" "Pitch 2" "Ampl 1" "Ampl 2")
+X.minValues: (200.0 200.0     0.0 0.0)
+X.maxValues: (2000.0 2000.0   1.0 1.0)
+X.initialValues: (330.0 440.0    0.4 0.4)
+X.mappings: (0 1 2 3)
+X.parameters: 4
+X.defaultValues: (330.0 440.0    0.4 0.4)

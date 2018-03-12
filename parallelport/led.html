@@ -1,0 +1,73 @@
+<html> <head> <title>LedActor</title> </head>
+<body>
+<h2>Parallel-port LED driver</h2>
+
+The LedActor sends a data byte out the parallel port (/dev/lp1) of the PC which
+VSS is running on.  It is intended for sending to a particular homebrew
+circuit which sends 2+3+3 bits of brightness data to a red, green and blue
+LED respectively.  It's been tested only under Linux as of 1/5/2000.
+<p>
+
+Don't create more than one LedActor;  it wouldn't make sense, since you
+don't have more than one /dev/lp1.<p>
+
+To use the LedActor, load ledlpt.so and create an actor of type LedActor.
+
+<h3>LedActor messages</h3>
+
+In addition to the messages understood by all actors, the LedActor understands the following message:
+
+<dl>
+	<dt>SetBrightness <tt>hActor x</tt>
+	<dd>Scale the overall brightness to <tt>x</tt>: 0 is dark, 1 is full brightness.
+	<dt>SetHue <tt>hActor x</tt>
+	<dd>Set the hue to <tt>x</tt>.  As <tt>x</tt> varies from 0 to 1,
+	hue moves smoothly through six regions:
+		<ul>
+		<li> 0.00 red
+		<li> 0.17 red+green
+		<li> 0.33 green
+		<li> 0.50 green+blue
+		<li> 0.67 blue
+		<li> 0.83 blue+red
+		<li> (1.00 red again, wrapping around)
+		</ul>
+
+	<dt>SetBlink <tt>hActor period dutycycle</tt>
+	<dd>Blink the LED.  Alternate its current hue-and-saturation settings
+	with darkness.  A blink happens every <tt>period</tt> seconds,
+	and the relative length of the lit portion compared to the length
+	of the period is <tt>dutycycle</tt> (in the range 0 to 1).
+	<br>
+	So if <tt>dutycycle</tt> is 0, it stays dark no matter what the hue or
+	brightness or period is.
+	And if <tt>dutycycle</tt> is 1, it stays lit no matter what the period is.
+	<br>
+	If the period is 0 (the default), no blinking happens (the LED
+	stays on).
+	If the period is less than 0.05, it is rounded down to 0:
+	blinking at faster than 20 Hz is doubtfully meaningful.
+	<br>
+</dl>
+
+<h3>Examples</h3>
+
+<tt>LoadDSO ledlpt.so;<br>rgb = Create LedActor;<br></tt>
+
+<dl>
+
+<dt><b>Display a very bright green, followed by a faint purple-blue:</b><br>
+<dd><p><tt>
+	SetHue rgb 0.33;<br>
+	SetBrightness rgb 1;<br>
+	sleep 1;<br>
+	SetHue rgb 0.79;<br>
+	SetBrightness rgb 0.4;<br>
+	sleep 1;<br>
+	</tt>
+
+<p>
+
+</dl>
+</body>
+</html>

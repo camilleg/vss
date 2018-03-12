@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE></TITLE>
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.01Gold (Win95; I) [Netscape]">
+</HEAD>
+<BODY>
+
+<P>The diagram of the reverberation network is as followed:</P>
+
+<P><IMG SRC="reverb.jpg"> </P>
+
+<H2><A NAME="pole"></A>Input bandpass filter</H2>
+
+<P>There are several reasons to use bandwidth control here. </P>
+
+<UL>
+<LI>Normal people can hear a frequency range from 20Hz to 20kHz. </LI>
+
+<LI>Virtually any natural environment has low-pass frequency response.</LI>
+
+<LI>In a digital system, highest signal frequency must be limited below
+half of the sampling frequency to avoid aliasing or frequency fold-over.
+</LI>
+
+<LI>Care has been taken to assure BIBO (bounded input bounded output) stability
+of the system, but for any kind of digital signal processing we must further
+avoid overflow, that is the value of the signal exceeds the limit of DSP
+hardware and software. For audio signal specifically, overflow means clipping
+which is very clear and unpleasant to ears. To avoid clipping, we must
+scale the audio signal to valid range, [-1,1] in VSS environment. Maximum
+signal amplitude should be scaled to 1 or -1. Thus, the DC component in
+audio is undesirable. It contributes little to the perception of sound,
+yet it raises the maximum signal amplitude, therefore demanding bigger
+scale factor and making some subtle aspects of the sound inaudible. </LI>
+</UL>
+
+<P>To address the above issues in a realtime process actor, we choose to
+use a bandpass filter with 0 gain at DC and half sampling frequency to
+preprocess the signal to be reverberated. Such frequency response satisfies
+all the requirements above. A 2nd order IIR filter is used for the purpose,
+its I/O function, transfer function, zero/pole distribution and frequency
+response is shown in the following graph.</P>
+
+<CENTER><P><IMG SRC="IIR1pBPF.jpg"> </P></CENTER>
+
+<P>As Z-plane zero/pole distribution of the filter tells us, the two zeros
+at 1 and -1 force the frequency response at 0 and <I>f</I>s/2 to be zero.
+The maximum frequency response is always 2 regardless of the position of
+the pole, however that position determines the frequency at which the response
+maximum occurs. It follows from straightforward derivation that the &quot;center
+frequency&quot; and the pole has the following relationship: cos(2*PI<I>*f</I>c/<I>f</I>s)
+= <I>pole</I>. Some pairs of <I>f</I>c and <I>pole</I> values are given
+below, with <I>f</I>s = 22,050Hz:</P>
+
+<TABLE BORDER=1 >
+<TR>
+<TD ALIGN=CENTER WIDTH="100"><B><I>pole</I></B></TD>
+
+<TD WIDTH="50">
+<CENTER><P>0.543</P></CENTER>
+</TD>
+
+<TD WIDTH="50">
+<CENTER><P>0.285</P></CENTER>
+</TD>
+
+<TD WIDTH="50">
+<CENTER><P>0.146</P></CENTER>
+</TD>
+
+<TD WIDTH="100">
+<CENTER><P>0</P></CENTER>
+</TD>
+
+<TD WIDTH="50">
+<CENTER><P>-0.138</P></CENTER>
+</TD>
+
+<TD WIDTH="50">
+<CENTER><P>-0.411</P></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P><B><I>f</I>c </B>(Hz)</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>3.5K</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>4.5K</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>5K</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>5,513 (<I>f</I>s/4)</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>6K</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P>7K</P></CENTER>
+</TD>
+</TR>
+</TABLE>
+
+<P>The closer the pole is to 1, the lower center frequency will be. When
+the pole is at 1, it cancels out with the zero, thus reducing the filter
+to 1st order FIR, which is not allowed. Similar discussion holds for negative
+pole position. When the pole is at origin, the IIR filter turns into a
+2nd order FIR filter. Positive pole is preferable, because then the response
+peak is set in low frequency range to make the sound &quot;warm&quot;.
+But pole &gt; 0.5 leads to distorted output because of the unlinearality
+at low frequency is too sharp. Same thing happens when pole &lt; -0.5.
+For some more information about filter, please consult Filter Actor documentation.<BR>
+
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="EF"></A>Early reflections</H2>
+
+<P>Reflections during about 20~80ms after sound is triggered are heard
+together with the direct sound as one single auditory event. An FIR filter
+is used to generate these early reflections.</P>
+
+<CENTER><P><IMG SRC="earlyReflection.jpg"> <BR></CENTER>
+
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="Comb"></A>Comb filters</H2>
+
+<P>Comb filters are used to imitate both time and frequency responses of
+enclosure reverberation. In time domain, comb filter produces exponentially
+decaying echoes of input. In frequency domain, the comb-shape frequency
+response resembles the natural modes of enclosure. The problem with comb
+filter is that the distances between adjacent echoes and frequency modes
+are decided by the single parameter of delay. Bigger delay leads to more
+scattered echoes and closer frequency modes, and vice versa, while the
+enclosure reverberation yields both dense echoes and close frequency modes.
+Because dense echoes can be achieved by all-pass filters in the next stage,
+and distant frequency modes yield unpleasant metallic sound, the comb filter
+delays should be set in the range of 50~80ms.<BR>
+<BR>
+Output of one comb filter has very distinct periodicity which is called
+&quot;flutter&quot;. This can been seen from its impulse response, or heard
+by setting the reverberator to have only one comb filter. To avoid the
+periodicity, several comb filters with delays in prime number can be paralleled.
+The frequency response of paralleled comb filters will be the sum of the
+individuals, imitating the overlap of natural modes of enclosure.<BR>
+<BR>
+<A NAME="t60"></A>The reverberation time is decided by delay and gain.
+The standard measure of reverberation time is <I>t60</I>, the time at which
+reverberation level falls to -60dB or one thousands of the initial sound.</P>
+<CENTER><IMG SRC="comb.jpg"><BR></CENTER>
+<P>
+<A NAME="damp"></A>Another character of room and hall is that <I>t60 </I>is
+frequency-dependent. The <I>t60</I>-frequency curve is fairly complicated
+and distinct for individual enclosure, but the general shape is low-pass.
+The same 1st order IIR filter for bandwidth control can be added into the
+feedback loop of the comb filter to produce a smooth low-pass <I>t60</I>-frequency
+response. Given the ratio of <B><I>t60</I>(0) / <I>t60</I>(<I>f</I>s/2)</B>
+(set by <I>damp ratio</I>), delay, loop gain and low-pass gain can be calculated.</P>
+</P>
+<CENTER><P><IMG SRC="combWithDamp.jpg"> <BR></CENTER>
+
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="AP"></A>All-pass filters</H2>
+
+<P>The name &quot;all-pass&quot; comes from its constant frequency response.
+But its phase response is quite complex, and the group delay is in comb
+shape. All-pass filter along can make pretty decent reverberatino because
+of the dispersive phase response. Here, they are used to increase echo
+density. The impulse response is similar to that of comb filter, so a small
+delay, e.g. 6ms can make very dense echoes, while no &quot;color&quot;
+is added into the sound as by the comb filter, because of the constant
+frequency response.</P>
+<CENTER><IMG SRC="allpass.jpg"><BR></CENTER>
+<BR>
+
+<HR WIDTH="100%"></P>
+
+<H2><A NAME="BW"></A>Output low-pass filter</H2>
+
+<P>A 1st order IIR filter is used to low-pass the reverberation to reduce
+the high-frequency ringing generated by comb filters. A single parameter
+BW is used to control the frequency response of the filter, thus the &quot;brightness&quot;
+of the reverberation. Frequency response at DC is always 1, and BW/(2-BW)
+at <I>f</I>s/2. Thus the bigger BW, the wider frequency band is passed
+through.</P>
+
+<CENTER><P><IMG SRC="lpf.jpg"><BR></CENTER>
+
+<HR WIDTH="100%"></P>
+
+<H1>Reference</H1>
+
+<CENTER><P><B>Perry Cook's STK reverberator </B></P></CENTER>
+
+<CENTER><P><IMG SRC="stk.jpg"> </P></CENTER>
+<P>Salute! The algorithm implementation and program structure of STK reverberator
+was shameless copied to reverberator actor design.</P>
+<P>Problems: </P>
+
+<UL>
+<LI>Delay is in number of samples, not time, and isn't related to filter
+gain. So if D is big (e.g. 10000), significant periodicity can be heard.
+D = 2137 for all STK instruments.</LI>
+
+<LI>No early echo: For fast attack/decay sound like chime, there's a distinct
+dry part and wet part of the reverberated sound.</LI>
+</UL>
+
+<CENTER><P>
+<HR WIDTH="100%"><BR>
+<B>The reverberator in M4C. </B></P></CENTER>
+
+<CENTER><P><IMG SRC="m4c.jpg"> 
+<HR WIDTH="100%"><B>J. A. Moorer's reverberator</B> uses an FIR part for
+early echoes. </P></CENTER>
+
+<CENTER><P><IMG SRC="moore.jpg" HEIGHT=223 WIDTH=640></P></CENTER>
+
+<CENTER><P>
+<HR WIDTH="100%"><BR>
+<B>Jon Dattorro's comercial reverberator</B> is a bit too complex for real-time
+software implementation. </P></CENTER>
+
+<CENTER><P><IMG SRC="dattorro.jpg"> </P></CENTER>
+
+</BODY>
+</HTML>

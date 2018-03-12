@@ -1,0 +1,13 @@
+audpanel.title: "PlaneMapper demo"
+audpanel.sliders: 8
+audpanel.presets: ("mg")
+
+mg.messageGroup: "mg"
+mg.interval: 0.025
+mg.type:        (3 4 0 0 4 0 0 3)
+mg.labels: 	("Amp" "Sound" "" "" "User" "" "" "UserAngle")
+mg.minValues: 	(0.0 0.0 0.0 0.0 0.0 0.0 0.0 -360.0)
+mg.maxValues: 	(2.0 1.0 0.0 0.0 1.0 0.0 0.0 360.0)
+mg.initialValues: (0.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+mg.mappings: (0 -1 -1 -1 -1 -1 -1 1)
+mg.parameters: 8

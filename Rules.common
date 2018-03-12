@@ -1,0 +1,235 @@
+# This file contains definitions for various make thingies.
+
+.SUFFIXES: .c .c++ .C .o .a .l .y
+.PHONY: clean_dso clean all depend_dso
+
+# Operating system.
+include $(TOPDIR)/srv/Platform
+
+ifeq "$(PLATFORM)" "VSS_SOLARIS_8"
+	PLATFORMBASE := VSS_SOLARIS
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_53"
+  PLATFORMBASE := VSS_IRIX
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_62"
+  PLATFORMBASE := VSS_IRIX
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_63"
+  PLATFORMBASE := VSS_IRIX
+  MAKEPARALLEL = "-j 2"
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
+  PLATFORMBASE := VSS_IRIX
+  MAKEPARALLEL = "-j 10"
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_65"
+  PLATFORMBASE := VSS_IRIX
+  MAKEPARALLEL = "-j 10"
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
+  PLATFORMBASE := VSS_LINUX
+  MAKEPARALLEL = "-j 4"
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_21"
+  PLATFORMBASE := VSS_LINUX
+endif
+ifeq "$(PLATFORM)" "VSS_REDHAT7"
+  PLATFORMBASE := VSS_LINUX
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
+  PLATFORMBASE := VSS_LINUX
+  MAKEPARALLEL = "-j10"
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
+  PLATFORMBASE := VSS_LINUX
+  MAKEPARALLEL = "-j 4"
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_K7"
+  PLATFORMBASE := VSS_LINUX
+  MAKEPARALLEL = "-j 2"
+endif
+ifeq "$(PLATFORM)" "VSS_FreeBSD"
+  PLATFORMBASE := VSS_FreeBSD
+endif
+ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
+  PLATFORMBASE := VSS_WINDOWS
+endif
+
+VSSLIBS := -lm
+
+ifeq "$(PLATFORMBASE)" "VSS_LINUX"
+  # Use -lpthread_p not -lpthread below, if on an SMP machine pre-glibc2.1.
+  VSSLIBS += -ldl -lpthread -export-dynamic -lm
+endif
+
+ifeq "$(PLATFORMBASE)" "VSS_IRIX"
+  VSSLIBS += -laudio -lm -lmd -ldmedia
+  # -ldmedia is only for dmGetUST(), in platform.c++
+
+ifneq "$(PLATFORM)" "VSS_IRIX_53"
+  VSSLIBS += -lpthread
+endif
+endif
+
+ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
+  VSSLIBS := -ldl -lsocket -lnsl 
+endif
+
+VSSLIBS += -lm
+
+# Default C and C++ compilers.
+CCC := gcc
+CC := g++
+
+INC := -I$(TOPDIR)/srv
+
+CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall \
+# -ffast-math -maccumulate-outgoing-args -malign-double -fomit-frame-pointer 
+# CPU-dependent
+# CcFLAGS += -mfpmath=sse
+# CcFLAGS += -march=pentium4
+
+# VSS-specific
+# CcFLAGS += -DVERIFY_ALG_POINTERS
+# CcFLAGS += -DVERBOSE
+# CcFLAGS += -Weffc++
+# CcFLAGS += -DVSS_COMPILERBUG1
+# ;;;; LDFLAGS := -D$(PLATFORM)
+# LDFLAGS := -lasound
+# LDFLAGS := -s
+LDFLAGS :=
+
+ifeq "$(PLATFORM)" "VSS_SOLARIS_8"
+  CcFLAGS += -Wall -O3 -ffast-math
+  CFLAGS := $(CcFLAGS)
+  cFLAGS := $(CcFLAGS)
+endif
+
+ifeq "$(PLATFORM)" "VSS_IRIX_53"
+  # THIS FAILS!!!!        INC += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
+  CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
+  # -I/usr/bulk5/cg/gcc/libstdc++
+  CcFLAGS += -O2 -mips2
+  # ;;;;needed?   CcFLAGS += -DVSS_OLD_H_FILES
+  CFLAGS := $(CcFLAGS)
+  cFLAGS := $(CcFLAGS)
+  LDFLAGS += -L/usr/local/gnu/lib		# to find libstdc++.a
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_62"
+  CFLAGS := $(CcFLAGS)
+  cFLAGS := $(CcFLAGS)
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
+    CcFLAGS += -woff 1424,3201,1110 -DVSS_OLD_H_FILES -DVSS_IRIX_63PLUS
+    # MIPSpro 7.3
+    CCC := cc
+    CC := CC
+    CcFLAGS += \
+		-TARG:processor=r4400 -TARG:platform=ip22 \
+		-fullwarn -ptused \
+		-O3 \
+		-TENV:X=4 \
+		-mips3 \
+		-exceptions=OFF \
+		-OPT:IEEE_arithmetic=3 -OPT:alias=typed -LNO:opt=1 \
+		-OPT:Olimit=0 \
+		-LANG:std
+#		-trapuv    -- inconsistent with -O3 -mips3, see "man rld" on "The aggregate IEEE exceptions required".
+#		-mcpu=r4000 
+	CFLAGS := $(CcFLAGS)
+	cFLAGS := $(CcFLAGS)
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_65"
+  # gcc 2.95.2
+  CcFLAGS += -O3 -DVSS_IRIX_63PLUS
+  # -mips3 or -mips4 cause compile errors in STL.
+  CFLAGS := $(CcFLAGS)
+  cFLAGS := $(CcFLAGS)
+endif
+ifeq "$(PLATFORM)" "VSS_IRIX_63"
+  # gcc 2.95.2
+  CcFLAGS += -O3 -DVSS_IRIX_63PLUS
+  # -mips3 or -mips4 cause compile errors in STL.
+  CFLAGS := $(CcFLAGS)
+  cFLAGS := $(CcFLAGS)
+endif
+
+# -march=pentiumpro
+ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
+    #CcFLAGS += -DREDHAT52 -Wall -O3 -ffast-math -malign-double
+    CcFLAGS += -Wall -O3 -ffast-math
+    # -ffast-math subsumes -mno-ieee-fp
+    #CFLAGS = $(CcFLAGS) -fno-exceptions
+    CFLAGS = $(CcFLAGS) -fno-exceptions
+    cFLAGS = $(CcFLAGS)
+	LDFLAGS := -lasound
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_21"
+	# -ffast-math subsumes -mno-ieee-fp
+    #CcFLAGS += -g -DREDHAT52 -Wall -O3 -ffast-math -malign-double
+    CcFLAGS += -O3 -ffast-math -fPIC 
+    #CFLAGS = $(CcFLAGS) -fno-exceptions
+    CFLAGS = $(CcFLAGS) -fno-exceptions
+    # STL requires -fno-exceptions
+    cFLAGS = $(CcFLAGS)
+	LDFLAGS :=
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
+	# -ffast-math subsumes -mno-ieee-fp
+    CcFLAGS += -Wall -O3 -ffast-math
+    #CcFLAGS += -g -O0	# debugging
+    CFLAGS = $(CcFLAGS) -fno-exceptions
+    cFLAGS = $(CcFLAGS)
+	LDFLAGS := -lasound
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
+	# -ffast-math subsumes -mno-ieee-fp
+    #CcFLAGS += -g -DREDHAT52 -Wall -O3 -ffast-math -malign-double
+    CcFLAGS += -Wall -O3 -ffast-math
+    CFLAGS = $(CcFLAGS) -fno-exceptions
+    cFLAGS = $(CcFLAGS)
+	LDFLAGS := -lasound
+endif
+ifeq "$(PLATFORM)" "VSS_LINUX_K7"
+    #CcFLAGS += -DREDHAT52 -Wall -O3 -ffast-math -malign-double
+    CcFLAGS += -Wall -O3 -ffast-math
+	# -ffast-math subsumes -mno-ieee-fp
+    #CFLAGS = $(CcFLAGS) -fno-exceptions
+    CFLAGS = $(CcFLAGS) -fno-exceptions
+    cFLAGS = $(CcFLAGS)
+	LDFLAGS :=
+endif
+ifeq "$(PLATFORM)" "VSS_FreeBSD"
+endif
+ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
+# VSS_CYGWIN32_NT40
+	CcFLAGS += -Wall -O1 -ffast-math -malign-double
+#	CcFLAGS += -I/usr/local/include
+		# -I/usr/local/include makes vss crash (exception thrown before main()).
+		# i'm going to remove -mwindows
+		# maybe do a full build now.  also remove -ldsound and -lwinmm.
+	CYG=/cygdrive/d/cygwin
+	LDFLAGS := -L $(CYG)/lib -L /usr/local/lib -ldsound -lwinmm -lole32
+	# ;; -O3, later.
+	# -ffast-math subsumes -mno-ieee-fp
+	#CFLAGS = $(CcFLAGS) -fno-exceptions
+	CFLAGS = $(CcFLAGS) -fno-exceptions
+	cFLAGS = $(CcFLAGS)
+endif
+
+AUDTEST  = $(TOPDIR)/util/audtest
+
+# sed: Remove /usr/foo. Absorb trailing backslashes. Compress whitespace.
+DEPENDFILTER = sed -e 's_ /usr[^ ]*_ _g' | sed -e :a -e '/\\$$/N; s/\\\n//; ta' | sed -e 's/  */ /g'
+# DEPENDFILTER = grep -v ": /usr/"
+# DEPENDFILTER = grep -v "^  /usr/.* \\\\" | sed -e "s_ /usr/[^ ]*__g"
+
+%.o: %.c++
+	$(CC) -c $(CFLAGS) $<
+%.o: %.C
+	$(CC) -c $(CFLAGS) $<
+%.o: %.c
+	$(CCC) -c $(cFLAGS) $<
+%.o: %.cc
+	$(CC) -c $(cFLAGS) $<

@@ -1,0 +1,11 @@
+SetPrintCommands 2;
+
+LoadDSO msgGroup.so;
+LoadDSO piano.so;
+
+ap = Create PianoActor;
+sleep 1;
+
+sp = BeginSound ap SetNoteOn 1;
+sleep 1;
+SetNoteOn sp 0;

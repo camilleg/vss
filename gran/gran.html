@@ -1,0 +1,96 @@
+<!doctype html public "-//IETF//DTD HTML 3.0//EN">
+<html>
+<head>
+
+<title>Granulation actor</title>
+
+</head>
+<body>
+
+<h3>A simple granulation actor</h3>
+
+The granulator actor suite (granActor, granHand, granAlg) provides a simple granulation algorithm.  Like the sample actor, it is <b>not</b> a good example for developing actors in the vss framework, because it requires some special handling that is not general to vss generators and algorithms, and generally does <b>not</b> follow the actor/handler protocol.<p>
+
+The principal parameters of the sample playback engine are the base directory (where it looks for sample files; relative paths are relative to the vss launch directory), the filename (names with path are relative to the base directory, unless they begin with "/"), and the position in the sample file from which a grain is taken.<p>
+
+The granulation algorithm loads the entire source file's sample data into memory, so one should use as few as possible, and delete them when they are no longer needed.<p>
+
+To use the granulation actor, load gran.so and create an actor of type Granulator.
+
+<h3>Granulator messages</h3>
+
+In addition to the messages understood by all generator actors, the Granulator understands the following messages:
+
+<dl>
+	<dt>SetDirectory <tt>hActor "dir"</tt>
+			<dd>Set the default base directory for new instances created by this actor to <tt>dir</tt>.
+			<tt>dir</tt> must be double-quoted as shown.
+	<dt>SetAllDirectory <tt>hActor dir</tt>
+			<dd>Set the base directory of all children to <tt>dir</tt>, and set the default base directory for all future children. 
+
+	<dt>LoadFile <tt>hActor "filename"</tt>
+			<dd>Load this soundfile into memory for quick future access.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>UnloadFile <tt>hActor "filename"</tt>
+			<dd>Free the memory used to store this soundfile.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>UnloadAllFiles <tt>hActor</tt>
+			<dd>Free the memory used to store all soundfiles.
+	<dt>SetDur <tt>hActor duration</tt>
+			<dd>Set the duration of all future grains to <tt>duration</tt> seconds.
+	<dt>SetPlaybackRate <tt>hActor r</tt>
+		<dd>Set the default playback rate of all future grains to <tt>r</tt>.
+		The default rate upon actor creation is <tt>r</tt>=1.0 which
+		corresponds to playback at the normal rate (i.e. a rate of 2.0 plays back at
+		double speed).  VSS always computes and plays out samples at its own set
+		sample rate; for sample files recorded at different rates, samples are
+		automatically interpolated to maintain a consistent perceived playback rate.
+
+	<dt>SetStart <tt>hActor start </tt>
+			<dd>Set the starting offset into the soundfile of all future grains to <tt>start</tt> (0 = start of file, 1 = end of file).  If this is less than twice the duration of the grain's "slope" (see below), the grain's duration will be set to twice the duration of the slope.
+	<dt>SetSlope <tt>hActor duration</tt>
+			<dd>Set the length of the attack and release segments of all future grains to <tt>duration</tt>.  If this exceeds half the grain's total duration, the grain's slope will be set to half the grain's total duration.
+	<dt>SetControlMin <tt>hActor value</tt>
+			<dd>Set the minimum value expected by SetDur and SetStart to <tt>value</tt> (range is 0 to 1).  Defaults to 0.
+	<dt>SetControlMax <tt>hActor value</tt>
+			<dd>Set the maximum value expected by SetDur and SetStart to <tt>value</tt> (range is 0 to 1).  Defaults to 0.
+	<dt>SetJumpMin <tt>hActor value</tt>
+			<dd>Set the minimum offset to start a grain at to <tt>value</tt> (range is 0 to 1).  Defaults to 0.
+	<dt>SetJumpMax <tt>hActor value</tt>
+			<dd>Set the maximum offset to start a grain at to <tt>value</tt> (range is 0 to 1).  Defaults to 1.
+	<dt>Rebound <tt>hActor value</tt>
+			<dd>Set the amount to randomly adjust the offset of a grain by, when it would have started out of range (<0 or >1), to <tt>value</tt> (range is 0 to 1).  Defaults to 1.
+	<dt>Spread <tt>hActor value</tt>
+			<dd>Set the range (+/-) to randomly adjust the offset of a grain by, to <tt>value</tt> (range is 0 to 1).  Defaults to 0.05.
+			Nonzero values result in a less tedious sound at times when the starting point doesn't explicitly change.
+
+</dl>
+
+Note that <tt>BeginSound</tt> plays only a single grain, not a stream of grains.
+
+<h3>Granulator handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the Granulator algorithm understands the following messages:
+
+<dl>
+	<dt>SetDirectory <tt>hSound "dir"</tt>
+			<dd>Set the base directory to <tt>dir</tt>.
+			<tt>dir</tt> must be double-quoted as shown.
+	<dt>SetFile <tt>hSound "filename"</tt>
+			<dd>Load the sample file <tt>fileName</tt> and initialize
+			playback.  Starting position, duration, and slope are copied
+			from the Granulator actor during this message.  <tt>filename</tt>
+			must be double-quoted as shown.
+	<dt>SetStart <tt>hSound value</tt>
+			<dd>Set the default starting offset for grains to <tt>value</tt>.
+	<dt>Spread <tt>hSound value</tt>
+			<dd>Set the default spread for grains to <tt>value</tt>.
+	<dt>Rebound <tt>hSound value</tt>
+			<dd>Set the default rebound for grains to <tt>value</tt>.
+	<dt>SetSlope <tt>hSound value</tt>
+			<dd>Set the default slope for grains to <tt>value</tt>.
+	<dt>SetDur <tt>hSound value</tt>
+			<dd>Set the default duration for grains to <tt>value</tt>.
+
+</dl>
+
+</body>
+</html>

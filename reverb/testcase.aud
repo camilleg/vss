@@ -1,0 +1,76 @@
+// This is the .aud file for testing the reverberation actor
+
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO msgGroup.so;
+LoadDSO reverb.so;
+LoadDSO samp.so;
+LoadDSO later.so;
+
+aLa = Create LaterActor;
+
+// Create a sample actor to play sound file
+aSa = Create SampleActor;
+SetDirectory aSa "dsos/reverb";
+LoadFile aSa "guitar.aiff";
+sleep 1;
+
+// Create, set up the reverb actor
+aRe = Create ReverbActor;
+sRe = BeginSound aRe;
+sleep 1;
+sSa = BeginSound aSa SetFile "guitar.aiff", SetAmp 0, SetPause 1;
+SetInput sRe sSa;
+
+// Create message groups for the interaction
+Overall = Create MessageGroup;
+ERdelay = Create MessageGroup;
+ERcoeff = Create MessageGroup;
+CombDelay = Create MessageGroup;
+APdelay = Create MessageGroup;
+Preset = Create MessageGroup;
+
+// Set up the slider interaction
+
+AddMessage Overall SetPause sSa 1;
+AddMessage Overall Rewind sSa;
+AddMessage Overall SetMix sRe *0;
+AddMessage Overall SetGain sRe *1;
+AddMessage Overall SetTime sRe *2;
+AddMessage Overall SetBright sRe *3;
+AddMessage Overall SetDampRatio sRe *4;
+AddMessage Overall SetPole sRe *5;
+AddMessage Overall SetPause sSa 0;
+AddMessage Overall AddMessage aLa 5 SetEarlyRefNum sRe 0;
+AddMessage Overall AddMessage aLa 5 SetAllPassNum sRe 0;
+
+AddMessage ERdelay SetPause sSa 1;
+AddMessage ERdelay Rewind sSa;
+AddMessage ERdelay SetEarlyRefNum sRe *0;
+AddMessage ERdelay SetEarlyRefDelay sRe [ *1 *2 *3 *4 *5 *6];
+AddMessage ERdelay SetPause sSa 0;
+
+AddMessage ERcoeff SetPause sSa 1;
+AddMessage ERcoeff Rewind sSa;
+AddMessage ERcoeff SetEarlyRefCoeff sRe [ *1 *2 *3 *4 *5 *6];
+AddMessage ERcoeff SetPause sSa 0;
+
+AddMessage CombDelay SetPause sSa 1;
+AddMessage CombDelay Rewind sSa;
+AddMessage CombDelay SetCombNum sRe *0;
+AddMessage CombDelay SetCombDelay sRe [ *1 *2 *3 *4 *5 *6];
+AddMessage CombDelay SetPause sSa 0;
+
+AddMessage APdelay SetPause sSa 1;
+AddMessage APdelay Rewind sSa;
+AddMessage APdelay SetAllPassNum sRe *0;
+AddMessage APdelay SetAllPassDelay sRe [ *1 *2 *3 ];
+AddMessage APdelay SetPause sSa 0;
+
+AddMessage Preset SetPause sSa 1;
+AddMessage Preset Rewind sSa;
+AddMessage Preset SetPresetNum sRe *0;
+AddMessage Preset SetPause sSa 0;
+AddMessage Preset AddMessage aLa 5 SetEarlyRefNum sRe 0;
+AddMessage Preset AddMessage aLa 5 SetAllPassNum sRe 0;

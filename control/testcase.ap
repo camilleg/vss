@@ -1,0 +1,43 @@
+audpanel.title: "LoopActor Demo"
+audpanel.sliders: 4
+audpanel.presets: ("General" "Data" "Time" "Step")
+
+General.messageGroup: "APgen"
+General.interval: 0.1
+General.type: (2 2 2 0)
+General.labels: ("NumLoops" "Swing" "Debug" "")
+General.minValues:     ( 0.0  0.0  0.0  0.0)
+General.maxValues:     (10.0  2.0  2.0  0.0)
+General.initialValues: ( 1.0  0.0  0.0  0.0)
+General.mappings: (0 1 2 3)
+General.parameters: 4
+
+Data.messageGroup: "APdata"
+Data.interval: 0.1
+Data.labels: ("Start" "Step" "Limit" "Nolimit")
+Data.minValues:     ( -20.0  -10.0 -20.0  0.0)
+Data.maxValues:     (  20.0   10.0  20.0  0.0)
+Data.initialValues: (   0.0    0.0   0.0  0.0)
+Data.mappings: (0 1 2 -1)
+Data.parameters: 4
+Data.type: (3 3 3 1)
+
+Time.messageGroup: "APtime"
+Time.interval: 0.1
+Time.labels: ("Step" "Limit" "" "")
+Time.minValues:     (   0.0 -1.0  0.0 0.0)
+Time.maxValues:     (   2.0 30.0  0.0 0.0)
+Time.initialValues: (   1.0 -1.0  0.0 0.0)
+Time.mappings: (0 1 -1 -1)
+Time.parameters: 4
+Time.type: (3 3 0 0)
+
+Step.messageGroup: "APstep"
+Step.interval: 0.1
+Step.labels: ("Limit" "Nolimit" "" "")
+Step.minValues:     (   0.0  0.0 0.0 0.0)
+Step.maxValues:     (  10.0  0.0 0.0 0.0)
+Step.initialValues: (  10.0  0.0 0.0 0.0)
+Step.mappings: (0 -1 -1 -1)
+Step.parameters: 4
+Step.type: (2 1 0 0)

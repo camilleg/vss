@@ -1,0 +1,56 @@
+SetPrintCommands 2;
+
+// Load the DSOs we need
+LoadDSO msgGroup.so;
+LoadDSO logistic.so;
+LoadDSO seq.so;
+LoadDSO fm.so;
+LoadDSO later.so;
+
+aFm = Create FmActor;
+sFm = BeginSound aFm SetPause 1, SetMCratio 0.6875, ScaleAmp 0.1;
+al = Create LaterActor;
+
+setFm = Create MessageGroup;
+AddMessage setFm SetAmp sFm 1;
+AddMessage setFm SetCarFreq sFm *0;
+AddMessage setFm SetModIndex sFm 2.;
+AddMessage setFm SetPause sFm 0;
+AddMessage setFm SetAmp sFm 0 0.8;
+AddMessage setFm SetModIndex sFm 0 0.6;
+AddMessage setFm AddMessage al 1.0 SetPause sFm 1;
+
+alog = Create LogisticActor;
+SetMessageGroup alog "setFm";
+SetState alog 0.5;
+SetCtrl alog 3.73891;
+SetScaleandOffset alog 36.0 12.0;
+Debug alog 0;
+
+seq = Create SeqActor;
+SetLoopEnd seq 1;
+AddMessage seq 0 GoOnce alog;
+
+play = Create MessageGroup;
+play_Mode = Create MessageGroup;
+
+AddMessage play ScaleAmp sFm *0;
+AddMessage play SetCtrl alog *1;
+AddMessage play SetState alog *2;
+AddMessage play SetScaleAndOffset alog *3 *4;
+AddMessage play SetNumberOfBins alog *6;
+AddMessage play SetTempo seq *7;
+AddMessage play SetUserFloat alog *8;
+AddMessage play_Mode SetOutputMode alog *0;
+
+alog2 = Create LogisticActor;
+go = Create MessageGroup;
+testmg = Create MessageGroup;
+SetMessageGroup alog2 "testmg";
+Debug alog2 1;
+AddMessage go GoOnce alog2 1;
+
+SetState alog2 .1;
+SetCtrl alog2 3.8;
+SetOutputMode alog2 2;
+SetNumberOfBins alog2 4;

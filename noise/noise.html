@@ -1,0 +1,58 @@
+<html> <head> <title>Noise actor</title> </head> <body>
+
+<h2>A simple random-noise implementation</h2>
+
+The Noise suite implements a basic colored noise synthesis algorithm, along with its associated 
+handler and actor. The noise is random, or repetitive, in nature. (Actually, it repeats once every 
+2^48 samples, or at worst, once every 203 years at 44.1 kHz sampling rate. So, who's counting?) The 
+noise is colored by filtering through a selectable zero-order or first-order hold process.<p>
+
+Noise characteristics are controlled through two parameters: "Order", and "Cutoff". Order 
+determines the filter type used for coloring the noise. Order=0 corresponds to a simple zero-order 
+hold (i.e. sampled-and-held noise samples), while Order=1 corresponds to a first-order hold (i.e. 
+linearly interpolated noise samples). Both types of filtering are lowpass in nature, with a falloff
+slope of 6dB/octave for Order=0 and 12dB/octave for Order=1.<p>
+
+Cutoff controls the frequency at which the noise spectrum falls off, i.e., is filtered out, and is 
+expressed in Hz. Specifically, a cutoff of 1000Hz produces an output spectrum whose half-power 
+point occurs at 443Hz for Order=0, and at 319Hz for Order=1.<p>
+
+To use the Noise implementation, load noise.so and create an actor of type NoiseActor.
+
+<h3>NoiseActor messages</h3>
+
+In addition to the messages understood by all generator actors, the NoiseActor understands the following messages:
+
+<dl>
+	<dt>SetCutoff <tt>hActor x</tt>
+			<dd>Set the default cutoff frequency for new instances created by this actor 
+			to <tt>x</tt>.
+	<dt>SetAllCutoff <tt>hActor x <i>time</i></tt>
+			<dd>Set the cutoff frequency of all children to <tt>x</tt>, and set the 
+			default cutoff for all future children. If <tt>time</tt> is specified, 
+			children will modulate to the new cutoff over the specified duration. 
+			Default cutoff is always set immediately regardless of <tt>time</tt>.
+	<dt>SetOrder <tt>hActor bool</tt>
+			<dd>Set the default filter order for new instances created by this actor 
+			to <tt>bool</tt>, either 0 or 1.
+	<dt>SetAllOrder <tt>hActor bool</tt>
+			<dd>Set the filter order of all children to <tt>bool</tt>, and set the 
+			default order for all future children.
+</dl>
+
+<h3>Noise handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the noise algorithm understands the following messages:
+
+<dl>
+	<dt>SetCutoff <tt>hSound x <i>time</i></tt>
+			<dd>Set the cutoff frequency to <tt>x</tt>. If 
+			<tt>time</tt> is specified, move to the new cutoff over the specified 
+			duration.
+	<dt>SetOrder <tt>hSound bool</tt>
+			<dd>Set the filter order to <tt>bool</tt>, either 0 or 1.
+</dl>
+
+
+</body>
+</html>

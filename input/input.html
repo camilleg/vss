@@ -1,0 +1,40 @@
+<html>
+<head>
+
+<title>Input actor</title>
+
+</head>
+<body>
+
+<h2>A signal input actor</h2>
+
+The InputActor, when instantiated with BeginSound, plays whatever signal VSS 
+is receiving on its input port.  Note that you must run "vss -input" to enable 
+the input port in vss.  (Audio input processing consumes extra resources,
+so it makes sense to use those resources only if they are really needed.)
+<p>
+To use the input actor, load input.so and create an actor of type InputActor.
+
+<h3>InputActor messages</h3>
+
+The InputActor understands no other messages besides those
+understood by all generator actors.
+
+<h3>InputActor handler messages</h3>
+
+The handler for the InputActor algorithm understands no other messages
+besides those understood by all generator actors.
+<p>
+
+A common use of the InputActor is to send the audio signal at VSS's input
+to another actor for further processing.  In this case, send a
+<tt>SetMute 1</tt> message to the InputActor handler, so the input signal
+is not "echoed" at VSS's output.  For example:<br>
+<pre>
+	hInpActor = Create InputActor;
+	hInpSound = BeginSound hInpActor SetMute 1;
+	hProcessorActor = Create MyProcessorActor;
+	hProcessedSound = BeginSound hProcessorActor SetInput hInpSound;
+</pre>
+</body>
+</html>

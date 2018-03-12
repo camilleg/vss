@@ -1,0 +1,143 @@
+<html>
+<head>
+   <title>BasicIterator</title>
+</head>
+<body>
+
+<h2>
+BasicIterator Actor</h2>
+
+<hr>
+<b>We recommend using the LoopActor instead of the BasicIterator.</b>
+<hr>
+
+<hr>The BasicIterator can send linearly progressive/regressive or random
+data in messages to a message group at designated time interval. The following
+image illustrate the output of the iterator with several controllable parameters:
+<br><img SRC="basiciterator.gif" >
+<p>&nbsp;To use the BasicIterator implementation, load basicIterator.so
+and create an actor of type BasicIterator.
+<br>&nbsp;
+<h3>
+BasicIterator Actor messages</h3>
+In addition to the messages understood by all actors, the BasicIterator
+understands the following messages:
+<dl>
+<dt>
+SetMessageGroup<tt> hActor name</tt></dt>
+
+<dd>
+Assign a message group to send the ticks to. The argument <tt>name</tt>
+is a string.</dd>
+
+<dt>
+SetTimeIncrement<tt> hActor timeIncr</tt></dt>
+
+<dd>
+Set the duration of the clock tick. The argument <tt>timeIncr</tt> has
+a range of [-1e+09, 1e+09] and defaults to 0. It has an optional trailing
+time argument (in seconds).</dd>
+
+<dt>
+SetDataIncrement<tt> hActor dataIncr</tt></dt>
+
+<dd>
+This gets sent to the message group as an argument. The argument <tt>dataIncr</tt>
+has a range of [-1e+09, 1e+09] and defaults to 0. It has an optional trailing
+time argument (in seconds).</dd>
+
+<dt>
+SetDataStart<tt> hActor dataStart</tt></dt>
+
+<dd>
+Starting value of the data. If random data is to be sent, <tt>dataStart</tt>
+indicates the lower bound of random number generation. The argument <tt>dataStart</tt>
+has a range of [-1e+09, 1e+09] and defaults to 0.</dd>
+
+<dt>
+SetDataEnd<tt> hActor dataEnd</tt></dt>
+
+<dd>
+Terminal value of data, causing the iterator to end. If random data is
+to be sent, <tt>dataEnd</tt> indicates the upper bound of random number
+generation. The argument <tt>dataEnd</tt> has a range of [-1e+09, 1e+09]
+and defaults to 0.</dd>
+
+<dt>
+SetData<tt> hActor dataValue</tt></dt>
+
+<dd>
+Set the data value immediately. The argument <tt>dataValue</tt> has a range
+of [-1e+09, 1e+09] and defaults to 0.</dd>
+
+<dt>
+SetDuration<tt> hActor timeEnd</tt></dt>
+
+<dd>
+Time's-up value. Iterator stops when the clock gets this far. The argument
+<tt>timeEnd</tt>
+has a range of [-1e+09, 1e+09] and defaults to 0.</dd>
+
+<dt>
+SetIterationLimit<tt> hActor iterationLimit</tt></dt>
+
+<dd>
+Iterator stops after this many iterations. The argument <tt>iterationLimit</tt>
+has a range of [-1000000000, 1000000000] and defaults to 0.</dd>
+
+<dt>
+EnableDataEnd<tt> hActor enableDataEnd</tt></dt>
+
+<dd>
+Enable or disable iterator-ending because of data value. The argument <tt>enableDataEnd</tt>
+takes logical value as 0 or 1 and defaults to 0.</dd>
+
+<dt>
+EnableDurationEnd<tt> hActor enableDurationEnd</tt></dt>
+
+<dd>
+Enable or disable iterator-ending because time's up. The argument <tt>enableDurationEnd</tt>
+takes logical value as 0 or 1 and defaults to 0.</dd>
+
+<dt>
+EnableIterationLimit<tt> hActor enableIterationLimit</tt></dt>
+
+<dd>
+(Guess). The argument <tt>enableIterationLimit</tt> takes logical value
+as 0 or 1 and defaults to 0.</dd>
+
+<dt>
+SetLoop<tt> hActor numloops</tt></dt>
+
+<dd>
+-1 = forever, 0 = never, 1 = once, x = x times. The argument <tt>numloops</tt>
+has a range of [-1, 1000000000] and defaults to 1.</dd>
+
+<dt>
+SetSwing<tt> hActor enableSwing</tt></dt>
+
+<dd>
+If true, swing back and forth instead of jumping back to the start. The
+argument <tt>enableSwing</tt> takes logical value as 0 or 1 and defaults
+to 0.</dd>
+
+<dt>
+SetRandom <tt>hActor enableRandom</tt></dt>
+
+<dd>
+Enable or disable random number generation. The argument <tt>enableRandom</tt>
+takes logical value as 0 or 1 and defaults to 0. If true, data to be sent
+out will be random numbers lies in the range set by SetDataStart and SetDataEnd.
+Iterator will not end because of data value even if EnableDataEnd is true
+because it doesn't make sense.</dd>
+
+<dt>
+SetSeed <tt>hActor seed</tt></dt>
+
+<dd>
+Set seed for random number generator, specifically, <tt>drand48()</tt>.
+Using the same seed will generate exactly the same random sequence.</dd>
+</dl>
+
+</body>
+</html>

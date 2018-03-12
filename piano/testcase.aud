@@ -1,0 +1,25 @@
+SetPrintCommands 2;
+
+// Load the DSOs we need
+LoadDSO msgGroup.so;
+LoadDSO piano.so;
+LoadDSO later.so;
+
+ap = Create PianoActor;
+sleep 2;
+
+piano = Create MessageGroup;
+piano_chord = Create MessageGroup;
+
+al = Create LaterActor;
+
+AddMessage piano BeginSound ap;
+AddMessage piano SetAmp *? *0;
+AddMessage piano SetAttnAmp *? *1;
+AddMessage piano SetFrequency *? *2;
+AddMessage piano SetDynamic *? *3;
+AddMessage piano SetInharmonicity *? *4;
+AddMessage piano AddMessage al *8 SetNoteOn *? 0;
+AddMessage piano SetNoteOn *? 1;
+
+

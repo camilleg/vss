@@ -1,0 +1,67 @@
+SetPrintCommands 2;
+LoadDSO basicIterator.so;
+LoadDSO msgGroup.so;
+
+test = Create MessageGroup;
+ModifyIter = Create MessageGroup;
+
+s = Create BasicIterator;
+Active s 0;
+
+SetMessageGroup s test;
+
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetDataIncrement s *0;
+AddMessage ModifyIter SetDataStart s *0;
+AddMessage ModifyIter SetDataEnd s *0;
+AddMessage ModifyIter SetDataRange s *0;
+AddMessage ModifyIter EnableDataEnd s *0;
+AddMessage ModifyIter SetLoop s *0;
+AddMessage ModifyIter SetDuration s *0;
+AddMessage ModifyIter EnableDurationEnd s *0;
+AddMessage ModifyIter SetIterationLimit s *0;
+AddMessage ModifyIter EnableIterationLimit s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+AddMessage ModifyIter SetTimeIncrement s *0;
+
+
+//SetRandom s 1;
+
+SetTimeIncrement s .25;
+SetDataIncrement s 1;
+SetDataStart s 10;
+//SetDataEnd s 11.1;
+SetDataRange s .1;
+
+EnableDataEnd s 0;
+
+SetSwing s 0;
+
+//SetDuration s 5;
+//EnableDurationEnd s 1;
+
+//SetIterationLimit s 5;
+//EnableIterationLimit s 0;
+
+//SetSeed s 10;
+
+Active s 1;
+//sleep 3;
+//SetSeed s 10;
+
+SetLoop s -1;
+
+

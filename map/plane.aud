@@ -1,0 +1,39 @@
+LoadDSO msgGroup.so;
+LoadDSO map.so;
+LoadDSO samp.so;
+
+SetPrintCommands 0;
+
+sa = Create SampleActor;
+SetDirectory sa "/home/huazheng/vss/srv/dsos/map";
+s = BeginSound sa SetFile "bonk.aiff";
+SetLoop s 1;
+
+a = Create PlaneMapper;
+mgPan = Create MessageGroup;
+SetRegistry a 0,0.,0.,mgPan;
+//SetPosition a 1.,1.;
+
+mg = Create MessageGroup;
+AddMessage mg SetAmp s *0;
+
+mg_Sound_Start = Create MessageGroup;
+mg_Sound_Stop = Create MessageGroup;
+mg_Sound_Move = Create MessageGroup;
+mg_User_Start = Create MessageGroup;
+mg_User_Stop = Create MessageGroup;
+mg_User_Move = Create MessageGroup;
+
+AddMessage mg_Sound_Start SetRegistry a 0, *0, *1;
+AddMessage mg_User_Start SetPosition a *0, *1;
+AddMessage mg_Sound_Move SetRegistry a 0, *0, *1;
+AddMessage mg_User_Move SetPosition a *0, *1;
+AddMessage mg SetOrientation a *1;
+
+mapPan = Create SegmentMapper;
+SetBreakpoints mapPan [-180.0 1.0, 0.0 0.0, 180.0 -1.0];
+mapDist = Create SegmentMapper;
+SetBreakpoints mapDist [0.0 0.001, 1.0 10.0];
+
+AddMessage mgPan MapAndSend mapPan SetPan s @*0;
+AddMessage mgPan MapAndSend mapDist SetDistance s @*1;

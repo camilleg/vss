@@ -1,0 +1,62 @@
+<html> <head> <title>Ring Modulation actor</title> </head>
+<body>
+
+<h2>A ring modulation actor</h2>
+
+Ring modulation multiplies two signals together, sample by sample.
+<br>
+The two inputs of this actor are called the "Input" and the "Modulation Input".
+<br>
+The ModInput defaults to an internally-generated sine wave (whose
+frequency is called the "Carrier Frequency").
+But for more complex spectral effects the ModInput may be a sound coming from another actor.
+<br>
+The amplitude of the modulating signal is scaled by the "Modulation Index".
+<br>
+The output contains only those frequencies which are the sum and difference
+of frequencies present in the two inputs.
+<br>
+So, for a narrow-band input
+bandlimited source with sinewave modulation, ring modulation is like 
+frequency shifting:  the input spectrum is shifted to appear symmetrically, above and 
+below the carrier frequency, with the input spectrum itself above the carrier, and the 
+mirror-image of the input spectrum below it.
+<p>
+To use the ring modulation actor, load ring.so and create an actor of type RingModActor.
+
+<h3>RingModActor messages</h3>
+
+In addition to the messages understood by all generator actors, the RingModActor understands the following messages:
+
+<dl>
+	<dt>SetModFreq <tt>hActor x</tt>
+			<dd>Set the default modulation frequency for new instances created by this actor to <tt>x</tt>.
+	<dt>SetAllModFreq <tt>hActor x <i>time</i></tt>
+			<dd>Set the modulation frequency of all children to <tt>x</tt>, and set the default carrier frequency for all future children. If <tt>time</tt> is specified, children will modulate to the new carrier frequency over the specified duration. Default carrier frequency is always set immediately regardless of <tt>time</tt>.
+	<dt>SetModIndex <tt>hActor x</tt>
+			<dd>Set the default modulation index for new instances created by this actor to <tt>x</tt>.
+	<dt>SetAllModIndex <tt>hActor x <i>time</i></tt>
+			<dd>Set the modulation index of all children to <tt>x</tt>, and set the default modulation index for all future children. If <tt>time</tt> is specified, children will modulate to the new modulation index over the specified duration. Default modulation index is always set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>RingModActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the RingModActor algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetInput <tt>hSound</tt>
+		<dd>Set the input to zero (i.e., silence the input).
+	<dt>SetModInput <tt>hSound hHandler</tt>
+		<dd>Set the modulation input to come from the handler <tt>hHandler</tt>.
+	<dt>SetModInput <tt>hSound</tt>
+		<dd>Set the modulation input back to the internal sine wave generator.
+	<dt>SetModFreq <tt>hSound x <i>time</i></tt>
+			<dd>Set the modulation frequency to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new carrier frequency over the specified duration.
+	<dt>SetModIndex <tt>hSound x <i>time</i></tt>
+			<dd>Set the modulation index to <tt>x</tt>. If <tt>time</tt> is specified, modulate to the new modulation index over the specified duration.
+</dl>
+
+</body>
+</html>

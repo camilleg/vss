@@ -1,0 +1,174 @@
+<HTML>
+<HEAD>
+   <TITLE>VSS Mixer Actor</TITLE>
+   <META NAME="Author" CONTENT="Zheng Hua (Geoffrey)">
+</HEAD>
+<BODY>
+
+<H1 ALIGN=CENTER>Mixer Actor</H1>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2>Introduction</H2>
+
+<P>The mixer actor is a process actor that takes in multiple inputs and
+generates their linear combination for mixing purposes. It has two
+mixing modes: matrix and non-matrix. In non-matrix mode, all inputs are
+combined into one single (but may be multichannel) output, and the
+output is fed into the VSS main busses as any other actor, and is
+subject to SetPan and SetElev messages. This is the default mode.</P>
+
+<P>In matrix mode, arbitrary combinations of <em>mono</em> inputs are
+sent to the output channels. The output channels directly correspond to
+VSS final output channels, i.e. the speakers. SetPan and SetElev are
+ignored. The dimension of the matrix can only be 2x2, 4x4 or 8x8, and
+cannot be greater than VSS channels.</P>
+
+<H2>Usage</H2>
+
+<P>To use the mixer actor, load <TT>mixer.so</TT> and create an actor of
+type <TT>MixerActor</TT>. Then create a handler of the actor using <TT>BeginSound</TT>,
+and use the following messages to direct sound sources through the mixer.
+The maximum number of sources that can be mixed is currently set to 8.</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H2>MixerActor messages</H2>
+
+<P>In addition to the messages understood by all generator actors, the
+MixerActor understands the following messages: </P>
+
+<DL>
+<DT><B>SetFaderAmp </B><TT>hActor x </TT></DT>
+
+<DD>Set the default linear fader value for new instances created by this
+actor to the scalar <TT>x</TT>. Valid range is [-128,128].</DD>
+
+<DT><B>SetFaderGain </B><TT>hActor x </TT></DT>
+
+<DD>Set the default log fader value for new instances created by this actor
+to <TT>x</TT> dB. Valid range is (-Inf,42]. This log fader value is converted
+to linear value and stored in the variable for default linear fader value
+immediately. So SetFaderAmp and SetFaderGain override each other.</DD>
+
+<DT><B>SetAllFaderAmp </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Set the linear fader values of all children to <TT>x</TT>, and set
+the default value for all future children. If <I><TT>time </TT></I>is specified,
+children will modulate to the new value over the specified duration. Default
+value is always set immediately regardless of time. </DD>
+
+<DT><B>SetAllFaderGain </B><TT>hActor x <I>time </I></TT></DT>
+
+<DD>Similar with SetAllFaderAmp. Same as SetFaderAmp and SetFaderGain, SetAllFaderAmp
+and SetAllFaderGain override each other.</DD>
+</DL>
+
+<H2>MixerActor handler messages</H2>
+
+<P>In addition to the messages understood by all handlers, the handler
+for the MixerActor understands the following messages: </P>
+
+<DL>
+<DT><B>SetNumberOfInputs </B><TT>hHandler x</TT></DT>
+
+<DD>Set the total number of input sources feeding into the mixer <TT>hHandler</TT>
+to be <TT>x</TT>. The mixer will then sum its mixing channel 1 to <tt>x</tt>. Valid range is [1,8].</DD>
+
+<DT><B>SetAllInputs </B><TT>hHandler [hSound0 hSound1 ...]</TT></DT>
+
+<DD>Set the input sources for all mixing channels of the mixer handler
+<TT>hHandler</TT>. The number of sources should match the number set by
+SetNumberOfInputs. Use a special source name &quot;-1&quot; to keep the
+current source of the corresponding channel unchanged. </DD>
+
+<DT><B>SetAllFaderAmp </B><TT>hHandler [x0 x1 ...]<I> time</I></TT></DT>
+
+<DT><B>SetAllFaderGain </B><TT>hHandler [x0 x1 ...] <I>time</I></TT></DT>
+
+<DD>Set the linear/log fader values of all mixing channels (different
+from the mixer actor messages with the same names). The number of
+sources should match the number set by SetNumberOfInputs. Use a special
+value of 1000 (both for SetFaderAmp and SetFaderGain) to keep the
+current fader value of the corresponding channel unchanged. If
+<I><TT>time </TT></I>is specified, VSS will modulate to the new values
+over the specified duration.</DD>
+</DL>
+
+The following messages deal with one specific channel:
+
+<DL>
+
+<DT><B>SetOneChannelAmp </B><TT>hHandler channel source x <I>time</I></TT></DT>
+
+<DT><B>SetOneChannelGain </B><TT>hHandler channel source x<I> time</I></TT></DT>
+
+<DD>Set the input source of <TT>channel</TT> to <TT>source</TT>, then set the linear/log fader value of the <TT>channel</TT> to x.
+If <I><TT>time </TT></I>is specified, VSS will modulate to the new value
+over the specified duration.</DD>
+
+<DT><B>SetChannelNum </B><TT>hHandler x</TT></DT>
+
+<DD>Set the number of channel to be used for later messages including SetOneInput, SetOneFaderAmp and SetOneFaderGain, to of the handler <TT>hHandler</TT>
+to be <TT>x</TT>. All following SetOne* messages will operate on that channel until a new channel number is set by SetChannelNum. Valid range is [1,8].</DD>
+
+<DT><B>SetOneInput </B><TT>hHandler hSound</TT></DT>
+
+<DD>Set the input source of current mixing channel to one sound source
+handler <TT>hSound for</TT> the mixer handler <TT>hHandler</TT>. If no
+<TT>hSound</TT> is specified, that channel will use a null source thus produce
+no output.</DD>
+
+<DT><B>SetOneFaderAmp </B><TT>hHandler <i>channel</i> x <I>time</I></TT></DT>
+
+<DT><B>SetOneFaderGain </B><TT>hHandler <i>channel</i> x<I> time</I></TT></DT>
+
+<DD>Set the linear/log fader value of the <TT>channel</TT>, or the current mixing channel if <TT>channel</TT> isn't specified, to x.
+If <I><TT>time </TT></I>is specified, VSS will modulate to the new value
+over the specified duration.</DD>
+
+<DT><B>SetNumberOfInputs </B><TT>hHandler x</TT></DT>
+<DD>This is the same message mentioned above. User should note that the number of inputs will be set to the number of parameters provided in each SetAll* message. So if a later SetOne* message is going to use a higher-numbered channel, SetNumberOfInputs must be used in order to include that channel into mixer output. For example, the following sequence of messages are valid (hMixer and h1-h6 are existing actor handlers):<br>
+<tt>SetNumberOfInputs hMixer 3;<br>
+SetAllInputs hMixer [h1 h2 h3];<br>
+SetAllFaderAmp hMixer [.2 .4 .6];<br>
+<br>
+SetNumberOfInputs hMixer 6;<br>
+SetOneChannelGain hMixer 4 h4 .9 5;<Br>
+<br>
+SetChannelNum hMixer 5;<br>
+SetOneInput hMixer h5;<br>
+SetOneFaderAmp hMixer .1;<br>
+<br>
+SetOneInput hMixer h6;<br>
+SetOneFaderGain hMixer 6 .5 10;<br>
+</TT>
+</DD> 
+</dl>
+
+The following messages deal with matrix mode:
+
+<dl>
+<DT><B>SetMatrixMode </B><TT>hHandler boolean</tt></dt>
+<dd>Set matrix mode to <tt>boolean</tt>. Default to 0.</dd>
+
+<DT><B>SetMatrixInRow </b><tt>hHandler <i>input_channel</i> [x]
+<i>time</i></tt></dt> <dd>Set one fader matrix row that corresponds to
+<i>input_channel</i> to array <tt>x</tt>, i.e. to specify the amplitudes
+of the input in <i>input_channel</i> to be sent to all output channels.
+If <i>time</i> is specified, modulate to the new values over that period.</dd>
+
+<DT><B>SetMatrixOutCol </b><tt>hHandler <i>output_channel</i> [x]
+<i>time</i></tt></dt> 
+<dd>Set one fader matrix column that corresponds to
+<i>output_channel</i> to array <tt>x</tt>, i.e. to specify the
+amplitudes of all the inputs to be sent to <i>output_channel</i>. If
+<i>time</i> is specified, modulate to the new values over that
+period.</dd>
+
+</DL>
+
+</BODY>
+</HTML>

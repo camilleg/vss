@@ -1,0 +1,17 @@
+// Parallel-port LED test case
+
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO ledlpt.so;
+LoadDSO msgGroup.so;
+
+aLED = Create LedActor;
+Debug aLED 1;
+
+mgAP = Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage mgAP SetBrightness aLED *0;
+AddMessage mgAP SetHue aLED *1;
+AddMessage mgAP SetBlink aLED *2 *3;

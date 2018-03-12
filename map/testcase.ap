@@ -1,0 +1,23 @@
+audpanel.title: "HidimMapper demo"
+audpanel.sliders: 8
+audpanel.presets: ("mg2D" "mg3D")
+
+mg2D.messageGroup: "mg2D"
+mg2D.interval: 0.025
+mg2D.type: (3 4 0 0 0 1 1 1)
+mg2D.labels: ("Amp" "Hidim" "" "" "" "GA" "Sammon" "ComputeLodim")
+mg2D.minValues: (0.0 0.0  0.0 0.0 0.0 0.0 0.0 0.0)
+mg2D.maxValues: (2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+mg2D.initialValues: (0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+mg2D.mappings: (0 -1 -1 -1 -1 -1 -1 -1)
+mg2D.parameters: 8
+
+mg3D.messageGroup: "mg3D"
+mg3D.interval: 0.025
+mg3D.type: (3 3 3 3 0 1 1 1)
+mg3D.labels: ("Amp" "Hidim" "Hidim" "Hidim" "" "GA" "Sammon" "ComputeLodim")
+mg3D.minValues: (0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+mg3D.maxValues: (2.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0)
+mg3D.initialValues: (0.1 0.5 0.5 0.5 0.0 0.0 0.0 0.0)
+mg3D.mappings: (0 1 2 3 -1 -1 -1 -1)
+mg3D.parameters: 8

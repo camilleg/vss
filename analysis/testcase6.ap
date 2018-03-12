@@ -1,0 +1,13 @@
+audpanel.title: "Pitch-tracking Demo"
+audpanel.sliders: 6
+audpanel.presets: ("X")
+
+X.messageGroup: "MGAPpitch"
+X.interval: 0.03
+X.labels: ("Pitch" "BandWidth" "Order" "Amp2" "CenterFreq" "ModIndex")
+X.minValues: (200.0 0.0 0.0 0.0 0.0 0.0)
+X.maxValues: (2000.0 5000.0 2.0 1.0 5000.0 1.0)
+X.initialValues: (400.0 200.0 1.0 0.0 300.0 0.5)
+X.mappings: (0 1 2 3 4 5)
+X.parameters: 6
+X.defaultValues: (400.0 200.0 1.0 0.0 300.0 0.5)

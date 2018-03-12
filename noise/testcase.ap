@@ -1,0 +1,13 @@
+audpanel.title: "Noise Synthesis Slider Demo"
+audpanel.sliders: 6
+audpanel.presets: ("ModifyNoise")
+
+ModifyNoise.messageGroup: "ModifyNz"
+ModifyNoise.interval: 0.025
+ModifyNoise.labels: 		("Amp1" "BandWidth" 	"Order" "Amp2" 	"CenterFreq" 	"ModIndex")
+ModifyNoise.minValues: 		(0.0  	0.0  		0.0  	0.0  	0.0  		0.0)
+ModifyNoise.maxValues: 		(1.0  	5000.0  	2.0  	1.0  	5000.0  	1.0)
+ModifyNoise.initialValues: 	(0.5  	200.0  		1.0  	0.0  	300.0  		0.5)
+ModifyNoise.mappings: (0 1 2 3 4 5)
+ModifyNoise.parameters: 6
+ModifyNoise.defaultValues: 	(0.5  	200.0  		1.0  	0.0  	300.0  		0.5)

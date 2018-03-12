@@ -1,0 +1,310 @@
+
+<!doctype html public "-//IETF//DTD HTML 3.0//EN">
+<html>
+<head>
+
+<title>Filter actors</title>
+
+</head>
+<body>
+
+<h2>A set of analog-behaving filter actors</h2>
+
+<h3> Background </h3>
+
+Formally, a filter is a processor which emphasizes certain frequencies and de-emphasizes others. 
+Informally, it is better known as a tone control. For example, the Bass and Treble controls on 
+a stereo system are implemented using filters. In the context of sound synthesis, they are used to 
+emulate the resonances and damping effects which occur naturally due to the physical properties 
+of the bodies of acoustic instruments and the rooms in which they are played, which in turn are 
+mostly governed by their shapes and the materials from which they are made.
+<p>
+The earliest electronic music instruments were analog in nature, i.e., they were built up from 
+circuitry whose internal voltages were designed to be analogs (hence the name) of the physical 
+acoustic pressure waves found in acoustic instruments. The filter circuit was used to emphasize 
+resonances and de-emphasize excess harmonics produced at the raw output of certain electronic 
+oscillators (like Moog's). Without the filters, these generators would sound "buzzy", which in 
+itself was (and still is) considered a neat effect, but not if the desired result is the emulation 
+of an acoustic instrument. Since this important function actually removes, or "subtracts" harmonics 
+from a sound, this kind of synthesis was called "subtractive synthesis". This term is also used to 
+contrast the type of synthesis from the "additive", or Fourier sum-of-partials method more prevalent 
+on computers in the early days of digital synthesis. So, since the start, the filter has always been 
+an important element of electronic sound synthesis.
+<p>
+In use, the analog filter is a very straightforward element to understand and control. It comes in 
+three basic types, the lowpass, highpass, and bandpass. Generally, the lowpass is used to "muffle" the 
+sound, the highpass is used to make the sound "thinner", and the bandpass makes the sound as if it 
+were passing through a phone line or a resonant cavity (like a human mouth puckering up to whistle), 
+depending on the amount of resonance in the filter element. 
+<p>
+Analog filters are most easily characterized by their frequency response, or the relative gain of the 
+system as a function of applied sinewave frequency. The frequency response of the lowpass is flat 
+(constant gain wrt frequency) at low frequencies, while the highpass is flat at high frequencies. The 
+flat region is called the "pass-band" of the filter, and its location along frequency gives rise to the 
+respective names of the filter types. 
+<p>
+At a certain critical frequency, called the corner frequency, the response starts to fall off, 
+so that the amplitudes of frequencies in this band are de-emphasized relative to the passband. The 
+rate of fall-off, also called the rolloff, asymptotically approaches a logarithmically-defined 
+constant which for natural systems approximates N * 6 dB/octave, where N is the order of the filter 
+system. So, a higher-order filter rolls off more rapidly than a lower-order one. The critical 
+frequency is defined as the frequency at which the response falls 3dB from flat, i.e. the half-power 
+point. Spectrally, the lowpass and highpass types are complements of one another. The lowpass response 
+is considered to roll off in the direction of increasing frequency, and the highpass is considered to 
+roll off in the direction of <i>decreasing</i> frequency. 
+<p>
+A filter of type bandpass rolls off on both sides of the critical frequency. So, for the bandpass, 
+this frequency is known as the center frequency. The width of the passband is typically defined in 
+logarithmic terms for the analog bandpass response, as the ratio of the upper corner frequency (the 
+corner frequency above the center frequency) to the lower corner frequency, in octaves. A narrower 
+response (e.g. bandwidth of less than an octave) results in a system with less damping, producing a 
+more resonant quality to the sound. In the limit, the system becomes an oscillator, whose frequency 
+of oscillation equals the center frequency. Since the bandpass must roll off on both sides, it can 
+only exist with filter systems of even order, the minimum order thus being the classic second-order 
+response from physics.
+<p>
+Two other basic response types are afforded by the analog filter: the notch, and the allpass. The 
+notch is useful for suppressing or completely cancelling out a certain frequency or range of 
+frequencies. It is in fact the complement of the bandpass response; it suppresses in the passband of 
+the bandpass (now <i>that's</i> a mouthful!), and it is flat where the bandpass is rolling off. 
+Increasing the filter resonance reduces the width of the notch. In the extreme, the notch will cancel 
+out only one frequency, but it will require perfect accuracy to properly place the hair-thin notch at 
+that frequency. In practice, notches of less than 1/8 octave are not useful.
+<p>
+The allpass response is also not used very much in practice, at least for sound synthesis. Its 
+frequency response is completely flat, so it does not overtly alter the "tone" of a sound; its effect 
+is much more subtle. The allpass response rolls off in <i>phase</i>, so that a sinewave, swept upwards 
+from dc, through the corner, and upwards, smoothly undergoes a negative phase transition of N * 180 
+degrees, where N is again the order of the filter. The frequency at the center of the phase transition 
+corresponds to the critical frequency, and is also called the corner frequency or center frequency. 
+Clasically, in communications systems the allpass filter is used for shaping time-domain wavelets, 
+either to spread them out or to line them up in time to meet a certain transmission spec (like 
+"crest factor", for example). In sound synthesis, the allpass has had a great heyday (and a big 
+comeback) as a guitar effect. A high-order phase-shift network is built up from a long cascade  of 
+these elements, and the center frequency is swept sinusoidally (or sometimes with a triangle wave) at 
+a rate varying from sub-hertz to 10 or so Hz, depending on the desired effect. This usage has formed 
+the basis upon which famous effects like the Electro-Harmonix Small Stone and the Dunlop Univibe were 
+built.
+<p>
+Care was taken in crafting this family of filter actors so that their control behavior would emulate 
+that of analog filters. Ultimately, a filter implemented on a computer must take on the form of a 
+digital filter. Unfortunately, textbook digital filters are developed to emulate certain types of 
+fixed higher-order filter networks used in communications systems (like phone lines, for instance). 
+However, the given transformations were able to be adapted to the intuitive kinds of filters used 
+in music synthesizers. In particular, the analog state-variable filter (SVF) was emulated. This filter 
+is ideal for sound synthesis, as it produces many responses for a single energy-storage element, or 
+set of elements (one element per filter order, actually). This translates to fewer parts in the analog 
+filter and to higher computational efficiency for a digital one, since each analog energy storage 
+element to be emulated adds a corresponding MAC (multiply-accumulate) operation in the digital filter 
+implementation.
+<p>
+Only the first and second order analog SVFs were emulated, since all higher orders can be built up by 
+parallel or cascade combinations of these. In sound synthesis practice, filter orders typically are 
+not higher than four except in special cases, as their relatively steep asymptotic rolloffs do not 
+sound "natural".
+<p>
+The analog state-variable filter (SVF) presents the user with a very intuitive control interface. Each  
+control affects one, and only one, of the parameters described above (i.e. they do not interact, so 
+that adjusting the resonance, for instance, does not affect the center frequency). This control 
+separation is not always the case, particularly in digital filters. A means of mapping the analog 
+parameters to digital ones was found which preserves this control separation, so that, except for other 
+digital artifacts like aliasing and quantization, these filters operate essentially like analog SVFs.
+
+<h3> Actors </h3>
+
+The <b>Order1FilterActor</b> implements a first-order state-variable filter. This filter can simultaneously 
+produces a lowpass, highpass, and allpass response. All three responses from a given filter element 
+share the same corner frequency, which is controllable dynamically by the user. All responses are 
+available at once, and their relative gains may be individually set. By setting more than one gain to 
+a nonzero value, the responses may be combined for greater flexibility in controlling the resultant 
+tone. The first-order response cannot resonate, but it does model certain damping effects very well, 
+such as those due to reflecting sound waves off of carpeted walls.
+<p>
+The <b>BiQuadFilterActor</b> implements a second-order SVF based on the classic bi-quad architecture. This 
+filter can simultaneously produce a lowpass, bandpass, highpass, allpass and notch response. All five 
+responses share the same corner/center frequency, which is controllable dynamically by the user. All 
+responses are available at once, and their relative gains may be individually set. By setting more 
+than one gain to a nonzero value, the responses may be combined. The resonance of the internal filter 
+element is also controllable, and affects all five responses simultaneously.
+
+<h3>Usage</h3>
+
+To use any of the filter actors, load filter.so and create an actor of type Order1FilterActor or 
+BiQuadFilterActor.
+<dl>
+<dd><A HREF="#order1">Order1 Filter Messages</A>
+<p>
+<dd><A HREF="#biquad">BiQuad Filter Messages</A>
+</dl>
+<hr>
+
+<a name="order1">
+
+<h3>Order1FilterActor messages</h3>
+
+In addition to the messages understood by all generator actors, the Order1FilterActor understands the 
+following messages:
+
+<dl>
+	<dt>SetFrequency <tt>hActor x</tt>
+		<dd>Set the default corner frequency for new instances created by this actor to 
+		<tt>x</tt> (Hz).
+	<dt>SetAllFrequency <tt>hActor x <i>time</i></tt>
+		<dd>Set the corner frequency of all children to <tt>x</tt> (Hz), and set the default 
+		corner frequency for all future children. If <tt>time</tt> is specified, children will 
+		modulate to the new corner frequency over the specified duration. Default corner 
+		frequency is always set immediately regardless of <tt>time</tt>.
+	<dt>SetLowPassGain <tt>hActor x</tt>
+		<dd>Set the default lowpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllLowPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the lowpass response gain of all children to <tt>x</tt>, and set the default 
+		lowpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new lowpass response gain over the specified duration. Default 
+		lowpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetHighPassGain <tt>hActor x</tt>
+		<dd>Set the default highpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllHighPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the highpass response gain of all children to <tt>x</tt>, and set the default 
+		highpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new highpass response gain over the specified duration. Default 
+		highpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetAllPassGain <tt>hActor x</tt>
+		<dd>Set the default allpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllAllPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the allpass response gain of all children to <tt>x</tt>, and set the default 
+		allpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new allpass response gain over the specified duration. Default 
+		allpass response gain is always set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>Order1FilterActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the Order1FilterActor 
+algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetInput <tt>hSound</tt>
+		<dd>Set the input to zero (i.e., silence the input).
+	<dt>SetFrequency <tt>hSound x <i>time</i></tt>
+		<dd>Set the corner frequency to <tt>x</tt> (Hz). If <tt>time</tt> is 
+		specified, modulate to the new corner frequency over the specified duration.
+	<dt>SetLowPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the lowpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new lowpass response gain over the specified duration.
+	<dt>SetHighPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the highpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new highpass response gain over the specified duration.
+	<dt>SetAllPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the allpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new allpass response gain over the specified duration.
+</dl>
+
+<p>
+<hr>
+
+<a name="biquad">
+
+<h3>BiQuadFilterActor messages</h3>
+
+In addition to the messages understood by all generator actors, the BiQuadFilterActor understands the 
+following messages:
+
+<dl>
+	<dt>SetFrequency <tt>hActor x</tt>
+		<dd>Set the default corner/center frequency for new instances created by this actor to 
+		<tt>x</tt> (Hz).
+	<dt>SetAllFrequency <tt>hActor x <i>time</i></tt>
+		<dd>Set the corner/center frequency of all children to <tt>x</tt> (Hz), and set the 
+		default corner/center frequency for all future children. If <tt>time</tt> is specified, 
+		children will modulate to the new corner/center frequency over the specified duration. 
+		Default corner/center frequency is always set immediately regardless of <tt>time</tt>.
+	<dt>SetResonance <tt>hActor x</tt>
+		<dd>Set the default resonance (Q) for new instances created by this actor to <tt>x</tt>.
+	<dt>SetAllResonance <tt>hActor x <i>time</i></tt>
+		<dd>Set the resonance (Q) of all children to <tt>x</tt>, and set the 
+		default resonance for all future children. If <tt>time</tt> is specified, 
+		children will modulate to the new resonance over the specified duration. 
+		Default resonance is always set immediately regardless of <tt>time</tt>.
+	<dt>SetLowPassGain <tt>hActor x</tt>
+		<dd>Set the default lowpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllLowPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the lowpass response gain of all children to <tt>x</tt>, and set the default 
+		lowpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new lowpass response gain over the specified duration. Default 
+		lowpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetBandPassGain <tt>hActor x</tt>
+		<dd>Set the default bandpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllBandPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the bandpass response gain of all children to <tt>x</tt>, and set the default 
+		bandpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new bandpass response gain over the specified duration. Default 
+		bandpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetHighPassGain <tt>hActor x</tt>
+		<dd>Set the default highpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllHighPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the highpass response gain of all children to <tt>x</tt>, and set the default 
+		highpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new highpass response gain over the specified duration. Default 
+		highpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetAllPassGain <tt>hActor x</tt>
+		<dd>Set the default allpass response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllAllPassGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the allpass response gain of all children to <tt>x</tt>, and set the default 
+		allpass response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new allpass response gain over the specified duration. Default 
+		allpass response gain is always set immediately regardless of <tt>time</tt>.
+	<dt>SetNotchGain <tt>hActor x</tt>
+		<dd>Set the default notch response gain for new instances created by this actor to 
+		<tt>x</tt>.
+	<dt>SetAllNotchGain <tt>hActor x <i>time</i></tt>
+		<dd>Set the notch response gain of all children to <tt>x</tt>, and set the default 
+		notch response gain for all future children. If <tt>time</tt> is specified, children 
+		will modulate to the new notch response gain over the specified duration. Default 
+		notch response gain is always set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>BiQuadFilterActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the BiQuadFilterActor 
+algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetInput <tt>hSound</tt>
+		<dd>Set the input to zero (i.e., silence the input).
+	<dt>SetFrequency <tt>hSound x <i>time</i></tt>
+		<dd>Set the corner/center frequency to <tt>x</tt> (Hz). If 
+		<tt>time</tt> is specified, modulate to the new corner/center frequency over the 
+		specified duration.
+	<dt>SetResonance <tt>hSound x <i>time</i></tt>
+		<dd>Set the resonance (Q) to <tt>x</tt>.  If <tt>time</tt> is 
+		specified, modulate to the new resonance over the specified duration.
+	<dt>SetLowPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the lowpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new lowpass response gain over the specified duration.
+	<dt>SetBandPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the bandpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new bandpass response gain over the specified duration.
+	<dt>SetHighPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the highpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new highpass response gain over the specified duration.
+	<dt>SetAllPassGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the allpass response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new allpass response gain over the specified duration.
+	<dt>SetNotchGain <tt>hSound x <i>time</i></tt>
+		<dd>Set the notch response gain to <tt>x</tt>. If <tt>time</tt> is 
+		specified, modulate to the new notch response gain over the specified duration.
+</dl>
+
+</body>
+</html>

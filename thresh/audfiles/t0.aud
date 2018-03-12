@@ -1,0 +1,39 @@
+/* Just load the bloody actor.
+ */
+LoadDSO "msgGroup.so";
+LoadDSO "swThresh.so";		// threshold + switch actor
+LoadDSO "test.so";
+
+out = Create TestActor;
+Print out "----------------------------------------------------------------";
+
+s = Create SwitchActor;
+Switch s;
+
+Case s 0;
+    AddMessage s Print out "s:Case_0";
+
+Case s 1;
+    AddMessage s Print out "s:Case_1";
+
+Case s 2;
+    AddMessage s Print out "s:Case_2";
+
+Case s 3;
+    AddMessage s Print out "s:Case_3";
+
+Print out "Trying_case_0";
+SendAndEval s [ 0 ];
+
+Print out "Trying_case_1";
+SendAndEval s [ 1 ];
+
+Print out "Trying_case_2";
+SendAndEval s [ 2 ];
+
+Print out "Trying_case_3";
+SendAndEval s [ 3 ];
+
+
+
+

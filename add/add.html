@@ -1,0 +1,219 @@
+<HTML>
+<HEAD>
+   <TITLE>AddActor</TITLE>
+</HEAD>
+<BODY>
+
+<H2>
+Additive Synthesis Actor</H2>
+<HR>The Additive Synthesis Actor performs harmonic-spectrum additive
+synthesis.  At most 30 harmonics ("partials") are computed.
+
+<P>To use the Additive Synthesis Actor, load add.so and create an actor
+of type AddActor.
+<H3>
+AddActor messages</H3>
+In addition to the messages understood by all generator actors, the AddActor
+understands the following messages:
+<DL>
+<DT>
+SetFreq <TT>hActor x</TT></DT>
+
+<DD>
+Set the default fundamental frequency for new instances created by this
+actor to <TT>x</TT> Hz.</DD>
+
+<DT>
+SetAllFreq <TT>hActor x <I>time</I></TT></DT>
+
+<DD>
+Set the fundamental frequency of all children to <TT>x</TT> Hz, and also
+set the default fundamental frequency for all future children to <TT>x</TT>
+Hz. If <TT>time</TT> is specified, children will modulate to the new frequency
+over the specified duration. Default frequency is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+<DT>
+SetAmplPartials <TT>hActor array</TT></DT>
+
+<DD>
+Set the default amplitudes of the first few partials (however many are
+specified) for new instances created by this actor to <TT>array</TT>.</DD>
+
+<DT>
+SetIthAmpl <TT>hActor i x</TT></DT>
+
+<DD>
+Set the default amplitude of the i'th partial (starting from 0 as the base
+partial) for new instances created by this actor to <TT>x</TT>.</DD>
+
+<DT>
+SetAllIthAmpl <TT>hActor i x <I>time</I></TT></DT>
+
+<DD>
+Set the amplitude of the i'th partial of all children to <TT>x</TT>, and
+set the default amplitude of the i'th partial for all future children.
+If <TT>time</TT> is specified, children will modulate to the new amplitude
+over the specified duration. Default amplitude is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+<DT>
+SetFDPartials <TT>hActor array</TT></DT>
+
+<DD>
+Set the default frequency deviations of the first few partials (however
+many are specified) for new instances created by this actor to <TT>array</TT>.
+<br>
+As the FD value for the i'th partial ranges from -1 to 1,
+the i'th partial will have a frequency ranging 
+from that of the (i-1)'th to that of the (i+1)'th.
+<br>
+In other words:
+Frequency deviation is expressed in deviated portion of fundamental frequency
+with range of [-1, +1].
+New partial frequency = original harmonic frequency + FD*fundamental frequency.
+So FD=-1 brings the partial down to the partial below it, FD=1 up.
+</DD>
+
+<DT>
+SetIthFD <TT>hActor x</TT></DT>
+
+<DD>
+Set the default frequency deviation of the i'th partial for new instances
+created by this actor to <TT>x</TT>.</DD>
+
+<DT>
+SetAllIthFD <TT>hActor i x <I>time</I></TT></DT>
+
+<DD>
+Set the frequency deviation of the i'th partial of all children to <TT>x</TT>,
+and set the default amplitude of the i'th partial for all future children.
+If <TT>time</TT> is specified, children will modulate to the new value
+over the specified duration. Default value is always set immediately
+regardless of <TT>time</TT>.</DD>
+</DL>
+
+<H3>
+AddActor handler messages</H3>
+In addition to the messages understood by all handlers, the handler for
+the additive synthesis algorithm understands the following messages:
+<DL>
+<DT>
+SetFreq <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the fundamental frequency to <TT>x</TT> Hz. If <TT>time</TT>
+is specified, move to the new frequency over the specified duration.</DD>
+
+<DT>
+SetAmplPartials <TT>hSound array <I>time</I></TT></DT>
+
+<DD>
+Set the amplitudes of the first few partials (however many are specified)
+to <TT>array</TT>. If <TT>time</TT> is specified, move
+to the new amplitudes over the specified duration.</DD>
+
+<DT>
+SetIthAmpl <TT>hSound i x <I>time</I></TT></DT>
+
+<DD>
+Set the <TT>i</TT>'th partial's amplitude to <TT>x</TT>.
+If <TT>time</TT> is specified, move to the new amplitude over the specified
+duration. (Note: as of this writing, overlapping SetIthAmpl messages for
+different partials with different <I><TT>time</TT></I>s may cause unexpected
+results.)</DD>
+
+<DT>
+SetFDPartials <TT>hSound array</TT></DT>
+
+<DD>
+Set the frequency deviations of the first few partials (however many are
+specified) to <TT>array</TT>.</DD>
+
+<DT>
+SetIthFD <TT>hSound x</TT></DT>
+
+<DD>
+Set the frequency deviation of the i'th partial to <TT>x</TT>.
+<br>
+As x ranges from -1 to 1, the i'th partial will have a frequency ranging 
+from that of the (i-1)'th to that of the (i+1)'th.
+</DD>
+
+<DT>
+SetFreqPartials <TT>hSound array</TT></DT>
+
+<DD>
+Set the absolute frequency (in Hz) of the first few partials (however many
+are specified) to <TT>array</TT>. Valid range is [0, 24000].</DD>
+
+<DT>
+SetIthFreq <TT>hSound x</TT></DT>
+
+<DD>
+Set the absolute frequency of the i'th partial to <TT>x</TT>.</DD>
+
+</DL>
+
+<h3>Examples</h3>
+
+<tt>LoadDSO add.so;<br>a = Create AddActor;<br></tt>
+
+<dl>
+
+<dt><b>Play a fairly quiet pure sine wave at 200 Hz for 5 seconds:</b><br>
+<dd><p><tt>
+	s = BeginSound a SetFreq 200 SetAmp .1;<br>
+	sleep 5;
+	</tt>
+
+<p>
+<dt><b>The same, but with another louder sine wave at 1000 Hz:</b><br>
+<dd><p><tt>
+	SetIthAmpl a 0 .1;<br>
+	SetIthAmpl a 4 .3;<br>
+	s = BeginSound a SetFreq 200 SetAmp 1;<br>
+	sleep 5;
+	</tt>
+
+<p>
+<dt><b>Another way to get the same result:</b><br>
+<dd><p><tt>
+	s = BeginSoundPaused a SetFreq 200 SetAmp 1;<br>
+	SetIthAmpl s 0 .1;<br>
+	SetIthAmpl s 4 .3;<br>
+	SetPause s 0;<br>
+	sleep 5;
+	</tt>
+
+<p>
+<dt><b>Yet another way to get the same result:</b><br>
+<dd><p><tt>
+	s = BeginSoundPaused a SetFreq 200 SetAmp 1;<br>
+	SetAmplPartials s [.1 0 0 0 .3];<br>
+	SetPause s 0;<br>
+	sleep 5;
+	</tt>
+
+<p>
+<dt><b>This time, fade out the 200 Hz sine wave and fade in a 400 Hz one:</b><br>
+<dd><p><tt>
+	s = BeginSoundPaused a SetFreq 200 SetAmp 1;<br>
+	SetAmplPartials s [.1 0 0 0 .3];<br>
+	SetPause s 0;<br>
+	SetAmplPartials s [0 .1 0 0 .3] 5;<br>
+	sleep 5;
+	</tt>
+
+<p>
+<dt><b>How to play an arbitrary collection of frequencies:</b><br>
+<dd><p><tt>
+	s = BeginSoundPaused a SetFreq 200 SetAmp 1;<br>
+	SetAmplPartials s [.3  .1  .4  .1  .5  .9 ];<br>
+	SetFreqPartials s [200 700 100 800 200 800];<br>
+	SetPause s 0;<br>
+	sleep 5;
+	</tt>
+
+</BODY>
+</HTML>

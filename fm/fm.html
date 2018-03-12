@@ -1,0 +1,139 @@
+<!doctype html public "-//IETF//DTD HTML 3.0//EN">
+<html>
+<head>
+
+<title>FM actor</title>
+
+</head>
+<body>
+
+<h2>A basic two-operator frequency modulation implementation</h2>
+
+The FM suite (fmActor, fmHand, fmAlg) provides an implementation of the frequency modulation 
+synthesis algorithm, along with its associated vss handler and actor. The FM suite also provides 
+a model for implementing other synthesis algorithms in the vss3.0 framework, by virtue of its 
+completeness as a generator actor and by its relative simplicity. <p>
+
+The synthesis algorithm is based upon two sinusoidal operators, the output of one modulating the 
+phase of the other. A so-called "fm operator" is considered as a two-input black box sinewave 
+generator. One input controls the frequency of the output sinusoid, the other, the instantaneous 
+phase offset. This second input is called the "modulation input". This algorithm employs two 
+operators, one as a modulator and one as a carrier. The output of the modulator ties to the 
+modulation input of the carrier. The carrier output becomes the generated sound. <p>
+
+The spectrum of the generated sound consists of a spike at the carrier frequency and an infinite, 
+decaying train of spikes (e.g. "harmonics") on either side of the carrier frequency. The harmonics 
+are spaced in frequency according to integer multiples of the sum and difference of the carrier and 
+modulator frequencies. The amount of modulation, i.e. the amplitude of the modulation applied to the 
+carrier, is called the "modulation index" and controls the resulting spectral width or "brightness" 
+of the output. Larger modulation indices result in a "richer" or "brighter" sound. <p>
+
+In addition, this algorithm implements "operator self-feedback". A controllable amount of the 
+operator output is fed back to the operator's own modulation input. Spectrally, this also results in 
+a train of harmonics spaced at even multiples of the operator's frequency. Depending upon the amount 
+of feedback, this can lend a generally "warm", "brassy", or "buzzy" quality to the resulting tone, a
+quality which is otherwise difficult or computationally expensive to achieve. The operator feedback 
+is implemented on both operators. Placing it on the modulator allows for a controllable degree of 
+non-sinusoidal modulation of the carrier, greatly extending the degree of tonal richness achievable 
+with only two operators. <p>
+
+Internally, the operators are a nice excercise in fast, linearly-interpolated sinusoidal wave-table 
+lookup. The FM algorithm obeys the standard FM equations found in most introductory communications 
+texts. For further investigation one may refer to the coverage of "Angle Modulation" in <u>Modern 
+Communications and Spread Spectrum</u> by Cooper and McGillem, published by McGraw-Hill. <p>
+
+To use the FM implementation, load fm.so and create an actor of type FmActor.
+
+<h3>FmActor messages</h3>
+
+In addition to the messages understood by all generator actors, the FmActor understands the following 
+messages. If the optional parameter <tt>time</tt> is specified in any of the following messages, then 
+the corresponding parameter is linearly modulated from the old value to the specified value over the 
+duration of <tt>time</tt> seconds after receipt of the command. In the case of the commands 
+SetAll[Param], the default [Param] is always set immediately on receipt of the command, regardless of 
+<tt>time</tt>.
+
+<dl>
+	<dt>SetRatioMode <tt>hActor <i>bool</i></tt>
+			<dd>Set the default frequency ratio mode for new instances created by this 
+			actor to <tt>bool</tt>. Ratio Mode is active if <tt>bool</tt>=1, and is the 
+			default if <tt>bool</tt> is unspecified. In Ratio Mode the modulator frequency 
+			tracks changes in the carrier frequency according to the carrier/modulator 
+			frequency ratio parameter set by CMratio or MCratio. Ratio Mode is useful for 
+			changing the perceived "pitch" of the sound, without altering the perceived 
+			"timbre" of the sound, by issuing a single SetCarFreq-style command. If 
+			<tt>bool</tt>=0 then Ratio Mode is inactive and the carrier and modulator 
+			frequencies are independent.
+	<dt>SetAllRatioMode <tt>hActor <i>bool</i></tt>
+			<dd>Set the current frequency ratio mode of all children to <tt>bool</tt>, 
+			and set the default frequency ratio mode for new instances created by this 
+			actor to <tt>bool</tt>. Ratio mode is active when <tt>bool</tt>=1 and is the 
+			default if <tt>bool</tt> is unspecified. Refer to actor command SetRatioMode 
+			for behavioral details of Ratio Mode.
+	<dt>SetCarFreq <tt>hActor x</tt>
+	<dt>SetModFreq <tt>hActor x</tt>
+			<dd>Set the default carrier (modulator) frequency for new instances created 
+			by this actor to <tt>x</tt>.
+			(SetFreq is a synonym for SetCarFreq.)
+	<dt>SetAllCarFreq <tt>hActor x <i>time</i></tt>
+	<dt>SetAllModFreq <tt>hActor x <i>time</i></tt>
+			<dd>Set the current carrier (modulator) frequency of all children to 
+			<tt>x</tt>, and set the default carrier (modulator) frequency for all 
+			future children to <tt>x</tt>. 
+	<dt>SetCMratio <tt>hActor x</tt>
+	<dt>SetMCratio <tt>hActor x</tt>
+			<dd>Set the default carrier-to-modulator frequency ratio (modulator-to-carrier 
+			frequency ratio) for new instances created by this actor to <tt>x</tt>.
+	<dt>SetAllCMratio <tt>hActor x <i>time</i></tt>
+	<dt>SetAllMCratio <tt>hActor x <i>time</i></tt>
+			<dd>Set the current carrier-to-modulator frequency ratio (modulator-to-carrier 
+			frequency ratio) of all children to <tt>x</tt>, and set the default CM ratio 
+			(MC ratio) for all future children to <tt>x</tt>.
+	<dt>SetModIndex <tt>hActor x</tt>
+			<dd>Set the default modulation index for new instances created by this actor 
+			to <tt>x</tt>.
+	<dt>SetAllModIndex <tt>hActor x <i>time</i></tt>
+			<dd>Set the current modulation index of all children to <tt>x</tt>, and set 
+			the default modulation index for all future children to <tt>x</tt>. 
+	<dt>SetCarFeedback <tt>hActor x</tt>
+	<dt>SetModFeedback <tt>hActor x</tt>
+			<dd>Set the default carrier (modulator) feedback amount for new instances 
+			created by this actor to <tt>x</tt>.
+	<dt>SetAllCarFeedback <tt>hActor x <i>time</i></tt>
+	<dt>SetAllModFeedback <tt>hActor x <i>time</i></tt>
+			<dd>Set the current carrier (modulator) feedback amount of all children to 
+			<tt>x</tt>, and set the default carrier (modulator) feedback amount for all 
+			future children to <tt>x</tt>.
+</dl>
+
+<h3>FM handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the FM algorithm understands 
+the following messages. If the optional parameter <tt>time</tt> is specified in any of the following 
+messages, then the corresponding parameter is linearly modulated from the old value to the specified 
+value over the duration of <tt>time</tt> seconds after receipt of the command. 
+
+<dl>
+	<dt>SetRatioMode <tt>hSound <i>bool</i></tt>
+			<dd>Set to the frequency ratio mode to <tt>bool</tt>. Ratio 
+			mode is active when <tt>bool</tt>=1, and is the default if <tt>bool</tt> is 
+			unspecified. Refer to actor command SetRatioMode for the behavioral details 
+			of Ratio Mode.
+	<dt>SetCarFreq <tt>hSound x <i>time</i></tt>
+	<dt>SetModFreq <tt>hSound x <i>time</i></tt>
+			<dd>Set the carrier (modulator) frequency to <tt>x</tt>.
+			(SetFreq is a synonym for SetCarFreq.)
+	<dt>SetCMratio <tt>hSound x <i>time</i></tt>
+	<dt>SetMCratio <tt>hSound x <i>time</i></tt>
+			<dd>Set the carrier-to-modulator (modulator-to-carrier) frequency ratio for 
+			this handler to <tt>x</tt>. 
+	<dt>SetModIndex <tt>hSound x <i>time</i></tt>
+			<dd>Set the modulation index to <tt>x</tt>. 
+	<dt>SetCarFeedback <tt>hSound x <i>time</i></tt>
+	<dt>SetModFeedback <tt>hSound x <i>time</i></tt>
+			<dd>Set the carrier (modulator) feedback amount to <tt>x</tt>. 
+</dl>
+
+
+</body>
+</html>

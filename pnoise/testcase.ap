@@ -1,0 +1,13 @@
+audpanel.title: "Pseudo-Noise Synthesis Slider Demo"
+audpanel.sliders: 6
+audpanel.presets: ("ModifyNoise")
+
+ModifyNoise.messageGroup: "ModifyNz"
+ModifyNoise.interval: 0.025
+ModifyNoise.labels: ("Amp" "PseudoBW" "ModIndex" "RandomBW" "" "")
+ModifyNoise.minValues: (0.0  0.0  0.0  0.0  0.0  0.0)
+ModifyNoise.maxValues: (1.0  5000.0  4.0  5000.0  1.0  1.0)
+ModifyNoise.initialValues: (0.5  1000.0  0.0  1000.0  0.0  0.0)
+ModifyNoise.mappings: (0 1 2 3 4 5)
+ModifyNoise.parameters: 6
+ModifyNoise.defaultValues: (0.5  1000.0  0.0  1000.0  0.0  0.0)

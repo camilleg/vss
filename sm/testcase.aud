@@ -1,0 +1,29 @@
+SetPrintCommands 1;
+
+LoadDSO msgGroup.so;
+LoadDSO sm.so;
+
+a = Create SmActor;
+
+setPresetFile a "test.gr";
+setDoorNum a 4;
+initDoor a 0 1;
+initDoor a 1 4;
+initDoor a 2 7;
+initDoor a 3 12;
+
+setTimelimit a 10;
+
+mgJmaxtest = Create MessageGroup;
+setMessageGroup a mgJmaxtest;
+
+mgTrigger_Door0 = Create MessageGroup;
+mgTrigger_Door1 = Create MessageGroup;
+mgTrigger_Door2 = Create MessageGroup;
+mgTrigger_Door3 = Create MessageGroup;
+
+AddMessage mgTrigger_Door0 triggerDoor a 0;
+AddMessage mgTrigger_Door1 triggerDoor a 1;
+AddMessage mgTrigger_Door2 triggerDoor a 2;
+AddMessage mgTrigger_Door3 triggerDoor a 3;
+

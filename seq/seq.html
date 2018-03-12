@@ -1,0 +1,52 @@
+<html> <head> <title>Sequencer actor</title> </head>
+<body>
+
+<h2>A simple sequencer</h2>
+
+The Sequencer actor stores a time-stamped list of messages to be sent to (other) actors.  Any message that a client can send to an actor can be added to a SequenceActor and then played back later. <p>
+
+To use the Sequencer implementation, load seq.so and create an actor
+of type SeqActor. <p>
+
+(<i>Note:</i> if you misspell SeqActor as
+"SequenceActor" or "SequencerActor" (the way you probably pronounce it),
+it'll still work.  You'll get a SeqActor.  No warning is issued for this.
+Normally if you misspell an actor's name,
+you get error messages about undefined actors and DSO's not loaded;
+this case is an exception.)
+
+<h3>SeqActor messages</h3>
+
+In addition to the messages understood by all generator actors, the SeqActor understands the following messages:
+
+<dl>
+	<dt>SetTempo <tt>hActor x</tt>
+			<dd>Set the tempo of this sequence to <tt>x</tt> beats per minute (default is 60).
+	<dt>SetBeatLength <tt>hActor x</tt>
+			<dd>Set the tempo of this sequence to <tt>x</tt> seconds per beat (default is 1, obviously, from above).
+	<dt>AddMessage <tt>hActor beat message... </tt>
+			<dd>Add an event to the list at time <i>beat</i>, in beats from the start of the sequence.  <i>message...</i> is the message to be sent.
+	<dt>SetNumLoops <tt>hActor numloops</tt>
+			<dd>Set the number of times to execute the body of the sequence.<br>
+			Defaults to -1, which means to loop forever.<br>
+			0 means don't do it at <i>all</i> (i.e., don't play anything);<br>
+			1 means do it once;<br>
+			2 means twice, and so on.
+	<dt>SetLoopStart <tt>hActor <i>beat</i></tt>
+			<dd>Set the loop start point to <i>beat</i> (default 0).
+	<dt>SetLoopEnd <tt>hActor <i>beat</i></tt>
+			<dd>Set the loop end point to <i>beat</i> (default 1 million).
+	<dt>JumpTo <tt>hActor <i>beat</i></tt>
+			<dd>Change the position of playback to <i>beat</i>.
+	<dt>Rewind <tt>hActor <i>beat</i></tt>
+			<dd>Change the position of playback, backwards, to <i>beat</i>.  If <i>beat</i> is omitted, it defaults to zero.
+	<dt>SkipEvents <tt>hActor <i>count</i></tt>
+			<dd>Fast-forward, skipping the next <i>count</i> events.  (Skipping backwards doesn't work as of this writing.)
+	<dt>Active <tt>hActor <i>activeStatus</i></tt>
+			<dd>Play or pause the sequence (<i>activeStatus</i> is 1 or 0 respectively).
+</dl>
+
+
+
+</body>
+</html>

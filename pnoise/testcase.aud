@@ -1,0 +1,22 @@
+// pnoise.aud
+// This is the .aud file for the "noise" demo of sliderX
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO pnoise.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the noise actor
+aNz = Create PseudoNoiseActor;
+sNz = BeginSound aNz SetCutoff 1000.;
+
+// Create message groups for the interaction
+ModifyNz 	= Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage ModifyNz SetAmp sNz *0;
+AddMessage ModifyNz SetCutoff sNz *1;
+AddMessage ModifyNz SetModIndex sNz *2;
+AddMessage ModifyNz SetModCutoff sNz *3;

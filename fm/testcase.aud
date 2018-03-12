@@ -1,0 +1,24 @@
+// This is the .aud file for testing the FM actor
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO fm.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the fm actor
+aFm = Create FmActor;
+sFm = BeginSound aFm SetCarFreq 200.0, SetAmp 0.0, SetModIndex 1.5, SetMCratio 1.0;
+
+// Create message groups for the interaction
+ModifyFm 	= Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage ModifyFm SetCarFreq sFm *0 0.05;
+AddMessage ModifyFm SetAmp sFm *1 0.05;
+AddMessage ModifyFm SetModIndex sFm *2 0.05;
+AddMessage ModifyFm SetMCratio sFm *3 0.05;
+AddMessage ModifyFm SetCarFeedback sFm *4 0.05;
+AddMessage ModifyFm SetModFeedback sFm *5 0.05;
+

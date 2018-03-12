@@ -1,0 +1,264 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07C-SGI [en] (X11; I; IRIX64 6.5 IP27) [Netscape]">
+   <TITLE>Sequencer actor</TITLE>
+</HEAD>
+<BODY>
+
+<H2>
+State Machine Actor</H2>
+last updated: Ken Chen, Geoffrey Zheng,&nbsp; 27 December 1999
+<HR>The State Machine actor (smActor) stores a virtual multi-node, multi-link
+graphic structure, which is generally abstracted from the semantic or musical
+information of certain sound materials.&nbsp; SmActor has a set of rules
+which will dynamically control the state of the graph and determine the
+result of possible transition when&nbsp; received trigger event at certain
+time point ...... send message to other actors.
+<P>To use the State Machine implementation, load sm.so and create an actor
+of type smActor.
+<P>(<I>Note:</I> )
+<H3>
+SmActor messages</H3>
+In addition to the messages understood by all generator actors, the SeqActor
+understands the following messages:
+<DL>
+<DT>
+setDirectory hActor dirname</DT>
+
+<DL>
+<DT>
+Set the directory where the AscII files discribe the graphic structure
+should be found.&nbsp; The string, dirname must be ended with "/".</DT>
+</DL>
+
+<DT>
+setPresetFile hActor filename</DT>
+
+<DL>
+<DT>
+Set the filename of the AscII files used to initialize the graphic structure.&nbsp;&nbsp;
+The format of the file must be accurately followed.</DT>
+</DL>
+
+<DT>
+setDoorNum hActor numDoor</DT>
+
+<DL>
+<DT>
+Set the number of the doors which is used to observe the bahavior of the
+graphic structure.</DT>
+</DL>
+
+<DT>
+initDoor hActor doorNum nodeNum</DT>
+
+<DL>
+<DT>
+Set the initial state of the doors to the node specified by nodeNum.&nbsp;
+DoorNum ranges from 0 to numDoor - 1;&nbsp; nodeNum ranges from 1 to the
+Maximum node number specified in the PresetFile.</DT>
+</DL>
+
+<DT>
+setTimelimit hActor x</DT>
+
+<DL>
+<DT>
+Set the inactive time limit to x second.&nbsp; Default value: 100 s.</DT>
+</DL>
+
+<DT>
+setCoupling hActor x</DT>
+
+<DL>
+<DT>
+Set if the smActor operates in the coupling mode or not.&nbsp; x can be
+0 and any integer greater than 0, which turns the coupling mode off and
+on respectively.&nbsp; Coupling comes from the idea that the inactive doors
+can intelligently "listen to" and update their states according to the
+activities of the most recent active door.&nbsp;&nbsp;&nbsp; This mechanism
+creats some interesting results that once a silent door is activated, it
+will respond to the most recent active door.</DT>
+</DL>
+
+<DT>
+setMessageGroup hActor msgGroupName</DT>
+
+<DL>
+<DT>
+Specify the name of the messageGroup, which will be used as an output of
+the smActor, and input to other Actor (most likely used to control the
+sound)</DT>
+
+<DT>
+This output msgGroup contains an array of 5 arguments: [DoorNum, NodeNum,
+soundfileNum, Start time, Duration].</DT>
+</DL>
+
+<DT>
+triggerDoor hActor doorNum</DT>
+
+<DL>
+<DT>
+Send a trigger message to door with doorNum.&nbsp; SmActor will determine
+the resultant state of the door based on the current state of the door
+and the graph structure, and will output result to the messageGroup specified
+by setMessageGroup.</DT>
+
+<DT>
+</DT>
+</DL>
+
+<DT>
+
+<HR WIDTH="100%"></DT>
+
+<DT>
+Format for the graphic structure files:</DT>
+
+<UL>
+<LI>
+Nodes:</LI>
+</UL>
+
+<TABLE BORDER WIDTH="70%" NOSAVE >
+<TR ALIGN=CENTER NOSAVE>
+<TD NOSAVE></TD>
+
+<TD NOSAVE>Node Name</TD>
+
+<TD>Sound File Number</TD>
+
+<TD>Start Time</TD>
+
+<TD>End Time</TD>
+</TR>
+
+<TR ALIGN=LEFT NOSAVE>
+<TD NOSAVE>Note:</TD>
+
+<TD>Must be sequential integer beginning from 1</TD>
+
+<TD NOSAVE>Any integer which can be used to identify soundfiles.</TD>
+
+<TD NOSAVE>Start time of the semantic unit, relative to the beginning of
+the soundfile.&nbsp; Unit: second</TD>
+
+<TD>End time of the semantic unit, relative to the beginning of the soundfile.&nbsp;
+Unit: second</TD>
+</TR>
+
+<TR ALIGN=CENTER NOSAVE>
+<TD NOSAVE>Example:</TD>
+
+<TD>1,2,3,4,5,....</TD>
+
+<TD>01,1,32...</TD>
+
+<TD>10.773</TD>
+
+<TD>13.573</TD>
+</TR>
+</TABLE>
+
+<UL>
+<LI>
+Terminals and Edges</LI>
+</UL>
+
+<TABLE BORDER WIDTH="70%" NOSAVE >
+<TR NOSAVE>
+<TD></TD>
+
+<TD NOSAVE>Start Time of the Term.</TD>
+
+<TD>Node Linked</TD>
+
+<TD>Time of the linked Node</TD>
+
+<TD>Trans. Prob.</TD>
+</TR>
+
+<TR>
+<TD>Note:</TD>
+
+<TD>The position of the terminals within the semantic unit.&nbsp; Values
+relative to the beginning of the soundfile.&nbsp;&nbsp; Previous value
+will be used if the field is skipped.</TD>
+
+<TD>The name of the node linked from this terminal.</TD>
+
+<TD>Specify the destination position in the linked Node through this edge.&nbsp;
+It is a time relative to the beginning of the next soundfile.</TD>
+
+<TD>Transition probility.&nbsp; Defaulted to be : (1/edgeNum).&nbsp;&nbsp;
+Default values will be automatically computed if the fields are vacant.&nbsp;
+Please make sure that the transition probabilities add up to 1.</TD>
+</TR>
+
+<TR>
+<TD>Example:</TD>
+
+<TD>11.627,13.573</TD>
+
+<TD>(6, (10, (11 ...</TD>
+
+<TD>23.464</TD>
+
+<TD>0.1, 0.2,&nbsp; 0.5 ...</TD>
+</TR>
+</TABLE>
+
+<UL>
+<LI>
+"End" should be placed at the end of the file.</LI>
+</UL>
+
+<UL>
+<LI>
+Tabs should be used to separate the numbers.</LI>
+</UL>
+
+<UL>
+<LI>
+A Sample File</LI>
+</UL>
+
+<HR WIDTH="100%">
+<DT>
+1&nbsp;&nbsp;&nbsp; 01&nbsp;&nbsp;&nbsp; 10.773&nbsp;&nbsp;&nbsp;&nbsp;
+13.573</DT>
+
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 11.627&nbsp;&nbsp;&nbsp;&nbsp; (6&nbsp;&nbsp;&nbsp;&nbsp;
+23.464
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 13.573&nbsp;&nbsp;&nbsp;&nbsp; (6&nbsp;&nbsp;&nbsp;&nbsp;
+23.464&nbsp;&nbsp;&nbsp;&nbsp; 0.1
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(10&nbsp;&nbsp; 6.602&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.2
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(11&nbsp;&nbsp; 26.497&nbsp;&nbsp;&nbsp;&nbsp; 0.3
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(9&nbsp;&nbsp;&nbsp;&nbsp; 51.217&nbsp;&nbsp;&nbsp;&nbsp; 0.2
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(5&nbsp;&nbsp;&nbsp;&nbsp; 17.165&nbsp;&nbsp;&nbsp;&nbsp; 0.2
+<P>2&nbsp;&nbsp;&nbsp; 01&nbsp;&nbsp;&nbsp; 13.573&nbsp;&nbsp;&nbsp;&nbsp;
+16.136
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 16.136&nbsp;&nbsp;&nbsp;&nbsp; (6&nbsp;&nbsp;&nbsp;&nbsp;
+23.464&nbsp;&nbsp;&nbsp;&nbsp; 0.5
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(10&nbsp;&nbsp; 4.285&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.5
+<P>3&nbsp;&nbsp;&nbsp; 02&nbsp;&nbsp;&nbsp; 16.136&nbsp;&nbsp;&nbsp;&nbsp;
+18.509&nbsp;&nbsp;&nbsp;&nbsp; 0.3
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18.509&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(5&nbsp;&nbsp;&nbsp; 17.165
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(10&nbsp;&nbsp; 4.285
+<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(8&nbsp;&nbsp;&nbsp;&nbsp; 24.693
+<BR>End
+<BR>&nbsp;</DL>
+
+</BODY>
+</HTML>

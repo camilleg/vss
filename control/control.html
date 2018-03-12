@@ -1,0 +1,263 @@
+<html>
+<head>
+<title>Control-flow actors</title>
+</head>
+<body>
+<h2>Control-flow actors</h2>
+
+These actors provide control-flow constructs for other actors.
+They send messages to user-specified
+<a href="./msgGroup.html">message groups</a> as the results of
+their actions -- looping, conditional statements, random number generation.
+<p>
+
+To use the LoopActor, load control.so and create an actor of type LoopActor.
+
+<h3>LoopActor messages</h3>
+
+The LoopActor periodically sends a single floating-point value to a message group.
+You can control three aspects of the loop: initialization;  termination conditions;
+and step behavior (just like the three parts of a C-language for(;;) loop).
+You can also control the number of times to repeat the loop, and optionally
+"swing" back and forth through the loop.
+<p>
+A loop has three states:  its <b>data</b> value, its <b>elapsed time</b>,
+and <b>how many steps</b> (iterations) it has taken so far.
+You can control the loop's execution with all three of these.  Moreover, since
+these produce an overdetermined system when taken as a whole, you can specify
+which of these shall be constrained by the others (e.g., figure out what the
+data and time increments will be, given a data range of 0 to 10,
+a time duration of 20 seconds, and exactly 42 steps through the loop).
+<p>
+This is trickier than it looks.  Watch out particularly that you terminate
+the loop in the way you intend to:  when the data value reaches a limit,
+when a fixed number of steps have completed, or when a certain amount of
+time has elapsed.  (If you don't do one of these things, the loop is infinite.)
+<p>
+The default loop "does nothing":  it sends out a stream of zeros, unchanging,
+without termination.  (It only does this once a message group has been set to
+receive the stream, and once a <tt>SetNumLoops</tt> message has activated it, though.)
+<p>
+In addition to the messages understood by all actors,
+the LoopActor understands the following messages:
+<p>
+
+<ul>
+
+<li><b><i>Loop Initialization</i></b>
+<p>
+<dl>
+	<dt>SetDataStart <tt>hActor x</tt>
+		<dd>Set the starting data value of the loop to <tt>x</tt>.
+</dl>
+
+<p>
+<li><b><i>Loop Stepping</i></b>
+<p>
+
+<dl>
+	<dt>SetDataStep <tt>hActor xDelta [time]</tt>
+		<dd>Each time through the loop, increment the data value by <tt>xDelta</tt>
+		(default 0).
+		If <tt>time</tt> is specified, linearly change the value of <tt>xDelta</tt>
+		from its current value to the new value over the next <tt>time</tt> seconds.
+	<dt>SetTimeStep <tt>hActor tDelta [time]</tt>
+		<dd>Each time through the loop, pause for <tt>tDelta</tt> seconds (default 1).
+		<tt>tDelta</tt> must be nonnegative.
+		If <tt>time</tt> is specified, linearly change the value of <tt>tDelta</tt>
+		from its current value to the new value over the next <tt>time</tt> seconds.
+</dl>
+
+<p>
+<li><b> <i>Loop Termination</i></b> -
+The loop will terminate if any one of these conditions holds (logical "or").
+<p>
+
+<dl>
+	<dt>SetDataLimit <tt>hActor xLimit</tt>
+		<dd>Terminate loop when the data value <tt>x</tt> passes <tt>xLimit</tt>,
+		considering the sign of SetDataStep.  (If the argument of the last
+		SetDataStep was positive,
+		terminate when <tt>x</tt> exceeds <tt>xLimit</tt>;
+		if negative, when <tt>x</tt> falls below <tt>xLimit</tt>.)
+	<dt>SetNoDataLimit <tt>hActor</tt>
+		<dd>Ignore any previous <tt>SetDataLimit</tt> messages
+		when checking for loop termination.  This is the default.
+	<dt>SetTimeLimit <tt>hActor tLimit</tt>
+		<dd>Terminate loop when <tt>tLimit</tt> seconds have elapsed since the loop
+		started running (by sending a <tt>SetNumLoops</tt> message).
+		If <tt>tLimit</tt> is negative (the default), ignore time limits.
+	<dt>SetStepLimit <tt>hActor stepLimit</tt>
+		<dd>Terminate loop after the <tt>stepLimit</tt>'th step through the loop.
+		If <tt>stepLimit</tt> is negative (the default), ignore step limits.
+</dl>
+
+<p>
+<li><b><i>Constraint Definition</i></b> -
+Of course, these may be inaccurate if values change during the loop's execution,
+e.g. as a result of gradual acceleration in <tt>SetTimeStep</tt> above.
+<p>
+
+<dl>
+	<dt>ComputeDataLimit <tt>hActor</tt>
+	<dt>ComputeDataStep  <tt>hActor</tt>
+		<dd>Compute this value so the data reaches its limit at the same time
+		as the first of (time, steps) reaches its limit.
+	<dt>ComputeTimeLimit <tt>hActor</tt>
+	<dt>ComputeTimeStep  <tt>hActor</tt>
+		<dd>Compute this value so the time reaches its limit at the same time
+		as the first of (data, steps) reaches its limit.
+	<dt>ComputeStepLimit <tt>hActor</tt>
+		<dd>Compute this value so the step reaches its limit at the same time
+		as the first of (data, time) reaches its limit.
+
+</dl>
+
+<p>
+<li><b><i>Miscellany</i></b>
+<p>
+
+<dl>
+	<dt>SetMessageGroup <tt>hActor messageGroupName</tt>
+		<dd>Assign a message group to send the periodic messages to.  These
+		messages will have two arguments ("<tt>*0, *1</tt>"), the current data
+		value of the loop and the most recent value sent to SetUserFloat respectively.
+	<dt>SetNumLoops <tt>hActor numLoops</tt>
+		<dd>Run the loop for <tt>numLoops</tt> times.  You'll commonly use a value of 1.
+		(If the loop is currently running,
+		it will restart from the beginning and do its thing <tt>numLoops</tt> times
+		starting from now, irrespective of any previous SetNumLoops commands.)
+		<br>
+		If <tt>numLoops</tt> is zero (the default),
+		the loop will immediately halt and remain halted until a nonzero
+		<tt>SetNumLoops</tt> message is received.
+		<br>
+		If <tt>numLoops</tt> is negative, the loop will run indefinitely.
+	<dt>SetSwing <tt>hActor bool</tt>
+		<dd>Enable or disable Swing Mode.
+		If <tt>bool</tt> is true (nonzero), each time the loop terminates,
+		the start and limit data values are exchanged and the data step is negated,
+		so the next execution of the loop is "reversed" with respect to the data.
+		If SetNumLoops has a large value, this causes the data value to "swing"
+		back and forth between its two extremes.
+		The default value is false.
+	<dt>Debug <tt>hActor bool</tt>
+		<dd>Enable or disable Debug Mode.
+		If <tt>bool</tt> is true (nonzero), the full state of the loop (start,
+		end, step, and current values of data, time, and step;  and swing and
+		numloops values) is printed just after each step of the loop
+		and just after each message received by the LoopActor.
+	<dt>SetUserFloat <tt>hActor x</tt>
+		<dd>Assign a new value to this variable, simply to pass it along
+		to the message group named in <tt>SetMessageGroup</tt> as a second
+		parameter.
+</dl>
+
+</ul>
+
+<h3>Examples</h3>
+
+<tt>
+LoadDSO debug.so;<br>
+pr = Create PrintfActor;<br>
+// This prints debugging messages.<br><br>
+LoadDSO msgGroup.so;<br>
+printme = Create MessageGroup;<br>
+AddMessage printme printf pr *0;<br>
+// Call this message group to print a number.<br><br>
+LoadDSO control.so;<br>
+loop = Create LoopActor;<br>
+SetMessageGroup loop printme;<br>
+// Attach mg to our loop actor, so our loop will print numbers.<br>
+</tt>
+
+<dl>
+
+<dt><b>Print 2, 4, 6, 8, one number per second</b> (with debugging info):<br>
+<dd><p><tt>
+	Active loop 0;<br>
+	Debug loop 1;<br>
+	SetNumLoops loop 1;<br>
+	SetDataStart loop 2;<br>
+	SetDataStep  loop 2;<br>
+	SetDataLimit loop 8;<br>
+	Active loop 1;<br>
+	sleep 15;
+	</tt>
+
+<p>
+<dt><b>Print 2, 4, 6, 8, one number per second, for one hour:</b><br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetNumLoops loop -1; // loop forever<br>
+	SetDataStart loop 2;<br>
+	SetDataStep  loop 2;<br>
+	SetDataLimit loop 8;<br>
+	Active loop 1;<br>
+	sleep 3600;
+	</tt>
+
+<p>
+<dt><b>Print 2, 4, 6, 8, 6, 4, 2, ten numbers per second, for one minute:</b><br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetSwing loop 1; // back and forth<br>
+	SetTimeStep loop 0.1;<br>
+	SetNumLoops loop -1; // loop forever<br>
+	SetDataStart loop 2;<br>
+	SetDataStep  loop 2;<br>
+	SetDataLimit loop 8;<br>
+	Active loop 1;<br>
+	sleep 60;
+	</tt>
+
+<p>
+<dt><b>Print increasing even numbers, ten per second, for one minute:</b><br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetSwing loop 1;<br>
+	SetTimeStep loop 0.1;<br>
+	SetTimeLimit loop 60; // this replaces SetDataLimit as termination condition<br>
+	SetNumLoops loop 1; // do this only once<br>
+	SetDataStart loop 2;<br>
+	SetDataStep  loop 2;<br>
+	Active loop 1;<br>
+	sleep 65;
+	</tt>
+
+<p>
+<dt><b>Print "42" ten times:</b><br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetStepLimit loop 9;   // "for (i=0; i<=9; i++)"<br>
+	SetDataStart loop 42;<br>
+	SetDataStep  loop 0;   // Don't change 42 to anything else (default)<br>
+	SetNumLoops  loop 1;<br>
+	Active loop 1;<br>
+	sleep 60;
+	</tt>
+
+<p>
+<dt><b>Print "42" ten times</b> (using 10 loops, instead of 10 steps through one loop):<br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetStepLimit loop 0;   // "for (i=0; i<=0; i++)"<br>
+	SetDataStart loop 42;<br>
+	SetNumLoops  loop 10;  // Do all of the above ten times<br>
+	Active loop 1;<br>
+	sleep 60;
+	</tt>
+
+<p>
+<dt><b>Print "42" ten times</b> (using 2 loops of 5 steps each):<br>
+<dd><p><tt>
+	Active loop 0;<br>
+	SetStepLimit loop 4;   // "for (i=0; i<=4; i++)"<br>
+	SetDataStart loop 42;<br>
+	SetNumLoops  loop 2;   // Do it twice<br>
+	Active loop 1;<br>
+	sleep 60;
+	</tt>
+
+</body>
+</html>

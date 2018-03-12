@@ -1,0 +1,74 @@
+SetPrintCommands 1;
+
+LoadDSO add.so;
+LoadDSO msgGroup.so;
+LoadDSO map.so;
+
+a = Create AddActor;
+
+PartialAmplitudes = Create MessageGroup;
+OverallControls = Create MessageGroup;
+FreqDeviation = Create MessageGroup;
+AbsFreq = Create MessageGroup;
+
+// #define go(s,partial)                         \
+// s = BeginSound a SetFreq 500 SetAmp 0;                \
+// AddMessage OverallControls SetAmp s *0 *3;            \
+// AddMessage OverallControls SetFreq s *1 *3;           \
+// AddMessage PartialAmplitudes SetIthAmpl s partial *partial *3;        \
+// AddMessage FreqDeviation SetIthFD s partial *partial *3;      \
+// AddMessage AbsFreq SetIthFreq s partial *partial *3
+// 
+// go(s0, 0);
+// go(s1, 1);
+// go(s2, 2);
+
+
+s0  = BeginSound a SetFreq 500 SetAmp 0;
+AddMessage OverallControls SetAmp  s0  *0 *3;
+AddMessage OverallControls SetFreq  s0  *1 *3;
+AddMessage PartialAmplitudes SetIthAmpl  s0    0  *  0  *3;
+AddMessage FreqDeviation SetIthFD  s0    0  *  0  *3;
+AddMessage AbsFreq SetIthFreq  s0    0  *  0  *3 ;
+
+s1  = BeginSound a SetFreq 500 SetAmp 0;
+AddMessage OverallControls SetAmp  s1  *0 *3;
+AddMessage OverallControls SetFreq  s1  *1 *3;
+AddMessage PartialAmplitudes SetIthAmpl  s1    1  *  1  *3;
+AddMessage FreqDeviation SetIthFD  s1    1  *  1  *3;
+AddMessage AbsFreq SetIthFreq  s1    1  *  1  *3 ;
+
+s2  = BeginSound a SetFreq 500 SetAmp 0;
+AddMessage OverallControls SetAmp  s2  *0 *3;
+AddMessage OverallControls SetFreq  s2  *1 *3;
+AddMessage PartialAmplitudes SetIthAmpl  s2    2  *  2  *3;
+AddMessage FreqDeviation SetIthFD  s2    2  *  2  *3;
+AddMessage AbsFreq SetIthFreq  s2    2  *  2  *3 ;
+
+
+SetAmplPartials s0 [.1];
+SetAmplPartials s1 [0 .1];
+SetAmplPartials s2 [0 0 .1];
+
+// #define tilt(map, a0, a1, s, partial) \
+// map = Create SegmentMapper;           \
+// SetBreakpoints map [0 a0, 1 a1];      \
+// AddMessage OverallControls MapAndSend map ScaleAmp s @*2 *3
+// 
+// tilt(m0, 1, 1, s0, 0);
+// tilt(m1, 1, .5, s1, 1);
+// tilt(m2, 1, .25, s2, 2);
+
+
+m0  = Create SegmentMapper;
+SetBreakpoints  m0  [0   1 , 1   1 ];
+AddMessage OverallControls MapAndSend  m0  ScaleAmp   s0  @*2 *3 ;
+
+m1  = Create SegmentMapper;
+SetBreakpoints  m1  [0   1 , 1   .5 ];
+AddMessage OverallControls MapAndSend  m1  ScaleAmp   s1  @*2 *3 ;
+
+m2  = Create SegmentMapper;
+SetBreakpoints  m2  [0   1 , 1   .25 ];
+AddMessage OverallControls MapAndSend  m2  ScaleAmp   s2  @*2 *3 ;
+

@@ -1,0 +1,88 @@
+<html> <head> <title>LaterActor</title> </head>
+<body>
+<h2>A delayed message sender</h2>
+
+The LaterActor stores a message destined for another actor, along with
+a delay time.
+It sends the message after the specified amount of time has elapsed.<p>
+
+A single LaterActor can hold multiple messages, so you never need to
+create more than one LaterActor.<p>
+
+To use the LaterActor, load later.so and create an actor of type LaterActor.
+
+<h3>LaterActor messages</h3>
+
+In addition to the messages understood by all actors, the LaterActor understands the following message:
+
+<dl>
+	<dt>AddMessage <tt>hActor delay msg</tt>
+	<dd>Store the message <tt>msg</tt> (everything between <tt>delay</tt> and
+	the semicolon, in a .aud file) to be sent <tt>delay</tt> seconds from the
+	receipt of this message.
+</dl>
+
+<h3>Examples</h3>
+
+<tt>LoadDSO later.so;<br>later = Create LaterActor;<br></tt>
+
+<dl>
+
+<dt><b>Sending a parameter-update message for a sound:</b><br>
+	make "tweet" silent, 2 seconds from now.
+<dd><p><tt>
+	tweet = BeginSound myActor;<br>
+	...<br>
+	AddMessage later 2 SetAmp tweet 0;
+	</tt>
+
+<p>
+<dt><b>Calling another message group (faking an <tt>AUDupdate()</tt>):</b><br>
+	5 seconds from now, invoke message group <tt>foo</tt> with no parameters;<br>
+	5 seconds after that, invoke <tt>bar</tt> with an array of floats.
+<dd><p><tt>
+	foo = Create MessageGroup;<br>
+	bar = Create MessageGroup;<br>
+	...<br>
+	AddMessage later 10 SendData bar [ 3.1416 2.71828 42.000 ];<br>
+	AddMessage later  5 SendData foo [0];   // The 0 is ignored, but necessary. <br>
+	</tt>
+	<p>
+	It doesn't matter that those two AddMessage lines are "out of order".
+	The LaterActor will sort it out and do the right thing at the right time.
+
+<p>
+<dt><b>Sending a delayed message from within a message group:</b><br>
+	when AUDupdate("zip") happens, 2 seconds later make "tweet" silent.
+<dd><p><tt>
+	zip = Create MessageGroup;<br>
+	tweet = BeginSound myActor;<br>
+	...<br>
+	AddMessage zip AddMessage later 2 SetAmp tweet 0;
+	</tt>
+	<p>
+	Read this as:  To the message group "zip", add the following
+	message: "AddMessage later 2 SetAmp tweet 0".  (That message
+	happens to contain another "AddMessage" command, but no big deal,
+	I learned what <tt>char **</tt> meant in my introductory C programming
+	class years ago.)  The added message then means, as usual,
+	"set the amplitude of tweet to zero, 2 seconds from now."
+
+<p>
+<dt><b>Sending a delayed message from within a message group, fancier:</b><br>
+	when AUDupdate("zip") happens, use its first argument as the
+	new amplitude of tweet and the second argument for how long
+	to wait before changing the amplitude.
+<dd><p><tt>
+	zip = Create MessageGroup;<br>
+	tweet = BeginSound myActor;<br>
+	...<br>
+	AddMessage zip AddMessage later *1 SetAmp tweet *0;
+	</tt>
+	<p>
+	Exactly the same as the previous example,
+	except the constants have become variables.
+
+</dl>
+</body>
+</html>

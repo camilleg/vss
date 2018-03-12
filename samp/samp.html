@@ -1,0 +1,164 @@
+<html> <head> <title>Sample playback actor</title> </head>
+<body>
+
+<h3>A sample-file playback actor</h3>
+
+The sample actor suite (sampActor, sampHand, sampAlg) provides a simple means of controlling sample file playback.
+(The sample actor is <b>not</b> a good example for developing other actors,
+because it requires some special code and breaks several actor/handler conventions.)<p>
+
+Sample files are on the machine running vss (the server, <i>not</i> the client).<pp>
+
+Sample files must be in <tt>aiff</tt> or <tt>wav</tt> format.
+Other formats like .au or .aifc must first be converted to .aiff.
+On an SGI computer, one of these two commands will usually work:<br>
+<tt>sfconvert inputfile outputfile.aiff format aiff<br>
+sfconvert inputfile outputfile.aiff format aiff int 16 2</tt><br>
+(Simply renaming <tt>foo.wav</tt> to <tt>foo.aiff</tt> won't work).
+Or you can use SGI's <tt>soundfiler</tt> application.
+On linux machines, <tt>sox</tt> converts file formats well.
+<p>
+AIFF files must be in 16-bit, not 8-bit, format;
+WAV files may be either 16 or 8-bit.  16-bit files generally
+sound much cleaner (less hiss and rumble);  they are strongly preferred.
+<p>
+WAV files must be in conventional PCM format, not something funky
+like ADPCM or MULAW or G728_CELP.
+<p>
+
+The principal parameters of the sample playback engine are
+<ul>
+<li>the base directory (where it looks for 
+sample files; relative paths are relative to the vss launch directory),
+<li>the filename (names with 
+path are relative to the base directory, unless they begin with "/"),
+<li>the loop points (begin and end), 
+<li>the loop flag (if true, looping occurs),
+<li>and, to a lesser degree, the bounding points (begin and end) 
+for playback of a smaller segment from within the sample file.</ul><p>
+
+The sample playback algorithm loads the entire sample data into memory,
+so be careful to load only the samples which you need,
+and delete them when they are no longer needed.  Sound files can be
+quite large.  If you're still cramped for memory, consider converting
+the files to a lower sample rate, or from stereo to mono, with SGI's
+<tt>soundfiler</tt> application.<p>
+
+To use the sample actor, load samp.so and create an actor of type SampleActor.
+
+<h3>SampleActor messages</h3>
+
+In addition to the messages understood by all generator actors, the SampleActor understands the following messages:
+
+<dl>
+	<dt>PlaySample <tt>hActor "fileName"</tt>
+			<dd>Load the specified sample file into memory, play it from beginning to end 
+			without looping, and then delete the handler. No handle is returned to the 
+			client.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>LoadFile <tt>hActor "fileName"</tt>
+			<dd>Load the specified sample file into memory, and add it to a quick-playback 
+			file list maintained internally by vss for future references to sample file 
+			<tt>fileName</tt> by <tt>hActor</tt>.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>UnloadFile <tt>hActor "fileName"</tt>
+			<dd>Delete the specified sample file from memory, and remove it from the 
+		        file list for <tt>hActor</tt>.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>UnloadAllFiles <tt>hActor</tt>
+			<dd>Delete all current sample files for actor <tt>hActor</tt> from memory, 
+			and clear the associated file list.
+	<dt>RewindAll <tt>hActor</tt>
+			<dd>Rewind all children. That is, set their playback indices to the beginning 
+			of the sample file, or to the "start" parameter given in the message 
+			SetAllBounds.
+	<dt>SetDirectory <tt>hActor "dir"</tt>
+			<dd>Set the default base directory for new instances created by this actor to 
+			<tt>dir</tt>.  <tt>dir</tt> must be double-quoted as shown.
+	<dt>SetAllDirectory <tt>hActor dir</tt>
+			<dd>Set the base directory of all children to <tt>dir</tt>, and set the 
+			default base directory for all future children to this directory also.
+	<dt>SetAllBounds <tt>hActor x y</tt>
+			<dd>Set the start and end points of sample playback for all children to 
+			<tt>x</tt> (start) and <tt>y</tt> end. Otherwise, the start and end points 
+			default to the beginning and end of the sample file(s).
+	<dt>SetLoop <tt>hActor bool</tt>
+			<dd>Set the default loop flag for new instances created by this actor to 
+			<tt>bool</tt>. Looping occurs for <tt>bool</tt>=1. The default behavior upon 
+			actor creation is for looping to be off.
+	<dt>SetAllLoop <tt>hActor bool</tt>
+			<dd>Set the loop flag of all children, and the default loop flag for all 
+			future children to <tt>bool</tt>.
+	<dt>SetAllLoop <tt>hActor x y <i>bool</i></tt>
+			<dd>Set the loop points for all children to <tt>x</tt> (start) and <tt>y</tt> 
+			(end). If <tt>bool</tt> is specified, set the loop flag for all children, and 
+			the default loop flag for all future children, to <tt>bool</tt>. If 
+			<tt>bool</tt> is not specified, set the loop flag for all children, and the 
+			default loop flag for all future children, to 1.0 (true).
+	<dt>SetPlaybackRate <tt>hActor r</tt>
+			<dd>Set the default playback rate for new instances created by this actor to 
+			<tt>r</tt>.  The default rate upon actor creation is <tt>r</tt>=1.0 which 
+			corresponds to playback at the normal rate (i.e. a rate of 2.0 plays back at 
+			double speed). vss always computes and plays out samples at its own set sample 
+			rate; for sample files recorded at different rates, samples are automatically 
+			interpolated to maintain a consistent perceived playback rate.
+	<dt>SetAllPlaybackRate <tt>hActor r <i>time</i></tt>
+			<dd>Set the playback rate for all children, and the default playback rate for 
+			all future children, to <tt>r</tt>. If <tt>time</tt> is specified, children 
+			will modulate to the new playback rate over the specified duration. Default 
+			playback rate for future children is always set immediately regardless of 
+			<tt>time</tt>.
+</dl>
+
+<h3>Sample playback handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the sample playback algorithm understands the following messages:
+
+<dl>
+	<dt>DeleteWhenDone <tt>hSound <i>bool</i></tt>
+			<dd>If <tt>bool</tt> is true (not 0.), delete the handler when 
+			the playback index reaches the playback endpoint (only if looping is
+			turned off). <tt>bool</tt> defaults to true.
+			If DeleteWhenDone isn't sent, the handler will <i>not</i> be automatically
+			deleted in this way.
+	<dt>DeleteWhenDoneMG <tt>hSound hMessageGroup</tt>
+			<dd>When the playback index reaches the playback endpoint,
+			delete the handler and send a message to the Message Group <tt>hMessageGroup</tt>
+			consisting of a floating-point array one element long.  This single element is
+			<tt>hSound</tt>, the handle of this (currently being deleted) handler.
+			You can use this message to discover when a sound has finished playing.
+	<dt>JumpTo <tt>hSound time</tt>
+			<dd>Move the playback index to the specified time (in seconds). Fails if 
+			<tt>time</tt> is less than zero (all sample files are assumed to start at 
+			relative time zero) or greater than the length of the file in time.
+	<dt>Rewind <tt>hSound</tt>
+			<dd>Set the playback index to the beginning of the sample file, or to the 
+			"start" parameter given in the messages SetBounds or SetAllBounds.
+	<dt>SetDirectory <tt>hSound "dir"</tt>
+			<dd>Set the base directory to <tt>dir</tt>.
+			<tt>dir</tt> must be double-quoted as shown.
+	<dt>SetFile <tt>hSound "fileName"</tt>
+			<dd>Load the sample file <tt>fileName</tt>, if not previously loaded, and 
+			initialize for playback. Playback and loop points are reset to the beginning 
+			and end of the file.  <tt>filename</tt> must be double-quoted as shown.
+	<dt>SetBounds <tt>hSound x y</tt>
+			<dd>Set the start and end points of sample playback to 
+			<tt>x</tt> (start) and <tt>y</tt> (end). Otherwise, the start and end points 
+			default to the beginning and end of the sample file, or to the points 
+			specified through message SetAllBounds.
+	<dt>SetLoop <tt>hSound bool</tt>
+			<dd>Set the default loop flag to <tt>bool</tt>.
+	<dt>SetLoop <tt>hSound x y <i>bool</i></tt>
+			<dd>Set the loop points to <tt>x</tt> (start) and <tt>y</tt> 
+			(end). If <tt>bool</tt> is specified, set the loop flag to 
+			<tt>bool</tt>. If <tt>bool</tt> is not specified, set the loop flag for this 
+			handler to 1.0 (true).
+	<dt>SetPlaybackRate <tt>hSound r <i>time</i></tt>
+			<dd>Set the rate at which which the algorithm plays back the sample file. 
+			The default rate upon actor creation is <tt>r</tt>=1.0 corresponding to 
+			playback at the normal rate (i.e. a rate of 2.0 plays back at double speed). 
+			If <tt>time</tt> is specified, modulate to the new playback rate over the 
+			specified duration. 
+			
+			
+</dl>
+
+</body>
+</html>

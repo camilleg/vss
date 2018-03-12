@@ -1,0 +1,31 @@
+audpanel.title: "Distance Test Slider Demo"
+audpanel.sliders: 3
+audpanel.presets: ("ModifyNoise" "ModifyDist" "ModifyPan")
+
+ModifyNoise.messageGroup: "ModifyNz"
+ModifyNoise.interval: 0.025
+ModifyNoise.type:		(3 3 3)
+ModifyNoise.labels: 		("Amp" "BandWidth"	"Order")
+ModifyNoise.minValues: 		(0.0  	0.0  		0.0)
+ModifyNoise.maxValues: 		(1.0  	20000.0  	2.0)
+ModifyNoise.initialValues: 	(0.0  	10000.0		0.0)
+ModifyNoise.mappings: (0 1 2)
+ModifyNoise.parameters: 3
+
+ModifyDist.messageGroup: "ModifyD1"
+ModifyDist.interval: 0.025
+ModifyDist.labels: 		("Amp"	"Distance"	"Direction")
+ModifyDist.minValues: 		(0.0  	0.0  	-1.0)
+ModifyDist.maxValues: 		(1.0  	1.0  	1.0)
+ModifyDist.initialValues: 	(0.0  	0.0  	0.0)
+ModifyDist.mappings: (0 1 2)
+ModifyDist.parameters: 3
+
+ModifyPan.messageGroup: "ModifyD1"
+ModifyPan.interval: 0.025
+ModifyPan.labels: 		("Amp"	"Pan"	"Elev")
+ModifyPan.minValues: 		(0.0  	-1.0	-1.0)
+ModifyPan.maxValues: 		(1.0  	1.0	1.0)
+ModifyPan.initialValues: 	(0.0  	0.0	0.0)
+ModifyPan.mappings: (0 1 2 )
+ModifyPan.parameters: 3

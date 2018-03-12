@@ -1,0 +1,41 @@
+//	test audfile for the threshold actor. 
+//	the threshold actor uses message groups, so
+//	the message group dso must be loaded before
+//	the threshold actor dso.
+//	-kel
+
+SetPrintCommands 1;
+
+/*
+LoadDSO "dsos/fm/fm.so";
+LoadDSO "dsos/msg/msgGroup.so";
+LoadDSO "dsos/thresh/thresh.so";
+*/
+LoadDSO "fm.so";
+LoadDSO "msgGroup.so";
+LoadDSO "swThresh.so";		// threshold + switch actor
+//LoadDSO "thresh.so";
+//LoadDSO "/afs/ncsa/projects/audio/vj/src/vss/dsos/SwitchActor/switch.so";
+
+f = Create FmActor;
+t = Create SwitchActor;
+
+n = BeginSound f SetCarFreq 100 SetCMratio 0.33 SetModIndex 30;
+
+AddThresholdGT t 2 SetCarFreq n 200;
+AddThresholdGT t 2 SetModIndex n 10;
+AddThresholdLT t 2 SetCarFreq n 100;
+AddThresholdLT t 2 SetModIndex n 30;
+
+sleep 1;
+TestThresholds t 1;
+sleep 1;
+TestThresholds t 2;
+sleep 1;
+TestThresholds t 3;
+sleep 1;
+TestThresholds t 2;
+sleep 1;
+TestThresholds t 1;
+sleep 3;
+

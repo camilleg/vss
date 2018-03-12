@@ -1,0 +1,61 @@
+// Have the server echo messages
+
+   SetPrintCommands 1;
+
+// Load the DSOs that we will need
+
+LoadDSO perry.so;
+LoadDSO reverb.so;
+LoadDSO later.so;
+
+aLa = Create LaterActor;
+aSnd = Create AgogoBelActor;
+aRE = Create ReverbActor;
+SetBright aRE .1;
+SetMix aRE .8;
+SetGain aRE 2;
+SetTime aRE .05;
+SetPole aRE 0;
+SetDampRatio aRE 10;
+
+sRE = BeginSound aRE;
+//SetEarlyRefNum sRE 0;
+//SetCombNum sRE 0;
+//SetAllPassNum sRE 0;
+//SetBright sRE 0.001;
+//SetMix sRE .5;
+SetTime sRE 1;
+//SetEarlyRefDelay sRE [ .3 .35 .4 .55 .65 ];
+//SetEarlyRefCoeff sRE [ 1 1 1 .8 .6 ];
+//SetCombDelay sRE [100];
+//SetAllPassDelay sRE [6 1.7 0.6];
+//SetPreset sRE Echo;
+//SetPresetNum sRE 4;
+//SetPresetFile sRE preset.dat;
+sleep 1;
+
+/*
+aShake = Create ShakerActor;
+hShake = BeginSound aShake SetReverb 0, SetAmp 0, SetShakerType 7;
+SetInput sRE hShake;
+//SetIdle sRE 1;
+*/
+
+hSnd = BeginSound aSnd SetReverb 0, SetFreq 500, SetAmp 0;
+SetInput sRE hSnd;
+
+//sleep 10;
+//SetIdle sRE 1;
+
+//AddMessage aLa 3 SetEarlyRefNum sRE 0;
+//AddMessage aLa 3 SetAllPassNum sRE 0;
+
+/*
+LoadDSO samp.so;
+aSa = Create SampleActor;
+SetDirectory aSa "/nfs/atlantia/usr2/projects/audio/dev/srv/dsos/reverb";
+LoadFile aSa "guitar.aiff";
+sleep 1;
+sSa = BeginSound aSa SetFile "guitar.aiff", SetAmp 1;
+//SetInput sRE sSa;
+*/

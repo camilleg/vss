@@ -1,0 +1,56 @@
+<html> <head> <title>StereoActor</title> </head>
+<body>
+
+<h2>A simple stereo-panning implementation</h2>
+
+The Stereo suite (stereoActor, stereoHand, stereoAlg) implements a basic
+stereo panning algorithm and its associated handler and actor.  Stereo
+inputs are panned such that both channels will get sent "hard right" if
+the pan position is hard right, and such that the channels remain unaltered
+and separated if the pan position is dead center.  (The input channels
+are processed separately, not merely summed.)<p>
+
+Note that all Generator Actors understand the SetPan message.  If you just
+want to pan around a monophonic source, use that instead of the
+StereoActor.  The StereoActor is intended for panning sounds,
+particularly stereo sounds, into a two-channel stream
+which other Processor Actors will modify.<p>
+
+To use this stereo implementation,
+load stereo.so and create an actor of type StereoActor.
+
+<h3>StereoActor messages</h3>
+
+In addition to the messages understood by all generator actors, the StereoActor understands the following messages:
+
+<dl>
+	<dt>SetPan <tt>hActor x</tt>
+		<dd>Set the default pan position for new instances
+created by this actor to <tt>x</tt> (-1 to +1 is hard left to hard right).
+	<dt>SetAllPan <tt>hActor x <i>time</i></tt>
+		<dd>Set the pan position of all children to <tt>x</tt>
+		(-1 to +1 is hard left to hard right),
+		and set the default pan position for all future children.
+		If <tt>time</tt> is specified, children will modulate to the new pan
+		position over the specified duration. Default pan position is always
+		set immediately regardless of <tt>time</tt>.
+</dl>
+
+<h3>StereoActor handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for
+the stereo algorithm understands the following messages:
+
+<dl>
+	<dt>SetInput <tt>hSound hHandler</tt>
+		<dd>Set the input to come from the handler <tt>hHandler</tt>.
+	<dt>SetPan <tt>hSound x <i>time</i></tt>
+		<dd>Set the pan position to <tt>x</tt>
+		(-1 to +1 is hard left to hard right). If
+		<tt>time</tt> is specified, move to the new pan position over the
+		specified duration.
+</dl>
+
+
+</body>
+</html>

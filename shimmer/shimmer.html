@@ -1,0 +1,173 @@
+<HTML> <HEAD> <TITLE>ShimmerActor</TITLE> </HEAD>
+<BODY>
+
+<H2> Shimmer Synthesis Actor</H2>
+
+<HR>The Shimmer Actor produces a sound with harmonic spectrum
+by randomly walking the frequencies of several sine waves 
+through an overtone series.  The effect can be "shimmery".
+(It's a cool sound I discovered with an Atari ST and a Yamaha FB01 in 1986.)
+
+<P>To use it, load shimmer.so and create an actor of type ShimmerActor.
+<H3>
+ShimmerActor messages</H3>
+In addition to the messages understood by all generator actors, the ShimmerActor
+understands the following messages:
+<DL>
+
+<DT>
+SetNumPartials <TT>hActor x</TT></DT>
+
+<DD>
+Set the default number of partials (i.e., sine waves)
+for new instances created by this actor to <TT>x</TT>.</DD>
+
+<DT>
+SetAllNumPartials <TT>hActor x</TT></DT>
+
+<DD>
+Set the number of partials of all children to <TT>x</TT>,
+and set the default number of partials for all future children to <TT>x</TT>.
+</DD>
+
+<DT>
+SetFreq <TT>hActor x</TT></DT>
+
+<DD>
+Set the default fundamental frequency for all future children to <TT>x</TT> Hz.
+</DD>
+
+<DT>
+SetAllFreq <TT>hActor x <I>time</I></TT></DT>
+
+<DD>
+Set the fundamental frequency of all children to <TT>x</TT> Hz, and also
+set the default fundamental frequency for all future children to <TT>x</TT>
+Hz. If <TT>time</TT> is specified, children will modulate to the new frequency
+over the specified duration. Default frequency is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+<DT>
+SetWalkspeed <TT>hActor x</TT></DT>
+
+<DD>
+Set the default random-walk speed for all future children to <TT>x</TT>
+seconds (i.e., allow the partials to change frequency every <TT>x</TT>
+seconds).
+
+<DT>
+SetAllWalkspeed <TT>hActor x <I>time</I></TT></DT>
+
+<DD>
+Set the random-walk speed of all children to <TT>x</TT> seconds, and also
+set the default for all future children to <TT>x</TT>.
+If <TT>time</TT> is specified, children will modulate to the new value
+over the specified duration. Default value is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+<DT>
+SetAvgFreq <TT>hActor x</TT></DT>
+
+<DD>
+Set the default average frequency of the partials to <TT>x</TT> Hz.
+
+<DT>
+SetAllAvgFreq <TT>hActor x <I>time</I></TT></DT>
+
+<DD>
+Set the average frequency of all children to <TT>x</TT> seconds, and also
+set the default for all future children to <TT>x</TT>.
+If <TT>time</TT> is specified, children will modulate to the new value
+over the specified duration. Default value is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+<DT>
+SetRange <TT>hActor x</TT></DT>
+
+<DD>
+Set the default frequency range of the partials to <TT>x</TT>,
+i.e., keep partials between average_frequency/x and average_frequency*x.
+x should be greater than 1.
+
+<DT>
+SetAllRange <TT>hActor x <I>time</I></TT></DT>
+
+<DD>
+Set the frequency range of all children to <TT>x</TT>, and also
+set the default for all future children to <TT>x</TT>.
+If <TT>time</TT> is specified, children will modulate to the new value
+over the specified duration. Default value is always set immediately
+regardless of <TT>time</TT>.</DD>
+
+</DL>
+
+
+
+<H3>
+ShimmerActor handler messages</H3>
+In addition to the messages understood by all handlers, the handler for
+the shimmer synthesis algorithm understands the following messages.
+<p>
+In all of the following, if the parameter <TT><i>time</i></TT>
+is specified, the value in question will become the new value 
+over the specified duration (instead of instantaneously).
+
+<DL>
+<DT>
+SetFreq <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the fundamental frequency to <TT>x</TT> Hz. </DD>
+
+<DT>
+SetLogFreq <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the fundamental frequency to exp(<TT>x</TT>) Hz. </DD>
+
+<DT>
+SetAvgFreq <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the average frequency to <TT>x</TT> Hz. </DD>
+
+<DT>
+SetLogAvgFreq <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the average frequency to exp(<TT>x</TT>) Hz. </DD>
+
+<DT>
+SetFreqRange <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the frequency range to <TT>x</TT>. </DD>
+
+<DT>
+SetLogFreqRange <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the frequency range to exp(<TT>x</TT>). </DD>
+
+<DT>
+SetWalkSpeed <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the random walk speed to <TT>x</TT> seconds. </DD>
+
+<DT>
+SetLogWalkSpeed <TT>hSound x <I>time</I></TT></DT>
+
+<DD>
+Set the random walk speed to exp(<TT>x</TT>) seconds. </DD>
+
+<DT>
+SetNumPartials <TT>hSound x</TT></DT>
+
+<DD>
+Set the number of partials to <TT>x</TT>. </DD>
+
+</DL>
+
+</BODY>
+</HTML>

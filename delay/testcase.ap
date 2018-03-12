@@ -1,0 +1,14 @@
+audpanel.title: "FM + Delay Line Slider Demo"
+audpanel.sliders: 8
+audpanel.presets: ("ModifyFM")
+
+ModifyFM.messageGroup: "ModifyFm"
+ModifyFM.interval: 0.025
+ModifyFM.labels: ("Car Freq" "Amp" "ModIndex" "MCRatio" "CarFB" "ModFB" "Delay" "DelayAmp")
+ModifyFM.minValues: (0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0)
+ModifyFM.maxValues: (1000.0  1.0  50.0  10.0  1.0  1.0  3.0  1.0)
+ModifyFM.initialValues: (200.0  0.0  1.5  1.0  0.0  0.0  0.5  0.5)
+ModifyFM.mappings: (0 1 2 3 4 5 6 7)
+ModifyFM.parameters: 8
+ModifyFM.defaultValues: (200.0  0.0  1.5  1.0  0.0  0.0  0.5  0.5)
+

@@ -1,0 +1,8 @@
+SetPrintCommands 0;
+LoadDSO "test.so";
+
+t = Create TestActor;
+
+Print t "Print_this_string";
+PrintL t "and_some_more";
+

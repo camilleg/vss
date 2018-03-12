@@ -1,0 +1,14 @@
+audpanel.title: "Chua's Circuit"
+audpanel.sliders: 6
+audpanel.presets: ("ModifyChua")
+
+ModifyChua.messageGroup: "ModifyCh"
+ModifyChua.interval: 0.025
+ModifyChua.labels: 		("Amp0" "SetChuaR0" 	"SetChuaR" 	"SetChuaL" 	"SetChuaBP2" 	"SetChuaC2")
+ModifyChua.minValues: 		(0.0  	18.0  		1300.0  	0.0068  	1.5  		0.89)
+ModifyChua.maxValues: 		(0.25  	20.0  	  	1650.0	  	0.0071  	1.9  		1.3)
+ModifyChua.initialValues: 	(0.1  	19.972803	1472.750244 	0.007001  	1.822093  	1.117859)
+ModifyChua.mappings: (0 1 2 3 4 5)
+ModifyChua.parameters: 6
+ModifyChua.defaultValues: 	(0.1  	19.972803 	1472.750244 	0.007001 	1.822093 	1.117859)
+

@@ -1,0 +1,65 @@
+SetPrintCommands 1;
+LoadDSO basicIterator.so;
+h = Create BasicIterator;
+SetAmp h 0.5;
+s = BeginSound h;
+				sleep .5;
+SetTimeIncrement s -8e+08;
+				sleep .5;
+SetTimeIncrement s 8e+08;
+				sleep .5;
+SetTimeIncrement s 0;
+				sleep .5;
+SetTimeIncrement s 0;
+				sleep .5;
+
+				sleep .5;
+SetDataIncrement s -8e+08;
+				sleep .5;
+SetDataIncrement s 8e+08;
+				sleep .5;
+SetDataIncrement s 0;
+				sleep .5;
+SetDataIncrement s 0;
+				sleep .5;
+
+				sleep .5;
+SetDataStart s -8e+08;
+				sleep .5;
+SetDataStart s 8e+08;
+				sleep .5;
+SetDataStart s 0;
+				sleep .5;
+SetDataStart s 0;
+				sleep .5;
+
+				sleep .5;
+SetDataEnd s -8e+08;
+				sleep .5;
+SetDataEnd s 8e+08;
+				sleep .5;
+SetDataEnd s 0;
+				sleep .5;
+SetDataEnd s 0;
+				sleep .5;
+
+				sleep .5;
+SetData s -8e+08;
+				sleep .5;
+SetData s 8e+08;
+				sleep .5;
+SetData s 0;
+				sleep .5;
+SetData s 0;
+				sleep .5;
+
+				sleep .5;
+SetDuration s -8e+08;
+				sleep .5;
+SetDuration s 8e+08;
+				sleep .5;
+SetDuration s 0;
+				sleep .5;
+SetDuration s 0;
+				sleep .5;
+

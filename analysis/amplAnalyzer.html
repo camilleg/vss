@@ -1,0 +1,66 @@
+<html><head>
+<title>AmplitudeAnalyzer</title>
+</head><body>
+<h2>AmplitudeAnalyzer</h2>
+The AmplitudeAnalyzer measures (or "tracks") the amplitude of its input
+in 128-sample windows.
+It sends this measurement directly to a VSS client, or via a
+message group other actors.
+<p>
+
+To use the AmplitudeAnalyzer implementation, load amplAnalyzer.so
+and create an actor of type AmplitudeAnalyzer.
+<ul>
+<li>
+To send amplitude measurements directly to a client, the client should
+send the message "Analyze" to the AmplitudeAnalyzer (typically from a
+.aud file via AUDupdate), and then immediately call actorGetReplyData()
+which returns a <tt>const char *</tt> string.  This string can be parsed with
+sscanf(..., "%f", ...) or atof() to get the floating-point measurement value.
+Analyses will occur once for every "Analyze" message received (unless
+a measurement is already in progress).
+<li>
+To send amplitude measurements to another actor,
+send a SetMessageGroup message and then
+send the SetRate message with a nonzero argument indicating how many times
+per second the message group should be called.
+The message group will then be called that often, with an argument array
+consisting of one element, the measurement value.
+</ul>
+<p>
+
+<h3>AmplitudeAnalyzer</h3>
+
+In addition to the messages understood by all Generator actors,
+the AmplitudeAnalyzer understands the following messages:
+<dl>
+
+<dt> SetRate<tt> hActor rate </tt>
+<dd> Set rate for subsequent analyses (default is zero).
+</dl>
+
+<h3>AmplitudeAnalyzer handler messages</h3>
+
+In addition to the messages understood by all handlers, the handler for the
+AmplitudeAnalyzer algorithm understands the following messages.  If the optional
+parameter <tt>time</tt> is specified in any of the following messages,
+then the corresponding parameter is linearly modulated from the old value
+to the specified value over the duration of <tt>time</tt> seconds after receipt
+of the command.
+<dl>
+
+<dt> SetMessageGroup<tt> hActor name </tt>
+<dd> Specify which message group the analyses are to be regularly sent to.
+	The format of the analysis is an array with a single element, which
+	is the maximum amplitude measured in the most recent window of 128 samples
+	(i.e., <tt>*0</tt>).
+<dt> SetRate<tt> hActor rate </tt>
+<dd> Set the rate in Hz at which the message group should be called with
+	a new analysis result.  Defaults to zero, which means that the message
+	group is not called at all.
+<dt> Analyze<tt> hActor </tt>
+<dd> Measure amplitude right now.  The VSS client application should
+immediately call <tt>actorGetReplyData()</tt> after this message is sent,
+to get the result of the analysis.
+</dl>
+</body></html>

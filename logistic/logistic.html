@@ -1,0 +1,142 @@
+<HTML>
+<HEAD>
+   <META NAME="Author" CONTENT="Geoffrey Zheng">
+   <TITLE>Logistic Actor</TITLE>
+</HEAD>
+<BODY>
+
+<H2>
+Logistic Actor</H2>
+<HR>
+<BR>The Logistic Actor implements a simple chaotic feedback system. It
+sends the output of a logistic equation to a message group assigned to
+it. The equation is: x<SUB>n</SUB> = R x<SUB>n-1</SUB> (1-x<SUB>n-1</SUB>),
+where x<SUB>n</SUB> is the state of the system, and R is the control variable.
+The actual output y<SUB>n</SUB> can be a linear function of the state,
+or a discretized bin number, to be described below.
+<P>To use the Logistic Actor, load logistic.so and create an actor of type
+LogisticActor. Because the actor does not have any timing mechanism, you
+have to use another actor such as the sequence actor or the loop actor
+to drive the logistic actor.
+<H3>
+Logistic Actor messages</H3>
+In addition to the messages understood by all actors, the Logistic Actor
+understand the following messages:
+<DL>
+<DT>
+SetMessageGroup <TT>hActor "msg_name"</TT></DT>
+
+<DD>
+Set the message group to which the logistic actor sends its output as the
+one and only parameter. To use that value, simply "<TT>AddMessage msg_name
+&lt;other message> *0;</TT>".</DD>
+
+<BR>&nbsp;
+<DT>
+GoOnce <TT>hActor</TT></DT>
+
+<DD>
+Compute a new state and send the output. This is the only way to let the
+logistic actor act.</DD>
+
+<BR>&nbsp;
+<DT>
+SetState <TT>hActor stateValue</TT></DT>
+
+<DD>
+Immediately set the current state x<SUB>n</SUB> to <TT>stateValue</TT>.
+Notice that this may not be the next output value, because it becomes the
+"previous" state x<SUB>n-1</SUB> when the actor computes the next output.
+Valid range is [0,1].</DD>
+
+<BR>&nbsp;
+<DT>
+SetCtrl <TT>hActor ctrlValue</TT></DT>
+
+<DD>
+Immediately set the control variable R to <TT>ctrlValue</TT>.</DD>
+
+<BR>&nbsp;
+<DT>
+SetOutput <TT>hActor outputValue</TT></DT>
+
+<DD>
+Immediately set the output value y<SUB>n</SUB> to <TT>outputValue</TT>.
+This is the actual number the actor sticks into the message group.</DD>
+
+<BR>&nbsp;
+<DT>
+SetScaleAndOffset <TT>hActor scale offset</TT></DT>
+
+<DD>
+Set the scale and offset value of the normal output mode. Default values
+are 1 and 0, i.e. y<SUB>n</SUB> = x<SUB>n</SUB>.</DD>
+
+<BR>&nbsp;
+<DT>
+SetNumberOfBins <TT>hActor numBins</TT></DT>
+
+<DD>
+Set the number of bins of the bin output modes. Default value is 10.</DD>
+
+<BR>&nbsp;
+<DT>
+SetOutputMode <TT>hActor outputMode</TT></DT>
+
+<DD>
+Currently there are 4 output modes, listed in the following table:</DD>
+
+<TABLE BORDER NOSAVE >
+<TR NOSAVE>
+<TH NOSAVE>Mode number</TH>
+
+<TH NOSAVE>
+<CENTER>Description</CENTER>
+</TH>
+</TR>
+
+<TR>
+<TD>
+<CENTER>0</CENTER>
+</TD>
+
+<TD>This is the normal mode. The output y<SUB>n</SUB> is calculated as:
+y<SUB>n</SUB> = scale <TT>x</TT> x<SUB>n</SUB> + offset.</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER>1</CENTER>
+</TD>
+
+<TD>Linear bin mode. In this mode, [0,1] is divided to equal-width bins,
+the number of bins is specified by <TT>SetNumberOfBins</TT>. The bins are
+numbered from 0 to <TT>numBins</TT>-1. The output is now calculated as
+y<SUB>n</SUB> = scale <TT>x</TT> b<SUB>n</SUB> + offset, where b<SUB>n</SUB>
+is the number of the bin in which x<SUB>n</SUB> falls. Setting output mode
+to this mode also sets scale to 1 and offset to 0, i.e. the output will
+be the bin number. You can use <TT>SetScaleAndOffset</TT> to change this
+afterwards.</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER>2</CENTER>
+</TD>
+
+<TD>Logarithmic bin mode. The only difference between this mode and the
+linear bin mode is that [0,1] is divided in the logarithmic scale.</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER>3</CENTER>
+</TD>
+
+<TD>Discrete sequence mode???</TD>
+</TR>
+</TABLE>
+</DL>
+
+</BODY>
+</HTML>

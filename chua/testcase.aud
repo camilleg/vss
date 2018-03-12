@@ -1,0 +1,23 @@
+// This is the .aud file for testing the chua actor
+
+// Print out everything
+SetPrintCommands 1;
+
+// Load the DSOs we need
+LoadDSO chua.so;
+LoadDSO msgGroup.so;
+
+// Create, set up the chua actor
+aCh = Create ChuaActor;
+sCh = BeginSound aCh SetAmp 0.1; // SetCutoff 5000. SetOrder 1;
+
+// Create message groups for the interaction
+ModifyCh = Create MessageGroup;
+
+// Set up the slider interaction
+AddMessage ModifyCh SetAmp sCh *0; //stays the same
+AddMessage ModifyCh SetChuaR0 sCh *1 0.05; //use Chua params
+AddMessage ModifyCh SetChuaR sCh *2 0.05;
+AddMessage ModifyCh SetChuaL sCh *3 0.01;
+AddMessage ModifyCh SetChuaBP2 sCh *4 0.01;
+AddMessage ModifyCh SetChuaC2 sCh *5 0.01;

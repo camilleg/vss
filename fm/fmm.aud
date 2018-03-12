@@ -1,0 +1,41 @@
+SetPrintCommands 1;
+
+LoadDSO msgGroup.so;
+LoadDSO fm.so;
+
+h = Create FmmActor;
+
+sFm = BeginSound h
+	SetAmp .5
+	Set1CarFreq 200
+	Set1MCratio 1
+	Set1ModIndex 2
+	Set2CCratio 1
+	Set2CCModIndex 1
+	Set2MCratio 1
+	Set2ModIndex 2
+//	Set1CarFeedback 0	// these 2 seem to do nothing
+//	Set1ModFeedback 0
+	Set2CarFeedback 0
+	Set2ModFeedback 0
+	SetLowpassGain 1
+	SetHighpassGain 1
+	;
+
+sss = Create MessageGroup;
+AddMessage sss SetAmp            sFm *0 0.03;
+AddMessage sss Set1CarFreq       sFm *1 0.03;
+AddMessage sss Set1MCratio       sFm *2 0.03;
+AddMessage sss Set2CCratio       sFm *3 0.03;
+AddMessage sss Set2MCratio       sFm *4 0.03;
+AddMessage sss Set1ModIndex      sFm *5 0.03;
+AddMessage sss Set2CCModIndex    sFm *6 0.03;
+AddMessage sss Set2ModIndex      sFm *7 0.03;
+
+//dMessage sss Set1CarFeedback   sFm *8 0.03;
+//dMessage sss Set1ModFeedback   sFm *9 0.03;
+AddMessage sss Set2CarFeedback   sFm *8 0.03;
+AddMessage sss Set2ModFeedback   sFm *9 0.03;
+
+AddMessage sss SetLowpassGain    sFm *10 0.03;
+AddMessage sss SetHighpassGain   sFm *11 0.03;
