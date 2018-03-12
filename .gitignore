@@ -1,3 +1,9 @@
 vss
-vss.exe
 *.o
+*/*.a
+*/*.o
+stk-4.4.4/Makefile
+stk-4.4.4/config.*
+stk-4.4.4/projects/*/Makefile
+stk-4.4.4/src/Makefile
+stk-4.4.4/src/libstk.a
