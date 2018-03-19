@@ -56,10 +56,13 @@ with the number of output channels, and at all configuration points provides a d
 over simple amplitude panning while coming in at a relatively small computational expense compared to 
 full-blown HRTFs.
 <p>
+<!-- (The file localizeAlgBlockDiag1.gif has been lost since at least 1999.)
 The algorithm is implemented according to the following system block diagram:
 <p>
 <CENTER><IMG SRC="localizeAlgBlockDiag1.gif"></CENTER>
 <p>
+-->
+
 The input signal arrives from the source generator or processor actor output, to be processed by the 
 localization algorithm, in this case into four output loudspeaker channels. (The four-channel case 
 represented here is easily reducible to the two-channel case by deleting the lower two loudspeaker 
@@ -92,14 +95,6 @@ becomes the dominant distance cue at Distances greater than 0.5.
 <h3>Usage</h3>
 
 To use the localization actor, load localize.so and create an actor of type LocalizeActor.
-
-<h3>LocalizeActor messages</h3>
-
-In addition to the messages understood by all processor actors, the LocalizeActor understands the 
-following messages:
-
-<dl>
-</dl>
 
 <h3>LocalizeActor handler messages</h3>
 
