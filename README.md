@@ -6,6 +6,8 @@ Version 4.2 is the same as 4.1, but excludes a few actors that incorporated copy
 
 To build the `vss` executable on linux: `make depend && make`
 
+Prerequisites: `sudo apt-get install make g++ libasound2-dev`
+
 To tidy up afterwards, if you need only that exe: `make clean`
 
 See http://syzygy.isl.uiuc.edu/vss.

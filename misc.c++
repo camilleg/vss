@@ -523,6 +523,7 @@ float dbtolin(float x)
 	return exp(x*0.1151292546497f);
 	#endif
 }	
+
 /*___________________________ HANNING WINDOW ____________________________*/
 #define hana	0.5f
 #define	hanb	0.5f
@@ -534,7 +535,6 @@ void hanning(int n, float *sig, int stride)
 	for(i=0;i < n; ++i)
 		sig[i*stride] = k*(hana + hanb * cos( i*ka -PI));
 }
-
 
 /*_____________________ BLACKMAN-HARRIS WINDOW __________________________*/
 
@@ -591,12 +591,12 @@ void RvecBhwind(int n, float *wind,int stride, int k)
 		break;
 	}
 }
+
 /*_________________________ RECTANGULAR WINDOW __________________________*/
 void RvecRecwind(int n, float *sig, int stride)
 {
 	kvec(1.0f/n, n, sig,stride);	 
 }
-
 
 /*_________________________ TRIANGULAR  WINDOW __________________________*/
 void RvecTriangularwind(int n, float *sig, int stride)
@@ -616,7 +616,6 @@ void RvecTriangularwind(int n, float *sig, int stride)
 	}
 }
 
-
 /*___________________________ HAMMING WINDOW ____________________________*/
 #define hama	0.5f
 #define	hamb	0.426f
@@ -631,14 +630,3 @@ void RvecHammingwind(int n, float *sig, int stride)
 		i++;
 	}
 }
-
-
-
-#include <sys/types.h>
-
-extern int Initsynth(int udp_port, float srate, int nchans,
-        int nchansIn, int liveaudio, int latency, int hwm);
-extern void WantToResetsynth(void);
-extern void FlushServer(void);
-
-#include "../srv/vssglobals.h"

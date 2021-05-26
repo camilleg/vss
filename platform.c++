@@ -98,11 +98,7 @@ extern "C" {
 #endif
 
 #ifdef VSS_LINUX_UBUNTU
-// December 2012, for post-OSS linux.  Pure ALSA.
-// http://equalarea.com/paul/alsa-audio.html
-// http://0pointer.de/blog/projects/guide-to-sound-apis.html
-// http://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html
-#include <alsa/asoundlib.h>
+#include <alsa/asoundlib.h> // apt-get install libasound2-dev
 snd_pcm_t *pcm_handle_read = NULL;
 snd_pcm_t *pcm_handle_write = NULL;
 snd_pcm_format_t pformat, rformat;
