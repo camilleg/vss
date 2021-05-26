@@ -8,7 +8,7 @@ VERSION= 4.2
 
 TOPDIR := $(shell cd ..; pwd)
 
-.PHONY: depend sane clean
+.PHONY: depend sane clean subdirs
 
 include Rules.common
 
@@ -26,7 +26,6 @@ sane:
 
 include dependfile
 
-
 ## ;;in linux, misc.o and fft.o may need CFLAGS += -O1
 #ifeq "$(PLATFORMBASE)" "VSS_LINUX"
 #  CFLAGS += -O1
@@ -37,8 +36,18 @@ include dependfile
 #CFLAGS += -g -O0
 #cFLAGS += -g -O0
 
-OBJSRV :=  vssSrv.o platform.o vssMsg.o VActor.o parseActorMessage.o \
-                VAlgorithm.o VGenActor.o VHandler.o misc.o fft.o
+OBJSRV := \
+  fft.o \
+  misc.o \
+  parseActorMessage.o \
+  platform.o \
+  VActor.o \
+  VAlgorithm.o \
+  VGenActor.o \
+  VHandler.o \
+  vssMsg.o \
+  vssSrv.o \
+
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 OBJSRV += vssWindows.o winplatform.o
 endif
