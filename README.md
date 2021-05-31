@@ -1,13 +1,13 @@
 # VSS virtual sound server
 
-Copyright 2018 University of Illinois Board of Trustees.
+VSS has two parts: a **server** (`vss` or `vss.exe`), and a **client** library (`vssClient.h` and `libsnd.a`) for building apps that talk to the server.
 
-Version 4.2 is the same as 4.1, but excludes a few actors that incorporated copyrighted code.
+This version, 4.2, is the same as 4.1 (2012), but without code that was copyrighted by others.  
+It is compatible with applications built with VSS 3.1 clients.  
+The client library is included in version 3.1 (2000).
 
-To build the `vss` executable on linux: `make depend && make`
+Prerequisites: `sudo apt install make g++ libasound2-dev`  
+To build `vss`: `make depend && make`  
+To tidy up, if you need only `./vss`: `make clean`
 
-Prerequisites: `sudo apt-get install make g++ libasound2-dev`
-
-To tidy up afterwards, if you need only that exe: `make clean`
-
-See http://syzygy.isl.uiuc.edu/vss.
+Copyright 2021 University of Illinois Board of Trustees.
