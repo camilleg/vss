@@ -308,7 +308,7 @@ extern "C" int VSS_main(int argc,char *argv[])
 		return -1;
 
 	fprintf(stderr, 
-		"%s\n\tBuilt %s\n\tCopyright 2018 Univ. of Illinois Board of Trustees\n\thttps://github.com/camilleg/vss\n",
+		"%s\n\tBuilt %s\n\tCopyright 2021 Univ. of Illinois Board of Trustees\n\thttps://github.com/camilleg/vss\n",
 		GetVssLibVersion(),
 		GetVssLibDate());
 
