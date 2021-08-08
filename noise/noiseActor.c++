@@ -13,9 +13,9 @@ ACTOR_SETUP(noiseActor, NoiseActor)
 //	sent in sendDefaults().
 //
 noiseActor::noiseActor(void) : 
+	VGeneratorActor(),
 	defaultCutoff( 500. ),
-	defaultOrder( 1 ),
-	VGeneratorActor() 
+	defaultOrder( 1 )
 {
 	setTypeName("NoiseActor");
 }

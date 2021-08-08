@@ -912,7 +912,7 @@ extern void CloseOfile(const char * fileName)
 #ifdef VSS_SPECIAL_CONVERSION_FROM_RAW_TO_AIFF
 		// todo: nice cmd-line flag for this.
 			{
-			char szCmd[300];
+			char szCmd[1000];
 			sprintf(szCmd, "/usr/bin/sox -e signed-integer -b 16 -c %d -r %d -t raw %s -t aiff %s.aiff",
 				globs.nchansVSS, (int)globs.SampleRate, globs.ofile, globs.ofile);
 			system(szCmd);

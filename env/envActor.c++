@@ -77,7 +77,7 @@ EnvelopeActor::act()
 #endif
 		
 		MsgDeque::iterator mit;
-		char message[100];
+		char message[1000];
 		for ( mit = messageList.begin(); mit != messageList.end(); mit++ )
 		{
 			float scaledDstVal = (segDstVal * (*mit).scale) + (*mit).offset;

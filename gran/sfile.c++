@@ -21,7 +21,7 @@ sfile::sfile(char * dir, char * file) :
 	strcpy(dirName, dir);
 	
 //	construct the full file name with path
-	char fNameWithPath[200];
+	char fNameWithPath[1000];
 	if ( fileName[0] != '/' )
 		sprintf(fNameWithPath, "%s/%s", dirName, fileName);
 	else
