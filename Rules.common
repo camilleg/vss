@@ -220,9 +220,5 @@ DEPENDFILTER = sed -e 's_ /usr[^ ]*_ _g' | sed -e :a -e '/\\$$/N; s/\\\n//; ta' 
 
 %.o: %.c++
 	$(CC) -c $(CFLAGS) $<
-%.o: %.C
-	$(CC) -c $(CFLAGS) $<
 %.o: %.c
 	$(CCC) -c $(cFLAGS) $<
-%.o: %.cc
-	$(CC) -c $(cFLAGS) $<
