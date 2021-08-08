@@ -4,9 +4,9 @@
 # the Chant and JmaxTest actors, which incorporated source code copyrighted by IRCAM,
 # and the SpacePad actor, which incorporated source code copyrighted by Ascension Technology.
 
-VERSION= 4.2
+VERSION = 4.2
 
-TOPDIR := $(shell cd ..; pwd)
+TOPDIR = $(PWD)
 
 .PHONY: depend sane clean subdirs
 
@@ -162,9 +162,8 @@ endif
 # ( command || echo -n ) forces command's return code to be zero.
 # "echo -n" is a no-op which returns 0.
 # gmake passes down "-j" implicitly via $(MAKEFLAGS), but not "-j <number>".
-# Workaround it with our own $(MAKEPARALLEL).
 subdirs:
-	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s $(MAKEPARALLEL) -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
+	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
 
 depend:
 	$(CC) -M $(CFLAGS) *.c++ | $(DEPENDFILTER) > dependfile

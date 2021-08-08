@@ -4,7 +4,7 @@
 .PHONY: clean_dso clean all depend_dso
 
 # Operating system.
-include $(TOPDIR)/srv/Platform
+include $(TOPDIR)/Platform
 
 ifeq "$(PLATFORM)" "VSS_SOLARIS_8"
 	PLATFORMBASE := VSS_SOLARIS
@@ -17,19 +17,15 @@ ifeq "$(PLATFORM)" "VSS_IRIX_62"
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_63"
   PLATFORMBASE := VSS_IRIX
-  MAKEPARALLEL = "-j 2"
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
   PLATFORMBASE := VSS_IRIX
-  MAKEPARALLEL = "-j 10"
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
   PLATFORMBASE := VSS_IRIX
-  MAKEPARALLEL = "-j 10"
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
   PLATFORMBASE := VSS_LINUX
-  MAKEPARALLEL = "-j 4"
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_21"
   PLATFORMBASE := VSS_LINUX
@@ -39,15 +35,12 @@ ifeq "$(PLATFORM)" "VSS_REDHAT7"
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
   PLATFORMBASE := VSS_LINUX
-  MAKEPARALLEL = "-j10"
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
   PLATFORMBASE := VSS_LINUX
-  MAKEPARALLEL = "-j 4"
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_K7"
   PLATFORMBASE := VSS_LINUX
-  MAKEPARALLEL = "-j 2"
 endif
 ifeq "$(PLATFORM)" "VSS_FreeBSD"
   PLATFORMBASE := VSS_FreeBSD
@@ -82,7 +75,7 @@ VSSLIBS += -lm
 CCC := gcc
 CC := g++
 
-INC := -I$(TOPDIR)/srv
+INC := -I$(TOPDIR)
 
 CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall \
 # -ffast-math -maccumulate-outgoing-args -malign-double -fomit-frame-pointer 
@@ -218,7 +211,7 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 	cFLAGS = $(CcFLAGS)
 endif
 
-AUDTEST  = $(TOPDIR)/util/audtest
+AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.
 
 # sed: Remove /usr/foo. Absorb trailing backslashes. Compress whitespace.
 DEPENDFILTER = sed -e 's_ /usr[^ ]*_ _g' | sed -e :a -e '/\\$$/N; s/\\\n//; ta' | sed -e 's/  */ /g'

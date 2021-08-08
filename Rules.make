@@ -1,4 +1,4 @@
-# Rules to make srv/*/*.a and srv/vss.
+# Rules to make */*.a and ./vss.
 
 all: $(DSO)
 
@@ -8,7 +8,6 @@ clean_dso:
 .SUFFIXES: .c .c++ .C .o .a .l .y
 .PHONY: clean depend all
 
-TOPDIR := $(shell cd ../..; pwd)
 ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
 CFLAGS += -fpic
 cFLAGS += -fpic

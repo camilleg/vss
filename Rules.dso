@@ -1,6 +1,6 @@
-# included by srv/*/Makefile
+# Included by */Makefile.
 ifndef TOPDIR
-  TOPDIR := $(shell cd ../..; pwd)
+  TOPDIR := $(shell cd ..; pwd)
 endif
 
 include ../Rules.common
