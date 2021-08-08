@@ -415,6 +415,8 @@ void pd_typedmess(t_pd *x, t_symbol *s, int argc, t_atom *argv)
     t_atomtype *wp, wanttype;
     int i;
     t_int ai[MAXPDARG+1], *ap = ai;
+    // *ap often gets a t_int, with a different size than the pointer x.
+    // It's unclear how to cast t_pd to t_int, because by 2021 these lines have vanished from pd_defaultlist().
     t_floatarg ad[MAXPDARG+1], *dp = ad;
     int narg = 0;
     t_pd *bonzo = NULL;
@@ -461,7 +463,7 @@ void pd_typedmess(t_pd *x, t_symbol *s, int argc, t_atom *argv)
 	}
 	if (argc > MAXPDARG) argc = MAXPDARG;
 	if (x != &newclass) *(ap++) = (t_int)x, narg++;
-	while (wanttype = *wp++)
+	while ((wanttype = *wp++) != 0)
 	{
 	    switch (wanttype)
 	    {
