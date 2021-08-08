@@ -168,7 +168,7 @@ void PitchAlg::sigfiddle_doit(t_sigfiddle *x)
     t_peak peaklist[MAXPEAK + 1], *pk1;
     t_peakout *pk2;
     int i, hop = x->x_hop, n = 2*hop, npeak;
-    int logn = sigfiddle_ilog2(n), newphase, oldphase;
+    int logn = sigfiddle_ilog2(n);
     float *fp, *fp1, *fp2, *fp3, total_power, total_loudness, total_db;
     float maxbin = BINPEROCT * (logn-2),  *histogram = spect2 + BINGUARD;
 #ifndef ZEROLATENCY
@@ -180,8 +180,10 @@ void PitchAlg::sigfiddle_doit(t_sigfiddle *x)
     int npeakout = x->x_npeakout, npeakanal = x->x_npeakanal;
     int npeaktot = (npeakout > npeakanal ? npeakout : npeakanal);
     
-    oldphase = x->x_histphase;
-    newphase = x->x_histphase + 1;
+#ifndef ZEROLATENCY
+    int oldphase = x->x_histphase;
+#endif
+    int newphase = x->x_histphase + 1;
     if (newphase == HISTORY) newphase = 0;
     x->x_histphase = newphase;
 
@@ -1158,14 +1160,14 @@ int sigfiddle_doinit(t_sigfiddle *x, long npoints, long npitch,
     if (npoints < MINPOINTS || npoints > MAXPOINTS) npoints = DEFAULTPOINTS;
     npoints = 1 << sigfiddle_ilog2(npoints);
     hop = npoints>>1;
-    if (!npeakanal && !npeakout) npeakanal = DEFNPEAK, npeakout = 0;
-    if (!npeakanal < 0) npeakanal = 0;
+    if (npeakanal==0 && npeakout==0) npeakanal = DEFNPEAK, npeakout = 0;
+    if (npeakanal < 0) npeakanal = 0;
     else if (npeakanal > MAXPEAK) npeakanal = MAXPEAK;
-    if (!npeakout < 0) npeakout = 0;
+    if (npeakout < 0) npeakout = 0;
     else if (npeakout > MAXPEAK) npeakout = MAXPEAK;
     if (npitch <= 0) npitch = 0;
     else if (npitch > MAXNPITCH) npitch = MAXNPITCH;
-    if (npeakanal && !npitch) npitch = 1;
+    if (npeakanal && npitch==0) npitch = 1;
 
 //	printf("\n\n\nfiddle values: npoints=%d hop=%d npeakanal=%d npeakout=%d npitch=%d\n\n\n",
 //		npoints, hop, npeakanal, npeakout, npitch);;;;
