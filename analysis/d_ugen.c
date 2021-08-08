@@ -214,7 +214,7 @@ t_signal *signal_new(int n, float sr)
     	bug("signal buffer too large");
     	return (0);
     }
-    if (ret = signal_freelist[logn])
+    if ((ret = signal_freelist[logn]))
     	signal_freelist[logn] = ret->s_next;
     else
     {
@@ -529,7 +529,7 @@ void ugen_done_graph(t_dspcontext *dc)
     t_dspcontext *parent_context = dc->dc_parentcontext;
     float parent_srate;
     int parent_vecsize;
-    int period, frequency, phase, vecsize;
+    int period, frequency, vecsize;
     float srate;
     int chainwas = -1;
     	/* debugging printout */
@@ -577,7 +577,6 @@ void ugen_done_graph(t_dspcontext *dc)
     	vecsize = blk->x_vecsize;
     	period = vecsize/(parent_vecsize * blk->x_overlap);
     	frequency = (parent_vecsize * blk->x_overlap)/vecsize;
-    	phase = blk->x_phase;
     	srate = parent_srate * blk->x_overlap;
     	if (period < 1) period = 1;
     	if (frequency < 1) frequency = 1;
@@ -590,7 +589,6 @@ void ugen_done_graph(t_dspcontext *dc)
     	srate = parent_srate;
     	vecsize = parent_vecsize;
     	period = frequency = 1;
-    	phase = 0;
     }
     dc->dc_srate = srate;
     dc->dc_vecsize = vecsize;
