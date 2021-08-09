@@ -525,7 +525,7 @@ Static Void parse(char *inbuf, tokenrec **buf)
 	  d1 = 1.0;
 	  i--;
 	  while (i <= (int)strlen(inbuf) &&
-		 (isdigit(inbuf[i - 1]) || inbuf[i - 1] == '.' && d1 == 1)) {
+		 (isdigit(inbuf[i - 1]) || (inbuf[i - 1] == '.' && d1 == 1))) {
 	    if (inbuf[i - 1] == '.')
 	      d1 = 10.0;
 	    else {
@@ -574,7 +574,7 @@ Static Void listtokens(FILE **f, tokenrec *buf)
 
   ltr = false;
   while (buf != NULL) {
-    if ((long)buf->kind >= (int)toknot && (long)buf->kind <= (int)tokrenum ||
+    if (((long)buf->kind >= (int)toknot && (long)buf->kind <= (int)tokrenum) ||
 	buf->kind == (int)toknum || buf->kind == (int)tokvar) {
       if (ltr)
 	putc(' ', *f);
@@ -2027,7 +2027,7 @@ Local Void cmdinput(struct LOC_exec *LINK)
   LINK->t = tok;
   if (strflag) {
     do {
-      fgets(s, 256, stdin);
+      (void)!fgets(s, 256, stdin);
       v = findvar(LINK);
       if (*v->UU.U1.sval != NULL)
 	Free(*v->UU.U1.sval);
@@ -2040,14 +2040,14 @@ Local Void cmdinput(struct LOC_exec *LINK)
     } while (!iseos(LINK));
     return;
   }
-  fgets(s, 256, stdin);
+  (void)!fgets(s, 256, stdin);
   parse(s, &tok);
   tok0 = tok;
   do {
     v = findvar(LINK);
     while (tok == NULL) {
       printf("?? ");
-      fgets(s, 256, stdin);
+      (void)!fgets(s, 256, stdin);
       disposetokens(&tok0);
       parse(s, &tok);
       tok0 = tok;
@@ -2182,8 +2182,8 @@ Local Void cmdfor(struct LOC_exec *LINK)
   lr.hometok = LINK->t;
   lr.kind = forloop;
   lr.next = loopbase;
-  if (lr.UU.U0.step >= 0 && *lr.UU.U0.vp->UU.U0.val > lr.UU.U0.max ||
-      lr.UU.U0.step <= 0 && *lr.UU.U0.vp->UU.U0.val < lr.UU.U0.max) {
+  if ((lr.UU.U0.step >= 0 && *lr.UU.U0.vp->UU.U0.val > lr.UU.U0.max) ||
+      (lr.UU.U0.step <= 0 && *lr.UU.U0.vp->UU.U0.val < lr.UU.U0.max)) {
     saveline = stmtline;
     i = 0;
     j = 0;
@@ -2800,7 +2800,7 @@ void main(void)
 
 #endif
 
-int BASICstep(char* cmdFromVSS)
+int BASICstep(const char* cmdFromVSS)
 {
 	strncpy(inbuf, cmdFromVSS, 255);
     parseinput(&buf);

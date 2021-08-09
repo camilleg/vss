@@ -10,7 +10,7 @@ class BasicActor : public VActor
 private:
 	int fTerminated;
 	int preprocess(char* cmd);
-	void command(char* cmd);
+	void command(const char* cmd);
 
 public:
 	BasicActor();

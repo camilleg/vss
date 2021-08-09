@@ -240,7 +240,7 @@ DEBTR(0)
 
 	for (j=0;j<6;j++) do {
 		for (i=0; i<2*rdim && facs[j]*floor(vp[i]/facs[j])==vp[i];i++);
-		if (h = (i==2*rdim)) {
+		if ((h = (i==2*rdim)) != 0) {
 //			hh=1;
 			out *= facs[j];
 			for (i=0;i<2*rdim; i++) vp[i]/=facs[j];
@@ -258,7 +258,7 @@ double lower_terms_point(point vp) {
 
 	for (j=0;j<6;j++) do {
 		for (i=0; i<2*rdim && facs[j]*floor(vp[i]/facs[j])==vp[i];i++);
-		if (h = (i==2*rdim)) {
+		if ((h = (i==2*rdim)) != 0) {
 			out *= facs[j];
 			for (i=0;i<2*rdim; i++) vp[i]/=facs[j];
 		}

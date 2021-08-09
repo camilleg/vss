@@ -3,7 +3,7 @@
 ACTOR_SETUP(BasicActor, BasicActor)
 
 extern void BASICinit(void);
-extern int BASICstep(char*);
+extern int BASICstep(const char*);
 extern void BASICterm(void);
 extern void BASICflushoutput(void);
 extern const char* BASICoutput(void);
@@ -42,7 +42,7 @@ int BasicActor::preprocess(char* cmd)
 extern int BASICfprintvss(void);
 extern void BASICflushprintvss(void);
 
-void BasicActor::command(char* cmd)
+void BasicActor::command(const char* cmd)
 {
 	if (!BASICstep(cmd))
 		fTerminated = 1;

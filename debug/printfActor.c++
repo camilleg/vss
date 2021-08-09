@@ -108,7 +108,7 @@ PrintfActor::receiveMessage(const char* Message)
 		ifFF( f1,f2, flush(fprintf(file, "%g %g\n", f1,f2)) );
 		ifSF( s,f1, flush(fprintf(file, munch(s), f1)) );
 		ifF( f1, flush(fprintf(file, "%g\n", f1)) );
-		ifS( s, flush(fprintf(file, munch(s))) );
+		ifS( s, flush(fprintf(file, "%s", munch(s))) );
 		return Uncatch();
 		}
 

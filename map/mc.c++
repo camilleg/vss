@@ -89,7 +89,7 @@ LLasciate:
 
 	// Absorb rest of point's dimensions, in case we're truncating.
 	for (; i<cxReal; i++)
-		(void)fscanf(pf, "%*g ");
+		(void)!fscanf(pf, "%*g "); // ! suppresses gcc warning
 	return 1;
 }
 
