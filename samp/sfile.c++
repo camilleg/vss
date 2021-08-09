@@ -2,8 +2,8 @@
 #include "aiff.h"
 
 FILE* inf = NULL;
-extern void err(char*) {}
-extern void warn(char*) {}
+extern void err(const char*) {}
+extern void warn(const char*) {}
 extern int scan_inf ( void );
 
 

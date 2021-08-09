@@ -62,7 +62,7 @@ public:
 class SwitchActorAB : public cxBaseAB, public cxNewDeleteMB
 {
 public:
-  static void  assertionFailed(char* test, char* file, int line) {
+  static void  assertionFailed(const char* test, const char* file, int line) {
     //__assert(test,file,line);
     fprintf(stderr, "SwitchActor: assertion failed: %s:%d: %s\n",
 	    file, line, test);

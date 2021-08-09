@@ -247,9 +247,7 @@ bool FileWrite :: setWavFile( std::string fileName )
   hdr.bytesPerSecond = (SINT32) (hdr.sampleRate * hdr.bytesPerSample);
 
   unsigned int bytesToWrite = 36;
-  bool useExtensible = false;
   if ( channels_ > 2 || hdr.bitsPerSample > 16 ) { // use extensible format
-    useExtensible = true;
     bytesToWrite = 72;
     hdr.chunkSize += 24;
     hdr.formatCode = 0xFFFE;
@@ -690,7 +688,7 @@ void FileWrite :: closeMatFile( void )
 
   SINT32 headsize, temp;
   fseek(fd_, 196, SEEK_SET);  // jump to header size
-  fread(&headsize, 4, 1, fd_);
+  (void)!fread(&headsize, 4, 1, fd_);
   temp = headsize;
   headsize += (SINT32) (frameCounter_ * 8 * channels_);
   fseek(fd_, 196, SEEK_SET);

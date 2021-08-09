@@ -25,7 +25,7 @@ static FILE *ouf; /* input and output files */
 int GETFSTR( char *s, int max_len )
 {
 	int len;
-	fgets( s, max_len, stdin );
+	(void)!fgets( s, max_len, stdin );
 	len = strlen(s);
 	if (len && s[len-1] == '\n')
 	s[len-1] = 0;
@@ -89,22 +89,6 @@ void *d; /* audio data buffer */
 
 
 static basicaiffbeg ba;
-
-
-#ifdef UNUSED
-
-void err ( char *errmsg )
-{
-   fprintf( stderr, "FATAL ERROR: %s.\n", errmsg);
-   exit(0);
-}
-
-void warn ( char *warnmsg )
-{
-   fprintf( stderr, "WARNING: %s.\n", warnmsg);
-}
-
-#endif
 
 /* oddpad() rounds up to nearest even number.  This function is needed because if chunk size is odd, there is an uncounted zero pad byte. */
 long oddpad( long x )
@@ -298,19 +282,19 @@ int scan_inf_wav(void)
 	short temp;
 
 	fseek(inf,0,SEEK_SET); // locate RIFF id
-	fread(wave,4,1,inf);
+	(void)!fread(wave,4,1,inf);
 	if (strncmp(wave,"RIFF",4))
 		// not a .wav file
 		return 0;
 	fseek(inf,8,SEEK_SET);   // Locate WAVE id
-	fread(wave,4,1,inf);
+	(void)!fread(wave,4,1,inf);
 	if (strncmp(wave,"WAVE",4))
 		// not a .wav file
 		return 0;
 
 	// Get format
 	fseek(inf,20,SEEK_SET);
-	fread(&temp,2,1,inf);
+	(void)!fread(&temp,2,1,inf);
 	temp = SwapShort(temp);
 	if (temp != 1 /*WAVE_FORMAT_PCM*/)
 		{
@@ -321,7 +305,7 @@ int scan_inf_wav(void)
 
 	// Get number of channels from the header
 	fseek(inf,22,SEEK_SET);
-	fread(&temp,2,1,inf);
+	(void)!fread(&temp,2,1,inf);
 	nh.chan = SwapShort(temp);
 	if (nh.chan != 1 && nh.chan != 2)
 		{
@@ -333,7 +317,7 @@ int scan_inf_wav(void)
 	// Get file sample rate from the header
 	int srate;
 	fseek(inf,24,SEEK_SET);
-	fread(&srate,4,1,inf);
+	(void)!fread(&srate,4,1,inf);
 	nh.rate = SwapInt(srate);
 	if (nh.rate < 4000 || nh.rate > 48000)
 		{
@@ -343,7 +327,7 @@ int scan_inf_wav(void)
 		}
 
 	fseek(inf,34,SEEK_SET);
-	fread(&temp,2,1,inf);
+	(void)!fread(&temp,2,1,inf);
 	nh.wdsi = SwapShort(temp);
 	if (nh.wdsi != 8 && nh.wdsi != 16)
 		{
@@ -355,7 +339,7 @@ int scan_inf_wav(void)
 	// Get length of data from the header
 	int bytes;
 	fseek(inf,40,SEEK_SET);
-	fread(&bytes,4,1,inf);
+	(void)!fread(&bytes,4,1,inf);
 	bytes = SwapInt(bytes);
 	nh.fram = bytes / (nh.wdsi/8) / nh.chan; // length in 1- or 2-byte samples
 

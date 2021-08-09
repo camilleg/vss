@@ -21,5 +21,5 @@ native_header;
 extern native_header nh;
 extern void *d;
 
-void err  ( char *errmsg );
-void warn ( char *warnmsg );
+void err  ( const char *errmsg );
+void warn ( const char *warnmsg );

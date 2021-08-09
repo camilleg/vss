@@ -50,11 +50,11 @@ University of California, Berkeley.
 #include <netinet/in.h> // for htonl
 #include "./client.h"
 
-char *OSC_errorMessage;
+const char *OSC_errorMessage;
 
 
 static int strlen(char *s);
-static int OSC_padString(char *dest, char *str);
+static int OSC_padString(char *dest, const char *str);
 
 void OSC_initBuffer(OSCbuf *buf, int size, char *byteArray) {
     buf->buffer = byteArray;
@@ -303,7 +303,7 @@ int OSC_effectiveStringLength(char *string) {
     return len;
 }
 
-static int OSC_padString(char *dest, char *str) {
+static int OSC_padString(char *dest, const char *str) {
     int i;
     
     for (i = 0; str[i] != '\0'; i++) {

@@ -149,7 +149,7 @@ public:
   static const int  assignToCopy()	{ return 1; }
 #endif
   
-  static void	assertionFailed(char* test, char* file, int line)
+  static void	assertionFailed(const char* test, const char* file, int line)
 	{
 #ifdef VSS_IRIX
 	__assert(test,file,line);

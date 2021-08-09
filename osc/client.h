@@ -161,7 +161,7 @@ int OSC_writeFloatArgs(OSCbuf *buf, int numFloats, float *args);
 int OSC_writeIntArg(OSCbuf *buf, int4byte arg);
 int OSC_writeStringArg(OSCbuf *buf, char *arg);
 
-extern char *OSC_errorMessage;
+extern const char *OSC_errorMessage;
 
 /* How many bytes will be needed in the OSC format to hold the given
    string?  The length of the string, plus the null char, plus any padding
