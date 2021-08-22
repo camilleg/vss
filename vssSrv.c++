@@ -19,11 +19,6 @@
 #include <sys/mman.h>
 #endif
 
-#ifdef VSS_FreeBSD
-#include <sys/types.h>
-#include <sys/uio.h>
-#endif
-
 #include "platform.h"
 #include "VActor.h"
 #include "VHandler.h"
@@ -180,10 +175,6 @@ static void* SynthThread(void *)
 
 #ifdef VSS_IRIX
 #include <sys/utsname.h>
-#endif
-
-#ifdef VSS_FreeBSD
-#include <sys/types.h>
 #endif
 
 #ifndef VSS_WINDOWS

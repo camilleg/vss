@@ -10,10 +10,6 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef VSS_FreeBSD
-#include <float.h> // for DBL_MAX
-#endif
-
 #include "platform.h"
 #include "mc.h"
 

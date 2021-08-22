@@ -39,9 +39,6 @@ endif
 ifeq "$(PLATFORM)" "VSS_LINUX_K7"
   PLATFORMBASE := VSS_LINUX
 endif
-ifeq "$(PLATFORM)" "VSS_FreeBSD"
-  PLATFORMBASE := VSS_FreeBSD
-endif
 ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   PLATFORMBASE := VSS_WINDOWS
 endif
@@ -179,8 +176,6 @@ ifeq "$(PLATFORM)" "VSS_LINUX_K7"
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS :=
-endif
-ifeq "$(PLATFORM)" "VSS_FreeBSD"
 endif
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 # VSS_CYGWIN32_NT40

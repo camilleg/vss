@@ -41,9 +41,6 @@ extern "C" const char* GetVssLibVersion(void)
 #error unspecified subplatform of VSS_IRIX
 #endif
 
-#elif defined(VSS_FreeBSD)
-		", FreeBSD 3.4"
-
 #else
 #error unspecified platform
 #endif

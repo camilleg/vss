@@ -10,21 +10,15 @@
 
 // MaxSampsPerBuffer must be a power of two.
 
-#ifdef VSS_IRIX
 #define MaxNumChannels          ((int) 8)
+#ifdef VSS_IRIX
 #define MaxSampsPerBuffer       ((int) 128)
 #endif
 #ifdef VSS_LINUX
-#define MaxNumChannels          ((int) 8)
 #define MaxSampsPerBuffer       ((int) 128)
 #endif
 #ifdef VSS_WINDOWS
-#define MaxNumChannels          ((int) 8)
 #define MaxSampsPerBuffer       ((int) /*8192*/4096)
-#endif
-#ifdef VSS_FreeBSD
-#define MaxNumChannels          ((int) 2)
-#define MaxSampsPerBuffer       ((int) 128)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
