@@ -421,9 +421,9 @@ LDoneChans:;
 			if (*argv)
 				cerr <<"vss error: unknown flag \"" <<*argv <<"\"\n";
     		cerr <<"Usage: vss \
-\n\t-chans n \n\t-srate n \n\t-silent \n\t-input \n\t-port n \
+\n\t-chans n \n\t-srate n \n\t-silent \n\t-ofile filename\n\t-input \n\t-port n \
 \n\n\t-hog [012] \n\t-lowlatency \n\t-latency lwm hwm \n\t-antidropout msec \
-\n\n\t-limit \n\t-soft ";
+\n\n\t-limit \n\t-soft\n";
 #ifdef VSS_WINDOWS
 			cerr <<"\n\n\t-mmio";
 #endif
