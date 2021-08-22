@@ -122,10 +122,7 @@ void Vec_scale_test(int n, Coord a, Coord *x)
 float b_err_min, b_err_min_sq;
 
 #ifdef VSS_WINDOWS
-//;;double logb(double x) { return _logb(x); } // Or see rand.cpp #ifdef cray.
 double logb(double x) { return ilogb(x); }
-#else
-double logb(double); /* on SGI machines: returns floor of log base 2.  (Not anymore!  RTFM.  does this still work?) */
 #endif
 
 static int vd;

@@ -36,10 +36,4 @@ extern void init_rand(long seed) {
 	X[1] = (short)(seed==0 ? time(0) : seed);
 }
 
-#ifdef cray
-double logb(double x) {
-	if (x<=0) return -1e2460;
-	return log(x)/log(2);
-}
-#endif
 #endif
