@@ -146,8 +146,9 @@ stk4/stk.a:
 # bug: if "subdirs:" didn't update anything,
 # i.e. $@ is older than all $(SUBLIBS), then this should also do nothing.
 # Hardcode that as a bash "if" in here?
+now=\"$(shell date +"%Y-%m-%d\ %H:%M")\" # 'T' deliberately omitted
 $(TARGET): vssBuild.c++ $(OBJSRV) subdirs stk4/stk.a
-	$(CC) -o $@ $(CFLAGS) vssBuild.c++ $(OBJSRV) $(SUBLIBS) $(VSSLIBS) $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) -D__TIMESTAMP_ISO8601__=$(now) vssBuild.c++ $(OBJSRV) $(SUBLIBS) $(VSSLIBS) $(LDFLAGS)
 	-@chmod a+rx $@
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 	strip -fs $@

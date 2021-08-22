@@ -57,5 +57,5 @@ extern "C" const char* GetVssLibVersion(void)
 
 extern "C" const char* GetVssLibDate(void)
 {
-	return __DATE__ ", " __TIME__;
+	return __TIMESTAMP_ISO8601__;
 }
