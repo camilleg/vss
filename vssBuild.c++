@@ -8,7 +8,7 @@ extern const float vssversion = 4.2f;
 
 extern "C" const char* GetVssLibVersion(void)
 {
-	return "VSS Sound Server V" VSS_VERSION_NUMBER
+	return "Virtual Sound Server v" VSS_VERSION_NUMBER
 
 #if 0
 
