@@ -19,10 +19,6 @@ using namespace std;
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#ifdef VSS_SOLARIS
-#include <sys/file.h>
-#endif
-
 // Create a socket for sending msgs back to clients.
 
 extern OBJ BgnMsgsend(const char *szHostname, int channel)
@@ -59,9 +55,6 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 	o->sockfd = sockfd;
 	o->len = sizeof(o->addr);
 	fcntl(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
-#ifndef VSS_SOLARIS
-	{ int f=1; if (ioctl(sockfd, FIONBIO, &f) < 0) perror("ioctl failed"); }
-#endif
 #if defined(SET_SOCK_SND_BUF_SIZE)
 	setsockopt(sockfd, F_SETFL, FNDELAY);
 #endif
@@ -73,7 +66,7 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 }
 
 /***************************************/
-#if defined(VSS_LINUX) || defined(VSS_CYGWIN32_NT40) || defined(VSS_SOLARIS)
+#if defined(VSS_LINUX) || defined(VSS_CYGWIN32_NT40)
 #define SPOOGE (const struct sockaddr*)
 #else
 #define SPOOGE
@@ -516,12 +509,7 @@ void gaussian_noisevec( int n, float *out, int stride)
 }
 float dbtolin(float x)
 {
-	//	Solaris doesn't support single-precision floating point:
-	#ifndef VSS_SOLARIS
-	return expf(x*0.1151292546497f);
-	#else
 	return exp(x*0.1151292546497f);
-	#endif
 }	
 
 /*___________________________ HANNING WINDOW ____________________________*/

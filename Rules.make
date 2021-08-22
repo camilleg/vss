@@ -8,14 +8,6 @@ clean_dso:
 .SUFFIXES: .c .c++ .C .o .a .l .y
 .PHONY: clean depend all
 
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-CFLAGS += -fpic
-cFLAGS += -fpic
-# may need -lgcc with this, see "GCC Command Options" -nostdlib
-# at http://gcc.gnu.org/onlinedocs/gcc_2.html
-LDFLAGS += -nostdlib
-endif
-
 clean:
 	-rm -f $(DSO) $(OBJS)
 depend:
@@ -30,12 +22,6 @@ $(DSO): $(OBJS)
 	-@chmod a+r $@
 #ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 #	strip -fs $@
-#else
-#ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-#	strip $@
-#else
-#	strip -s $@
-#endif
 #endif
 
 # noninteractive just-make-a-beep test

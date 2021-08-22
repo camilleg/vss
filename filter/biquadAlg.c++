@@ -33,11 +33,7 @@ void
 biquadFiltAlg::setFrequency(float f)
 {
 	wd = f * 2.0 * M_PI;
-#ifdef VSS_SOLARIS	//	 no single-precision support
-	w0 = tan(wd * globs.OneOverSR / 2.0);
-#else
 	w0 = tanf(wd * globs.OneOverSR / 2.0);
-#endif
 	a0 = w0*w0;
 	a1 = w0/Q;
 	computeCoef();

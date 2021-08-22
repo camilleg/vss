@@ -6,9 +6,6 @@
 # Operating system.
 include $(TOPDIR)/Platform
 
-ifeq "$(PLATFORM)" "VSS_SOLARIS_8"
-	PLATFORMBASE := VSS_SOLARIS
-endif
 ifeq "$(PLATFORM)" "VSS_IRIX_53"
   PLATFORMBASE := VSS_IRIX
 endif
@@ -65,10 +62,6 @@ ifneq "$(PLATFORM)" "VSS_IRIX_53"
 endif
 endif
 
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-  VSSLIBS := -ldl -lsocket -lnsl 
-endif
-
 VSSLIBS += -lm
 
 # Default C and C++ compilers.
@@ -92,12 +85,6 @@ CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall \
 # LDFLAGS := -lasound
 # LDFLAGS := -s
 LDFLAGS :=
-
-ifeq "$(PLATFORM)" "VSS_SOLARIS_8"
-  CcFLAGS += -Wall -O3 -ffast-math
-  CFLAGS := $(CcFLAGS)
-  cFLAGS := $(CcFLAGS)
-endif
 
 ifeq "$(PLATFORM)" "VSS_IRIX_53"
   # THIS FAILS!!!!        INC += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include

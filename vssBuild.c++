@@ -44,9 +44,6 @@ extern "C" const char* GetVssLibVersion(void)
 #elif defined(VSS_FreeBSD)
 		", FreeBSD 3.4"
 
-#elif defined(VSS_SOLARIS)
-		", Solaris 8"
-
 #else
 #error unspecified platform
 #endif

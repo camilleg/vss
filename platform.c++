@@ -47,12 +47,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-//	Solaris audio headers:
-#ifdef VSS_SOLARIS
-#include <sys/audio.h>
-#include <sys/stropts.h>
-#endif	//	def VSS_SOLARIS
-
 //	IRIX media headers:
 #ifdef VSS_IRIX
 extern "C" {
@@ -352,11 +346,6 @@ int fdDAC = -1; // hardware output (and input, actually)
 	int fdADC = -1; // hardware input. /dev/dsp# is NOT duplex here
 #	endif
 
-//	yucky globals, Solaris-specific:
-#elif defined(VSS_SOLARIS)
-static int fdAudio;	//	file desciptor returned by open(),
-					//	used in ioctl(), read(), write(), etc.
-
 //	yucky globals, IRIX-specific:
 #elif defined(VSS_IRIX)
 static ALport alp;
@@ -451,68 +440,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 //	in real time, rather than being dumped to a file.
 	if (liveaudio)
 		{
-//	Solaris setup:
-#ifdef VSS_SOLARIS
-		cerr << "initializing " << nchans << " channel Solaris audio..." << endl;
-		// cerr << "latency (hwm) is set to " << globs.hwm << " samples" << endl;
-		cerr << "(annoying built-in speaker is disabled, use AudioControl panel to enable)" << endl;
-
-		//	open /dev/audio for writing (eventually, 
-		//	for reading also, in audio input):
-		//	possibly this should use the O_NONBLOCK flag 
-		//	so that if the driver is in use, we don't block
-		//	infinitely waiting for it to become available.
-		//
-		//	note: our use of high and low water marks (when
-		//	used correctly, see doSynth()) means that write()
-		//	will never block (if in blocking mode) and never
-		//	fail (when in non-blocking mode).
-		fdAudio = open( "/dev/audio", O_WRONLY );
-		if (fdAudio < 0)
-		{
-			cerr << "vss error: failed to open audio driver: errno is " << errno << endl;
-			liveaudio = 0;
-			goto LContinue;
-		}
-
-		//	configure audio hardware, as described in
-		//	the audio man pages:
-		audio_info_t info;
-		AUDIO_INITINFO(&info);
-		//	data format:
-		info.play.sample_rate = (int)srate;
-		info.play.channels = nchans;
-		info.play.precision = 16;
-		info.play.encoding = AUDIO_ENCODING_LINEAR;
-		//	device control:
-		//	the built-in speaker is really annoying.
-		info.play.port = /* AUDIO_SPEAKER | */ AUDIO_HEADPHONE | AUDIO_LINE_OUT;
-		//	set it up:
-		int err = ioctl(fdAudio, AUDIO_SETINFO, &info);
-		if (err < 0)
-		{
-			cerr << "vss error: failed to configure audio driver: errno is " << errno << endl;
-			close(fdAudio);
-			fdAudio = -1;
-			liveaudio = 0;
-			goto LContinue;
-		}
-
-		/*
-			It might be interesting or useful to know the size
-			of the playback buffer, but unfortunately this field 
-			in the info struct is BOGUS. Empirically, it looks like
-			the queue holds almost 200k 16 bit samples, while 
-			buffer_size reports 8192!!!
-
-		if ( ioctl(fdAudio, AUDIO_GETINFO, &info) < 0 )
-			cerr << "cannot get audio device info to check buffer size" << endl;
-		else
-			cerr << "audio device playback buffer size is (reportedly) " << info.play.buffer_size << endl;
-		*/
-		
-#endif	//	def VSS_SOLARIS
-
 #ifdef VSS_IRIX
 		alc = alNewConfig();
 		alSetWidth(alc, AL_SAMPLE_16);
@@ -1211,10 +1138,6 @@ LContinue:
 #ifdef VSS_WINDOWS
 		return liveaudio ? 0/*unused globs.dacfd in VSS_WINDOWS*/ : -1;
 #endif
-
-#ifdef VSS_SOLARIS
-	return liveaudio ? fdAudio : -1;
-#endif
 }
 
 extern void VSS_ResyncHardware(void)
@@ -1243,20 +1166,6 @@ extern void VSS_ResyncHardware(void)
 // How many samples can we compute without getting too far ahead?
 int Scount(void)
 {
-#ifdef VSS_SOLARIS
-	audio_info_t info;
-	if (ioctl(fdAudio, AUDIO_GETINFO, &info) < 0)
-	{
-		cerr << "vss warning: ioctl failed" << endl;
-		return MaxSampsPerBuffer;	//	have to return something
-	}
-	else
-	{
-		long z = globs.SampleCount - info.play.samples;
-		// cerr << "Scount figures " << z << " sample frames pending" << endl;
-		return (z>0)?z:0;
-	}
-#endif
 #ifdef VSS_IRIX
 	return alGetFilled(alp);
 #endif
@@ -1303,19 +1212,6 @@ void Closesynth()
 {	
 	if (liveaudio)
 		{
-#ifdef VSS_SOLARIS
-		/*
-		//	try to stop playback and flush immediately, 
-		//	don't bother flagging errors:
-		audio_info_t info;
-		AUDIO_INITINFO(&info);
-		info.play.pause = 1;
-		ioctl(fdAudio, AUDIO_SETINFO, &info);
-		ioctl(fdAudio, I_FLUSH, FLUSHRW);
-		*/
-		close(fdAudio);
-#endif
-
 #ifdef VSS_IRIX
 		alClosePort(alp);
 #endif
@@ -1680,45 +1576,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 					write(fdDAC, rgb, cBuffer * cb);
 					}
 				}
-#elif defined(VSS_SOLARIS)
-			//	fdAudio is configured to block, don't need to check 
-			//	number of bytes written:
-			// int nnn;	
-			// if ( (nnn=write(fdAudio, sampbuff, samps*sizeof(short))) < 0 &&
-			//
-			//	in fact, this error check is probably not very useful either.
-			if ( write(fdAudio, sampbuff, samps*sizeof(short)) < 0 &&
-				 errno != EINTR )	//	don't yell about ^C
-			{
-				cerr << "write() to audio device failed: errno " << errno << endl;
-			}
-			/*
-			else if (nnn < samps*sizeof(short))
-			{
-				cerr << "write() to audio device returned " << nnn << " expected " << samps*sizeof(short) << endl;
-			}
-			*/
-
-			/*	Don't really need to check this, except for
-				debugging. We detect dropouts using Scount().
-			*/	
-			audio_info_t info;
-			/*
-			if ( ioctl( fdAudio, AUDIO_GETINFO, &info ) < 0 )
-				cerr << "couldn't get audio info" << endl;
-			else if ( info.play.error != 0 )
-			{
-			*/
-				//	play.error is set in the case of underflow:
-				// cerr << "audio device underflowed!" << endl;
-				AUDIO_INITINFO(&info);
-				info.play.error = 0;
-				ioctl(fdAudio, AUDIO_SETINFO, &info);
-			/*
-				if ( ioctl(fdAudio, AUDIO_SETINFO, &info) < 0 )
-					cerr << "could not clear audio playback error flag" << endl;
-			}	
-			*/
 #elif defined(VSS_IRIX)
 			alWriteFrames(alp, sampbuff, samps/nchans);
 			alSetFillPoint(alp, (long)(qsize-latency));
@@ -1954,16 +1811,6 @@ int nfds = -1;
 //	wCatchUp seems like a very bad idea. It allows sample buffers
 //	to be computed far in advance of what can be written, and then
 //	the write() (or whatever call) has to block! Dehr? 
-//
-//	Experimentally, under Solaris, using the CatchUp thing introduces
-//	huge latency problems. Probably we don't see them under IRIX 
-//	because the playback queue is much shorter (or configurable,
-//	see alSetQueueSize() in InitSynth()). Under Solaris, the playback
-//	queue size is huge (around 200000 samples) and not configurable,
-//	so computing buffers of samples without regard for the water marks
-//	fills the buffers and introduces several seconds of latency,
-//	and also lots of blocking on write().	
-//
 static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
 {
 	//;;;; get rid of wCatchUp, try this in irix, it may be jumping ahead and
@@ -1991,8 +1838,6 @@ static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
 #if defined(VSS_IRIX) 
 	const int c = (wCatchUp!=0) ? wCatchUp :
 					(vv.hwm-r) / (vv.nchansOut * MaxSampsPerBuffer);
-#elif defined(VSS_SOLARIS)
-	const int c = (vv.hwm-r) / (vv.nchansOut * MaxSampsPerBuffer);
 #else
 	const int c = 1; // much better for linux, I observe.
 #endif
@@ -2128,18 +1973,6 @@ static inline int Usec()
 	dmGetUST(&t);
 	unsigned long long dt = t - tPrev;
 	tPrev = t;
-	return (int)(dt / 1000);
-}
-#elif defined(VSS_SOLARIS)
-//	Solaris has a nanosecond clock
-//	"...ideal for cheap, accurate interval
-//	timing..." (man gethrtime).
-static hrtime_t t0;	//	initialized below in schedulerMain()
-static inline int Usec()
-{
-	hrtime_t t = gethrtime();
-	hrtime_t dt = t - t0;
-	t0 = t;
 	return (int)(dt / 1000);
 }
 #elif defined(VSS_WINDOWS)
@@ -2341,11 +2174,6 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 
 static inline int BatchTick(VSSglobals& vv, int sockfd)
 {
-
-#ifdef VSS_SOLARIS
-	struct sockaddr cl_addr;
-	int clilen;	
-#endif
 #if defined(VSS_IRIX)
 	struct sockaddr_in cl_addr;
 	int clilen;
@@ -2448,8 +2276,6 @@ LAgain:
 
 #if defined(VSS_IRIX)
 	flushme_(); // set "flush zero" bit to avoid underflow exceptions
-#elif defined(VSS_SOLARIS)
-	t0 = gethrtime();
 #elif !defined(VSS_WINDOWS)
 	t0 = clock();
 #endif

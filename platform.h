@@ -34,12 +34,6 @@ extern "C" void srand48(long seedval);
 #define flog10(_) log10(_)
 #endif
 
-#ifdef VSS_SOLARIS
-//	Solaris doesn't seem to have single-precision floating point
-//	math library functions... they compile (why?) but won't link.
-inline float sinf(float x) { return (float)sin((double)x); }
-#endif
-
 #include "vssglobals.h"
 
 extern void OpenOfile(const char*, int cbBuf);

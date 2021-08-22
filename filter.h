@@ -43,8 +43,6 @@ public:
 		if (f > fNyquist)
 			f = fNyquist; // clamp at Nyquist for stability
 		w0 = f * 2.0 * PI;
-		//	Solaris doesn't seem to support single-precision
-		//	floating point functions, doesn't have tanf()
 		za0 = tan(w0 * globs.OneOverSR / 2.0);
 		computeCoef();
 		}

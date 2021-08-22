@@ -26,11 +26,6 @@
 #define MaxNumChannels          ((int) 2)
 #define MaxSampsPerBuffer       ((int) 128)
 #endif
-#ifdef VSS_SOLARIS
-#define MaxNumChannels          ((int) 2)
-#define MaxSampsPerBuffer       ((int) 128)
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////
 //

@@ -52,9 +52,6 @@ VSSglobals::VSSglobals(void)
 {
 	// Always update SampleRate and OneOverSR together.
 	SampleRate = 44100.0f;
-#ifdef VSS_SOLARIS
-	nchansVSS = nchansIn = nchansOut = 1;
-#endif
 #ifdef VSS_IRIX
 	nchansVSS = nchansIn = nchansOut = 1;
 #endif
@@ -76,11 +73,7 @@ VSSglobals::VSSglobals(void)
 	smax = INT_MAX;
 	hog = 0;
 	lwm = 384;
-#ifdef VSS_SOLARIS
-	hwm = 2048;	//	seems to choke at 1k
-#else
 	hwm = 1024;
-#endif
 	msecAntidropout = 0.;
 	hostname = "127.0.0.1";
 	udp_port = 7999;
@@ -316,7 +309,7 @@ extern "C" int VSS_main(int argc,char *argv[])
 //|| defined (VSS_IRIX_63)
 	prctl(PR_SETEXITSIG, SIGINT);
 		SynthThread(NULL);
-#elif defined(VSS_WINDOWS) || defined(VSS_SOLARIS)
+#elif defined(VSS_WINDOWS)
 	schedulerMain(globs, &sample);
 #else
 	// VSS_IRIX_63, VSS_LINUX, etc.

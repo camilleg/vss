@@ -102,7 +102,11 @@ stkHand::stkHand(stkAlg * alg) :
 { 
   fValue.init(this);
   setTypeName("stkHand"); 
-  Stk::setRawwavePath("/r/vss4/dev/srv/stk-4.4.4/rawwaves");;;;
+  Stk::setRawwavePath("/r/vss/4/dev/srv/stk-4.4.4/rawwaves");
+  // How not hardcode this?
+  // Store those few dozen files in the exe, and unpack them into /run/shm (or man 3 mkdtemp, e.g. on macos).
+  // Then the exe really is standalone and can run from anywhere.
+  // How can we guarantee that the tmpdir is destroyed?  man 3 atexit?
 }
 
 int

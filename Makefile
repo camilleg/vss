@@ -152,12 +152,6 @@ $(TARGET): vssBuild.c++ $(OBJSRV) subdirs stk4/stk.a
 	-@chmod a+rx $@
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 	strip -fs $@
-else
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-	strip $@
-#else
-#	strip -s $@
-endif
 endif
 
 # ( command || echo -n ) forces command's return code to be zero.

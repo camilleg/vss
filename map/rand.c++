@@ -24,7 +24,7 @@ double double_rand(void) { return drand48(); /* emulated in platform.h */ }
 extern void init_rand(long seed) {}
 #else
 
-#if defined(VSS_FreeBSD) || defined(VSS_LINUX) || defined(VSS_SOLARIS)
+#if defined(VSS_FreeBSD) || defined(VSS_LINUX)
 #include <stdlib.h> // for erand48()
 #endif
 

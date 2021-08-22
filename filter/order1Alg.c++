@@ -30,11 +30,7 @@ void
 order1FiltAlg::setFrequency(float f)
 {
 	w0 = f * 2.0 * M_PI;
-#ifdef VSS_SOLARIS	// no single-precision support
-	a0 = tan(w0 * globs.OneOverSR / 2.0);
-#else
 	a0 = tanf(w0 * globs.OneOverSR / 2.0);
-#endif
 	computeCoef();
 }
 
