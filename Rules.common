@@ -1,7 +1,7 @@
 # This file contains definitions for various make thingies.
 
 .SUFFIXES: .c .c++ .C .o .a .l .y
-.PHONY: clean_dso clean all depend_dso
+.PHONY: clean_dso clean all
 
 # Operating system.
 include $(TOPDIR)/Platform
@@ -195,12 +195,10 @@ endif
 
 AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.
 
-# sed: Remove /usr/foo. Absorb trailing backslashes. Compress whitespace.
-DEPENDFILTER = sed -e 's_ /usr[^ ]*_ _g' | sed -e :a -e '/\\$$/N; s/\\\n//; ta' | sed -e 's/  */ /g'
-# DEPENDFILTER = grep -v ": /usr/"
-# DEPENDFILTER = grep -v "^  /usr/.* \\\\" | sed -e "s_ /usr/[^ ]*__g"
-
+DEPENDFLAGS = -MMD -MT $@ -MF $(patsubst %.o,.depend/%.d,$@)
 %.o: %.c++
-	$(CC) -c $(CFLAGS) $<
+	@mkdir -p .depend
+	$(CC) -c $(CFLAGS) $(DEPENDFLAGS) $<
 %.o: %.c
-	$(CCC) -c $(cFLAGS) $<
+	@mkdir -p .depend
+	$(CCC) -c $(cFLAGS) $(DEPENDFLAGS) $<

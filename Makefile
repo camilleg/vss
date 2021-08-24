@@ -8,7 +8,7 @@ VERSION = 4.2
 
 TOPDIR = $(PWD)
 
-.PHONY: depend sane clean subdirs
+.PHONY: sane clean subdirs
 
 include Rules.common
 
@@ -17,14 +17,11 @@ TARGET := vss.exe
 else
 TARGET := vss
 endif
-
 all: $(TARGET)
 
 # noninteractive just-make-a-beep test
 sane:
 	@$(AUDTEST) sanity.aud
-
-include dependfile
 
 ## ;;in linux, misc.o and fft.o may need CFLAGS += -O1
 #ifeq "$(PLATFORMBASE)" "VSS_LINUX"
@@ -51,7 +48,6 @@ OBJSRV := \
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 OBJSRV += vssWindows.o winplatform.o
 endif
-
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 OBJSRV += underflow.o
 endif
@@ -95,10 +91,7 @@ SUBDIRS := \
   test \
   thresh \
 
-# stk \
-# stk3 \
-
-# dsos/python is broken.
+# ./python is broken.
 
 SUBLIBS := \
   add/add.a \
@@ -154,22 +147,14 @@ ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 	strip -fs $@
 endif
 
-# ( command || echo -n ) forces command's return code to be zero.
-# "echo -n" is a no-op which returns 0.
+# ( ... || echo -n ) forces the return code to be zero, that of the no-op echo.
 # gmake passes down "-j" implicitly via $(MAKEFLAGS), but not "-j <number>".
 subdirs:
 	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
 
-depend:
-	$(CC) -M $(CFLAGS) *.c++ | $(DEPENDFILTER) > dependfile
-	@for i in $(SUBDIRS); do $(MAKE) -s -C $$i depend || exit 1; done
-ifneq "$(wildcard *.c)" ""
-	$(CCC) -M $(cFLAGS) $(wildcard *.c) | $(DEPENDFILTER) >> dependfile
-endif
-
 clean:
 	-rm -f stk-4.4.4/src/{Debug,Release}/*
 	-(cd stk-4.4.4 && make distclean)
-	-rm -rf $(TARGET) *.o */*.o */*/*.o */*.a */dependfile dependfile core core.* vss.exe.stackdump
-	touch dependfile
-	for i in $(SUBDIRS); do touch $$i/dependfile; done
+	-rm -rf $(TARGET) *.o */*.o */*.a .depend */.depend core core.* vss.exe.stackdump
+
+-include $(patsubst %.o,.depend/%.d,$(OBJSRV))

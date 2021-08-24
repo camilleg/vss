@@ -9,7 +9,7 @@ It is compatible with VSS 3.1 clients.
 The client library is included in version 3.1 (2000).
 
 Prerequisites: `sudo apt install make g++ libasound2-dev`  
-To build: `make depend && make`  
+To build: `make`  
 To run: `./vss`  
 To tidy up: `make clean`
 
