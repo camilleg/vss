@@ -4,11 +4,11 @@
 # the Chant and JmaxTest actors, which incorporated source code copyrighted by IRCAM,
 # and the SpacePad actor, which incorporated source code copyrighted by Ascension Technology.
 
-VERSION = 4.2
+VERSION = 4.2.1
 
 TOPDIR = $(PWD)
 
-.PHONY: sane clean subdirs
+.PHONY: all clean sane
 
 include Rules.common
 
@@ -136,21 +136,18 @@ stk4/stk.a:
 	cd stk-4.4.4 && ./configure && cd src && make
 	cd stk4 && make
 
-# bug: if "subdirs:" didn't update anything,
-# i.e. $@ is older than all $(SUBLIBS), then this should also do nothing.
-# Hardcode that as a bash "if" in here?
 now=\"$(shell date +"%Y-%m-%d\ %H:%M")\" # 'T' deliberately omitted
-$(TARGET): vssBuild.c++ $(OBJSRV) subdirs stk4/stk.a
+
+# Explicity make inside each subdir, to get its ./.depend.
+# ( ... || echo -n ) forces the return code to be zero, that of the no-op echo.
+# gmake passes down "-j" implicitly via $(MAKEFLAGS), but not "-j <number>".
+$(TARGET): vssBuild.c++ $(OBJSRV) $(SUBDIRS) stk4/stk.a
+	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
 	$(CC) -o $@ $(CFLAGS) -D__TIMESTAMP_ISO8601__=$(now) vssBuild.c++ $(OBJSRV) $(SUBLIBS) $(VSSLIBS) $(LDFLAGS)
 	-@chmod a+rx $@
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 	strip -fs $@
 endif
-
-# ( ... || echo -n ) forces the return code to be zero, that of the no-op echo.
-# gmake passes down "-j" implicitly via $(MAKEFLAGS), but not "-j <number>".
-subdirs:
-	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
 
 clean:
 	-rm -f stk-4.4.4/src/{Debug,Release}/*
