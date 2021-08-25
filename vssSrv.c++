@@ -883,7 +883,7 @@ extern void CloseOfile(const char * fileName)
 		if (globs.vcbBufOfile>0 && globs.vibBufOfile>0)
 			{
 			// flush and free memory buffer.  Ignore return value, because we're closing things down anyways.
-			(void)write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
+			(void)!write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
 			globs.vibBufOfile=0;
 			globs.vcbBufOfile=0;
 			delete [] globs.rgbBufOfile;
@@ -899,7 +899,7 @@ extern void CloseOfile(const char * fileName)
 			char szCmd[1000];
 			sprintf(szCmd, "/usr/bin/sox -e signed-integer -b 16 -c %d -r %d -t raw %s -t aiff %s.aiff",
 				globs.nchansVSS, (int)globs.SampleRate, globs.ofile, globs.ofile);
-			system(szCmd);
+			(void)!system(szCmd);
 			unlink(globs.ofile);
 			fprintf(stderr, "Converted %s from raw to aiff.\n", globs.ofile);
 			}

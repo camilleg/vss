@@ -19,12 +19,6 @@ using namespace std;
 	#define iMaxMCPoint 45
 #endif
 
-class MCPoint;
-class MCMap;
-class MCPath;
-class MCSurface;
-class MCNotation;
-
 class MCPoint
 {
 private:

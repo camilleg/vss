@@ -17,7 +17,7 @@ public:
 
 #define iSndMax 50
 #define iXYZMax 500
-#define cchFileMax 100
+const auto cchFileMax = 1024;
 
 class XYZ
 {

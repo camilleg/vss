@@ -41,7 +41,7 @@ void loopActor::act()
 	// Send a message to the message group.
 
 	{
-	char sz[256];
+	char sz[1100];
 	sprintf(sz, "SendData %s [%f %f]", szMG, x, zUserFloat);
 	actorMessageHandler(sz);
 	}

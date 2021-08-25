@@ -1615,7 +1615,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 				if (globs.vibBufOfile + cb >= globs.vcbBufOfile)
 					{
 					// flush memory buffer
-					write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
+					(void)!write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
 					globs.vibBufOfile=0;
 					}
 				// append to memory buffer
@@ -1623,7 +1623,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 				globs.vibBufOfile += cb;
 				}
 			else
-				write(globs.fdOfile, sampbuff, cb);
+				(void)!write(globs.fdOfile, sampbuff, cb);
 			}
 		}
 

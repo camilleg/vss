@@ -43,7 +43,7 @@ CrowdActor::~CrowdActor()
 
 void CrowdActor::setDirectory(char* sz)
 {
-	char szCmd[200];
+	char szCmd[1100];
 	sprintf(szCmd, "SetDirectory %g %s", hSampActor, sz);
 	actorMessageHandler(szCmd);
 }
@@ -51,7 +51,7 @@ void CrowdActor::setDirectory(char* sz)
 void CrowdActor::setFile(char* sz)
 {
 	strncpy(szFile, sz, cchFileMax);
-	char szCmd[200];
+	char szCmd[1100];
 	sprintf(szCmd, "LoadFile %g %s", hSampActor, szFile);
 	actorMessageHandler(szCmd);
 }
@@ -124,7 +124,7 @@ for (i=0; i<ihMax; i++)
 	// Let's see if we should accommodate it.
 
 	int ihNewGuy = -1;
-	char szCmd[200];
+	char szCmd[1100];
 
 	// Is there a spot free in rgh?  If so, just take it.
 	for (ihNewGuy=0; ihNewGuy<ihMax; ihNewGuy++)
@@ -361,7 +361,7 @@ for (i=0; i<ih; i++)
 			// Add this id,h to the list.
 			const XYZ& xyz = XYZFromId(id);
 
-			char szCmd[200];
+			char szCmd[1100];
 			sprintf(szCmd, "BeginSound %g SetFile %s SetGain %.2f SetXYZ %.2f %.2f %.2f SetLoop 1",
 				hSampActor, szFile, dB, xyz.x,xyz.y,xyz.z);
 			if (zRateMin != 0. && zRateMax != 0.)

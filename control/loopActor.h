@@ -35,7 +35,7 @@ private:
 
 	float zUserFloat;
 
-	char szMG[100]; // name of message group to send messages to
+	char szMG[1024]; // Name of message group to send messages to.  Slightly larger than parseActorMessage.h's char[]'s.
 
 	void MaybeDump() { if (isDebug()) bio(cout, 0); }
 	float loopTime() { return currentTime() - tOffset; }
