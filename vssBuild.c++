@@ -1,9 +1,9 @@
 extern const float vssversion = 4.2f;
 
 #ifdef DEBUG
-#define VSS_VERSION_NUMBER "4.2 DEBUG"
+#define VSS_VERSION_NUMBER "4.2.1 DEBUG"
 #else
-#define VSS_VERSION_NUMBER "4.2"
+#define VSS_VERSION_NUMBER "4.2.1"
 #endif
 
 extern "C" const char* GetVssLibVersion(void)
