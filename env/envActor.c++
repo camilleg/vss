@@ -109,7 +109,7 @@ EnvelopeActor::addMessage(char* message, float scale, float offset)
 {
 	messageList.push_back( EnvMsg(message, scale, offset) );
 #if DEBUG
-	MsgDeque::iterator it = messageList.end() - 1;
+	MsgDeque::iterator it = messageList.end(); --it;
 	printf("EnvelopeActor adding %s (%f, %f)\n", (*it).msg, (*it).scale,
 			(*it).offset);
 #endif
@@ -380,7 +380,7 @@ EnvelopeActor::deleteReceivers(void)
 			NULL != (actor = VActor::getByHandle(actorHandle)) )
 		{
 #if DEBUG
-			printf("EnvelopeActor deleting %lx.\n", actor);
+			printf("EnvelopeActor deleting %p.\n", actor);
 #endif
 			delete actor;
 		}
