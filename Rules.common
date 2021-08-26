@@ -1,4 +1,4 @@
-# This file contains definitions for various make thingies.
+# Definitions for various make thingies.
 
 .SUFFIXES: .c .c++ .C .o .a .l .y
 .PHONY: clean_dso clean all
@@ -43,35 +43,28 @@ ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   PLATFORMBASE := VSS_WINDOWS
 endif
 
-VSSLIBS := -lm
-
 ifeq "$(PLATFORMBASE)" "VSS_LINUX"
-  # Use -lpthread_p not -lpthread below, if on an SMP machine pre-glibc2.1.
-  VSSLIBS += -ldl -lpthread -export-dynamic -lm
+  VSSLIBS := -lpthread
 endif
 
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
-  VSSLIBS += -laudio -lm -lmd -ldmedia
+  VSSLIBS := -laudio -lmd -ldmedia
   # -ldmedia is only for dmGetUST(), in platform.c++
 
 ifneq "$(PLATFORM)" "VSS_IRIX_53"
-  VSSLIBS += -lpthread
+  VSSLIBS := -lpthread
 endif
 endif
 
 VSSLIBS += -lm
 
-# Default C and C++ compilers.
 CCC := gcc
 CC := g++
 
 INC := -I$(TOPDIR)
 
-CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall \
-# -ffast-math -maccumulate-outgoing-args -malign-double -fomit-frame-pointer 
-# CPU-dependent
-# CcFLAGS += -mfpmath=sse
-# CcFLAGS += -march=pentium4
+CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
+# -maccumulate-outgoing-args -malign-double -fomit-frame-pointer
 
 # VSS-specific
 # CcFLAGS += -DVERIFY_ALG_POINTERS
@@ -87,7 +80,7 @@ ifeq "$(PLATFORM)" "VSS_IRIX_53"
   # THIS FAILS!!!!        INC += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
   CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
   # -I/usr/bulk5/cg/gcc/libstdc++
-  CcFLAGS += -O2 -mips2
+  CcFLAGS += -mips2
   # ;;;;needed?   CcFLAGS += -DVSS_OLD_H_FILES
   CFLAGS := $(CcFLAGS)
   cFLAGS := $(CcFLAGS)
@@ -99,13 +92,12 @@ ifeq "$(PLATFORM)" "VSS_IRIX_62"
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
     CcFLAGS += -woff 1424,3201,1110 -DVSS_OLD_H_FILES -DVSS_IRIX_63PLUS
-    # MIPSpro 7.3
+    # MIPSpro 7.3, not gcc 2.95.2.  Abandoned.
     CCC := cc
     CC := CC
     CcFLAGS += \
 		-TARG:processor=r4400 -TARG:platform=ip22 \
 		-fullwarn -ptused \
-		-O3 \
 		-TENV:X=4 \
 		-mips3 \
 		-exceptions=OFF \
@@ -118,15 +110,13 @@ ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
 	cFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
-  # gcc 2.95.2
-  CcFLAGS += -O3 -DVSS_IRIX_63PLUS
+  CcFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
   CFLAGS := $(CcFLAGS)
   cFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_63"
-  # gcc 2.95.2
-  CcFLAGS += -O3 -DVSS_IRIX_63PLUS
+  CcFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
   CFLAGS := $(CcFLAGS)
   cFLAGS := $(CcFLAGS)
@@ -134,18 +124,14 @@ endif
 
 # -march=pentiumpro
 ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
-    #CcFLAGS += -DREDHAT52 -Wall -O3 -ffast-math -malign-double
-    CcFLAGS += -Wall -O3 -ffast-math
-    # -ffast-math subsumes -mno-ieee-fp
-    #CFLAGS = $(CcFLAGS) -fno-exceptions
+    #CcFLAGS += -DREDHAT52 -malign-double
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS := -lasound
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_21"
-	# -ffast-math subsumes -mno-ieee-fp
-    #CcFLAGS += -g -DREDHAT52 -Wall -O3 -ffast-math -malign-double
-    CcFLAGS += -O3 -ffast-math -fPIC 
+    #CcFLAGS += -g -DREDHAT52 -malign-double
+    CcFLAGS += -fPIC
     #CFLAGS = $(CcFLAGS) -fno-exceptions
     CFLAGS = $(CcFLAGS) -fno-exceptions
     # STL requires -fno-exceptions
@@ -153,45 +139,36 @@ ifeq "$(PLATFORM)" "VSS_LINUX_21"
 	LDFLAGS :=
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
-	# -ffast-math subsumes -mno-ieee-fp
-    CcFLAGS += -Wall -O3 -ffast-math
-    #CcFLAGS += -g -O0	# debugging
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS := -lasound
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
-	# -ffast-math subsumes -mno-ieee-fp
-    #CcFLAGS += -g -DREDHAT52 -Wall -O3 -ffast-math -malign-double
-    CcFLAGS += -Wall -O3 -ffast-math
+    #CcFLAGS += -g -DREDHAT52 -malign-double
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS := -lasound
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_K7"
-    #CcFLAGS += -DREDHAT52 -Wall -O3 -ffast-math -malign-double
-    CcFLAGS += -Wall -O3 -ffast-math
-	# -ffast-math subsumes -mno-ieee-fp
-    #CFLAGS = $(CcFLAGS) -fno-exceptions
+    #CcFLAGS += -DREDHAT52 -malign-double
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS :=
 endif
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 # VSS_CYGWIN32_NT40
-	CcFLAGS += -Wall -O1 -ffast-math -malign-double
+	CcFLAGS += -malign-double
 #	CcFLAGS += -I/usr/local/include
 		# -I/usr/local/include makes vss crash (exception thrown before main()).
 		# i'm going to remove -mwindows
 		# maybe do a full build now.  also remove -ldsound and -lwinmm.
 	CYG=/cygdrive/d/cygwin
 	LDFLAGS := -L $(CYG)/lib -L /usr/local/lib -ldsound -lwinmm -lole32
-	# ;; -O3, later.
-	# -ffast-math subsumes -mno-ieee-fp
-	#CFLAGS = $(CcFLAGS) -fno-exceptions
 	CFLAGS = $(CcFLAGS) -fno-exceptions
 	cFLAGS = $(CcFLAGS)
 endif
+
+#CcFLAGS += -g -O0 # debugging
 
 AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.
 
