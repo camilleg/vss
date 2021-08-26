@@ -29,12 +29,6 @@ ACTOR_SETUP(ExpMapActor, ExponentialMapper)
 ACTOR_SETUP(SegmentMapActor, SegmentMapper)
 ACTOR_SETUP(HidimMapActor, HidimMapper)
 ACTOR_SETUP(PlaneMapActor, PlaneMapper)
-#ifndef VSS_LINUX
-ACTOR_SETUP(midiGeneratorActor, MidiGenerator)
-ACTOR_SETUP(midiSeqActor, MidiSequencer)
-ACTOR_SETUP(midiInActor, MidiInputActor)
-ACTOR_SETUP(midiOutActor, MidiOutputActor)
-#endif
 ACTOR_SETUP(mixerActor, MixerActor)
 ACTOR_SETUP(MessageGroup, MessageGroup)
 ACTOR_SETUP(noiseActor, NoiseActor)
