@@ -130,13 +130,14 @@ SUBLIBS := \
   stk4/stk.a \
   tb303/tb303.a \
   test/test.a \
-  thresh/thresh.a \
+  thresh/thresh.a
 
 stk4/stk.a:
 	cd stk-4.4.4 && ./configure && cd src && make
 	cd stk4 && make
 
-now=\"$(shell date +"%Y-%m-%d\ %H:%M")\" # 'T' deliberately omitted
+now=\"$(shell date +"%Y-%m-%d\ %H:%M")\"
+# 'T' deliberately omitted
 
 # Explicity make inside each subdir, to get its ./.depend.
 # ( ... || echo -n ) forces the return code to be zero, that of the no-op echo.
