@@ -2027,13 +2027,11 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 
 	doActors();
 	doActorsCleanup(); // after doActors(), in case handlers got deleted.
+
 #ifndef VSS_WINDOWS
 	if (!doSynth(vv, Scount()))
 		return 0;
-#endif
 
-#ifdef VSS_WINDOWS
-#else
 	nfds = (vpfnMidi && ((pfds[2].fd = (*vpfnMidi)(0)) >= 0)) ? 3 : 2;
 	// 3 if midi is running, otherwise 2.
 
@@ -2044,18 +2042,8 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 	//	 the midi port if midi is enabled.
 	//	(why poll the audio hardware under IRIX?)
 	if (poll(pfds+1, nfds-1, 0) < 0) // not using pfds[0]
-		{
-#ifndef VSS_LINUX
-		// This happens in linux whenever we ^C to exit vss:
-		// "interrupted system call".
-		// So don't bother reporting it there.
-		perror("vss internal error: problem in poll");
-#endif
 		return 1;
-		}
-#endif
 
-#ifndef VSS_WINDOWS
 	//	this call using the catchup argument (2)
 	//	is highly suspect! _Must_ screw up our 
 	//	latency control, no?
