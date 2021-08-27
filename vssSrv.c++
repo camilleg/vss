@@ -593,46 +593,6 @@ static void Internal_SetGear(const char* sz)
 
 static int fKeepRunning = 1;
 
-// copied from /vss/cli/cliMsg.c
-extern const char* VSS_StripZeros(const char* sz)
-{
-	char szT[sizeof(mm) + 5];
-	const char* pchSrc = sz;
-	char* pchDst = szT;
-
-	for ( ; ; /* *pchDst=='.' or ' '*/ *pchDst++ = *pchSrc++)
-		{
-		while (*pchSrc && *pchSrc != '.')
-			*pchDst++ = *pchSrc++;
-
-		if (!*pchSrc) // end of string
-			break;
-
-		// We've reached a decimal point.
-
-		// If it's NOT preceded by a space or a digit,
-		// don't abbreviate as it's probably NOT a floating-point number.
-		if (!(pchSrc[-1] == ' ' || (pchSrc[-1]>='0' && pchSrc[-1]<='9')))
-			continue;
-
-		// This way is faster, safer, and works almost all the time.
-		if (!strncmp(pchSrc, ".000000 ", 8) ||
-		    !strncmp(pchSrc, ".000000]", 8))
-			{
-			pchSrc += 7;
-			// now *pchSrc == ' ' or ']'
-			continue;
-			}
-		if (!strcmp(pchSrc, ".000000"))
-			// end of string, just discard it.
-			break;
-		}
-
-	// Copy back into original string.
-	*pchDst = '\0';
-	return strdup(szT); // todo: caller must free this malloc
-}
-
 //===========================================================================
 //		actorMessageHandlerCore
 //
@@ -772,7 +732,6 @@ extern "C" int actorMessageHandler(const char* Message)
 {
 	vzReturnToClient = hNil;
 	fKeepRunning = 1;
-	Message = VSS_StripZeros(Message);
 	int caught = actorMessageHandlerCore(Message);
 	if (!fKeepRunning)
 		return 0;
@@ -787,7 +746,6 @@ extern "C" int actorMessageHandler(const char* Message)
 		fprintf(stderr, "\033[34m\033[47m%s\033[0m\n", Message);
 #else
 		fprintf(stderr, "\t(internal)  %s\n", Message);
-		fflush(stderr);
 #endif
 		}
 	vfAlreadyLogged = 0; // This was the 2nd time.  Allow later msgs to be printf'ed now.

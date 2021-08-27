@@ -3,7 +3,6 @@
 //===========================================================================
 
 #include "mapActor.h"
-extern const char* VSS_StripZeros(const char* ); // in vssSrv.c++
 
 //===========================================================================
 //		MapActor mapArray
@@ -147,7 +146,6 @@ void MapActor::mapAndSend(char * mapThis)
 				strcat(message, fstr);
 				}
 			strcat(message, "]");
-			strcpy(message, VSS_StripZeros(message)); // memory leak
 			if (isDebug())
 				fprintf(stderr, "->  %s\n", strchr(message, '['));
 			continue;
