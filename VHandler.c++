@@ -295,8 +295,14 @@ LSetAmp:
 		return Uncatch();
 	}
 
-	return VActor::receiveMessage(Message);
-} 	// end of receiveMessage()
+	const auto tmp = VActor::receiveMessage(Message);
+	if (delete_me() /* set by VActor::receiveMessage */)
+          delete this;
+	// We're called only at the end of a fooHand::receiveMessage,
+	// which only forwards this return value,
+	// and thus won't try to access anything in just-deleted *this.
+	return tmp;
+}
 
 void VHandler::setDebug(int f)
 {

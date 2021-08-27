@@ -31,7 +31,8 @@ int VActor::fWantToFlush = 0;
 VActor::VActor() :
 	myHandle(NextHandle++),
 	fActive(1),
-	fDebug(0)
+	fDebug(0),
+	fDestroy(false)
 {
 	setTypeName("VActor");
 	Actors[ myHandle ] = this;	// add me to VActor::Actors
@@ -152,7 +153,7 @@ VActor::receiveMessage(const char* Message)
 
 	if (CommandIs("Delete"))
 	{ 
-		ifNil( delete this ); 
+		ifNil( fDestroy = true );
 	}
 
 	if (CommandIs("Dump"))

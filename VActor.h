@@ -38,10 +38,13 @@ public:
 //	fActive is true if this VActor is doing anything,
 //	and false if the actor's activity should be suspended.
 //	fDebug is user-defined.
+//	fDestroy marks this actor as to be deleted.
 private:
 	int	fActive;
 	int fDebug;
+	bool fDestroy;
 public:
+	int delete_me() const { return fDestroy; }
 	int isActive() const { return fActive; }
 	int isDebug() const  { return fDebug; }
 	// setActive() and setDebug() may be overridden by actors that
