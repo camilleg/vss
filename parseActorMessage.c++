@@ -192,21 +192,3 @@ extern "C" int SscanfInts(int cw, int* rgw, const char* sz)
 	return i;
 
 }
-
-// Warn the user if more than 5 unparsed characters remain.
-// It's probably the start of the next message.
-extern "C" void CheckSemi(int /*cch*/)
-{
-#ifdef TEMPORARILY_BROKEN_99_05_04 // actorMessageHandler() nested calls, I think.
-
-#ifndef VSS_WINDOWS // sscanf %n is broken in VC++.  It may be broken in VSS_LINUX too.
-	if (cch < (int)(strlen(sscanf_msg)) - 5)
-		{
-		fprintf(stderr,
-			"vss warning: possible missing semicolon near \"%s ... %s\", maybe before \"%s\"\n",
-			sscanf_cmd, sscanf_msg, sscanf_msg+cch);
-		}
-#endif
-
-#endif
-}

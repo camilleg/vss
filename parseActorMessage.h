@@ -28,22 +28,20 @@ static inline int SzStart(const char* msg, const char* cmd)
 extern "C" float* VrgzMG(void);
 extern "C" int SscanfFloats(int cz, float* rgz, const char* sz);
 extern "C" int SscanfInts(int cw, int* rgw, const char* sz);
-extern "C" void CheckSemi(int cch);
 
 extern "C" char sscanf_cmd[1000];
 extern "C" const char* sscanf_msg;
 #define CommandIs(_) (!strcmp(sscanf_cmd, _))
 
 #ifdef DEBUG
-#define CATCHES
+#define CATCHES // Needs #define DEBUG.
 #endif
-// #defining CATCHES without #defining DEBUG won't work.  Don't try it.
 
 #ifdef CATCHES
 inline int VActor::Catch(void)   { cerr <<typeName() <<": <" <<sscanf_cmd <<sscanf_msg <<">\n"; return 1; }
-inline int VActor::Uncatch(void) { cerr<<"msg missed (unexpected arg list) by " <<typeName() <<"\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
-inline int Catch(void)	{ cerr<<"msg caught by something else\n"; return 1; }
-inline int Uncatch(void)	{ cerr<<"msg missed (unexpected arg list) by something else\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
+inline int VActor::Uncatch(void) { cerr<<"msg missed (unexpected args) by " <<typeName() <<"\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
+inline int Catch(void) { cerr<<"msg caught\n\t<" << sscanf_cmd << sscanf_msg << ">\n"; return 1; }
+inline int Uncatch(void) { cerr<<"msg missed (unexpected args)\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
 #else
 inline int VActor::Catch(void)		{ return 1; }
 inline int VActor::Uncatch(void)	{ return 0; }
@@ -69,10 +67,10 @@ inline int Uncatch(void)			{ return 0; }
 // such a block in a separate function which has the clearly defined purpose of
 // handling that particular message.
 
-#define Do_(_)                  { _; CheckSemi(cch); return Catch(); }
+#define Do_(_)                  { _; return Catch(); }
 #define Do_AndDeleteArray(_, a) { _; delete[] a; return Catch(); }
 
-#define ifNil(_) { const int cch = 0; Do_(_) }
+#define ifNil(_) { Do_(_) }
 
 #define ifTypeArg1Sz(type,a1,_,sz) \
  { int cch; type a1; if (1 == sscanf(sscanf_msg, sz, &a1,&cch)) Do_(_) }
