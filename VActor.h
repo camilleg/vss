@@ -1,6 +1,4 @@
-#ifndef _ACTOR_BASE_CLASS_
-#define _ACTOR_BASE_CLASS_
-
+#pragma once
 #include "vssSrv.h"
 using namespace std;			/* BS: added 04/24/2006 */
 
@@ -9,13 +7,9 @@ using namespace std;			/* BS: added 04/24/2006 */
 //	VActor.c++ relates ActorHandles to Actors.
 typedef unsigned short ActorHandle;
 
-//	Forward declarations for special actor types. 
 class VHandler;
 class VGeneratorActor;
 
-//===========================================================================
-//		class VActor
-//
 //	Base class for all Actors.
 //
 //	Actors are automatically maintained in a map. They insert 
@@ -51,10 +45,9 @@ public:
 	// need to do something fancy when their status changes.
 	virtual void setActive(int f) { fActive = (f!=0); }
 	virtual void setDebug(int f)  { fDebug = f; }
-	
-//	construction/destruction
+
 public:
-		VActor(void);
+		VActor();
 		VActor(VActor &);
 		virtual ~VActor();
 	
@@ -70,8 +63,8 @@ public:
 //
 //	actCleanup() is a second pass, called by allActCleanup().
 protected:
-virtual void act(void) {}
-virtual void actCleanup(void) {}
+virtual void act() {}
+virtual void actCleanup() {}
 	
 //	allAct() is called by the scheduler, and hopefully not by anyone else. 
 //	It runs through the entire Actor container and calls act() for everybody.
@@ -81,8 +74,8 @@ virtual void actCleanup(void) {}
 //	which were recently deleted.  It should be called right after any code
 //	which might have deleted a handler (for now, allAct() and actorMessageMM()).
 public:
-static void	allAct(void);
-static void	allActCleanup(void);
+static void	allAct();
+static void	allActCleanup();
 
 //	Message handling:
 //	Derived classes that receive messages should override receiveMessage().
@@ -96,22 +89,22 @@ virtual	int receiveMessage(const char* Message);
 //	when a message is caught, but handled unsuccessfully (i.e.
 //	has wrong number of arguments or something).
 protected:
-inline int Catch(void);
-inline int Uncatch(void);
+inline int Catch();
+inline int Uncatch();
 			
 //	Global VActor container access and maintenance.
 private:
 	static int fWantToFlush;
 public:
 static VActor *	getByHandle(const float aHandle);
-static void		flushActorList(void);
+static void		flushActorList();
 static void WantToFlush()
 	{ fWantToFlush = 1; }
 
 //	For identifying special kinds of actors, override as necessary
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
-virtual	VHandler * as_handler(void) { return NULL; }
-virtual VGeneratorActor * as_generator(void) { return NULL; }
+virtual	VHandler * as_handler() { return NULL; }
+virtual VGeneratorActor * as_generator() { return NULL; }
 
 //	Debugging info:
 //	These members are included for debugging purposes, mostly. 
@@ -123,7 +116,7 @@ private:
 	char myTypeName[30];
 public:
 	void setTypeName(const char * str) { strncpy(myTypeName, str, 29); }
-	char const * typeName(void) { return myTypeName; }
+	char const * typeName() { return myTypeName; }
 	
 //	Actors should override dump() to print out useful information
 //	about themselves.
@@ -174,6 +167,4 @@ inline std::ostream &VActor::bio(std::ostream &os, int tabs)
 //
 #include "parseActorMessage.h"
 
-#define ACTOR_SETUP(T, t) extern "C" VActor* t##_New(void) { return (VActor*) new T; }
-
-#endif	// ndef _ACTOR_BASE_CLASS_
+#define ACTOR_SETUP(T, t) extern "C" VActor* t##_New() { return (VActor*) new T; }

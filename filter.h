@@ -1,21 +1,12 @@
-#ifndef _FILTER_H_
-#define _FILTER_H_
-
+#pragma once
 #include "vssSrv.h"
 
-
-//===========================================================================
-//		filter
-//
 //	Class filter is a state-space implementation of a first-order
 //	pole/zero pair. Use it to realize first-order lowpass, highpass, and
 //	allpass (phase-shift) filters. The filter is implemented by mapping a
 //	continuous-time state-space realization into a digital one through the
 //	Bilinear Transform (BLT).
-//
-//	SGI compiler bug: don't use variable names like B0 because they
-//	sometimes collide with hexadecimal constants 0xB0.  Yarrgh!
-//
+
 class filter
 {
 private:
@@ -86,8 +77,4 @@ public:
 	Aap(0.0)
 		{ setFrequency(1000.); }
 	~filter() {}
-
-};	// end of class filter
-
-
-#endif // ndef _FILTER_H_
+};

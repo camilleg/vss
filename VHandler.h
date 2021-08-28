@@ -1,6 +1,4 @@
-#ifndef _HANDLER_BASE_CLASS_H_
-#define _HANDLER_BASE_CLASS_H_
-
+#pragma once
 #include "VActor.h"
 #include "VAlgorithm.h"
 
@@ -25,7 +23,7 @@ public:
 	int& Iz() { return j; }
 	int& Cz() { return j; }
 
-	int FOnlyI(void) { return j == jUnused; }
+	int FOnlyI() { return j == jUnused; }
 
 	IParam() : i(-1), j(jUnused) {}
 	IParam(int iArg) : i(iArg), j(jUnused) {}
@@ -38,22 +36,18 @@ public:
 
 #include <iostream>
 
-//===========================================================================
-//      Class VModulator
-//
 //  Class VModulator is a template for parameter modulators of any
 //  parameter type. It is an abstract base class: modulator classes
 //  must define a currentValue() member that computes the value
 //  of the modulation at any time.
 //  It is *not* derived from class VActor, even though it looks like might be.
-//
 class VModulator
 {
 protected:
 	int fDone;
 	long dstSamp;
 public:
-	VModulator(void): fDone(0) {}
+	VModulator(): fDone(0) {}
 	virtual ~VModulator() {}
 
 	// Should return 0 when it finishes modulating,
@@ -69,7 +63,7 @@ private:
 	float   dstVal;
 	float   slope;
 
-	float currentValue(void);
+	float currentValue();
 public:
 	VFloatParam(float oldVal, float newVal, float modTime);
 	int SetAttribute(VHandler*, IParam);
@@ -80,7 +74,7 @@ class VFloatArrayElement : public VModulator
 	float   dstVal;
 	float   slope;
 
-	float currentValue(void);
+	float currentValue();
 public:
 	VFloatArrayElement(float oldVal, float newVal, float modTime);
 	int SetAttribute(VHandler*, IParam);
@@ -95,7 +89,7 @@ private:
 	float*  curVals;
 	float*  slopes;
 
-	float* currentValue(void);
+	float* currentValue();
 public:
 	VFloatArray(int sizeArg, const float* oldVals, const float* newVals, float modTime);
 	~VFloatArray();
@@ -116,11 +110,11 @@ public:
 	void insert(int, float, float, float);
 	void insert(int, float, int, float, float);
 	void insert(int, float, int, const float*, const float*);
-	void erase(void);
+	void erase();
 
-	VModulatorPool(void) {}
+	VModulatorPool() {}
 public:
-	~VModulatorPool(void) {}
+	~VModulatorPool() {}
 		// Modmap cleans up after itself (see Josuttis, p.233).
 };
 
@@ -128,9 +122,6 @@ public:
 //	for the creation and initialization of handlers.
 class VGeneratorActor;
 
-//===========================================================================
-//      Class VHandler
-//
 //	VHandlers provide an Actor-level encapsulation of VAlgorithm 
 //	behavior. They inherit the control-rate periodicity of VActors 
 //	for algorithm parameter updates. 
@@ -139,7 +130,6 @@ class VGeneratorActor;
 //	VAlgorithms in vss. Each algorithm instance is accessed by actors 
 //	through its handler. Each algorithm defined in vss should have an 
 //	associated handler defined.
-//
 class VHandler : public VActor
 {
 //	private parameters. All parameters should be private, and accessed
@@ -169,8 +159,8 @@ private:
 //	perform pointer verification (validation, for debugging). Defined
 //	inline below.
 public:
-	inline VAlgorithm* const getAlg(void);
-	inline int getAlgOK(void);
+	inline VAlgorithm* const getAlg();
+	inline int getAlgOK();
 	
 //	VHandlers need to remember who their parents are so they can inform
 //	the parent when they die. The parents (VGeneratorActors) have 
@@ -179,7 +169,7 @@ private:
 	float 	parentHandle;
 public:
 	void	setParent(float h) { parentHandle = h; } 
-	VGeneratorActor * getParent(void) const { return getByHandle(parentHandle)->as_generator(); }
+	VGeneratorActor * getParent() const { return getByHandle(parentHandle)->as_generator(); }
 
 //	Access members for discrete (not modulated) VAlgorithm parameters
 	int getMute() { return getAlg()->getMute(); }
@@ -189,7 +179,7 @@ public:
 
 //	contruction/destruction
 private:
-	VHandler(void);
+	VHandler();
 public:
 	VHandler(VAlgorithm *);
 	virtual	~VHandler();
@@ -216,7 +206,7 @@ public:
 //	If instantaneous amplitude changes are undesirable, 
 //	dampingTime() may be overriden to specify a different time
 //	that will be used for setAmp(s) when no time is specified.
-	virtual	float dampingTime(void) { return 0.03f; }
+	virtual	float dampingTime() { return 0.03f; }
 protected:
 	// This calls dampingTime(), to handle default duration-changes.
 	float AdjustTime(float& time);
@@ -257,7 +247,7 @@ public:
 //	Handlers that override this member should remember to call the 
 //	parent class' act() member as well, in order to inherit control 
 //	rate behavior from base classes.
-virtual void act(void);
+virtual void act();
 
 //	Message-receipt member. Handlers that override this member
 //	should remember to call their parent class' message receiver for
@@ -271,7 +261,7 @@ virtual	ostream &dump(ostream &os, int tabs);
 //	For identifying special kinds of actors, override as necessary.
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
 public:
-virtual	VHandler * as_handler(void) { return this; }
+virtual	VHandler * as_handler() { return this; }
 
 private:
 	enum { cDyingHandlerLim = 1000 };
@@ -283,18 +273,14 @@ private:
 	static VHandler** pDyingHandler2;
 
 public:
-int FValid(void);
-static void allAct(void);
-
-};   // end of class VHandler
+int FValid();
+static void allAct();
+};
 
 #ifdef VSS_COMPILERBUG1
 extern VAlgorithm* valgT;
 #endif
 
-//===========================================================================
-//		getAlg
-//
 //	Access to the handler's algorithm must go through this function
 //	which can be compiled to provide pointer verification for debugging
 //	purposes. This verification mechanism does _not_ fail gracefully.
@@ -327,16 +313,12 @@ VHandler::getAlg()
 	}
 #ifdef VERBOSE
 	printf("vss internal remark: VAlgorithm* %lx verified.\n", (long)valg);
-#endif // def VERBOSE
-
-#endif // def VERIFY_ALG_POINTERS
-
+#endif
+#endif
 	return valg;
 }
 
-inline int VHandler::getAlgOK(void)
+inline int VHandler::getAlgOK()
 {
 	return valg != NULL;
 }
-
-#endif // ndef _HANDLER_BASE_CLASS_H_

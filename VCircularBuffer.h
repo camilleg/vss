@@ -1,11 +1,7 @@
-#ifndef _CIRC_BUFFER_CLASS_H_
-#define _CIRC_BUFFER_CLASS_H_
-
-//===========================================================================
 //	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
 //	Turned into multichannel by Camille Goudeseune and Carlos Ricci, 1998.
-//===========================================================================
 
+#pragma once
 #include "vssSrv.h"
 
 class VCircularBuffer;
@@ -90,7 +86,6 @@ public:
 			}
 		}
 };
-
 
 //===========================================================================
 //	Class VCircularBuffer is used by VAlgorithm to store the samples
@@ -215,5 +210,3 @@ public:
 			}
 		}
 };
-
-#endif // ndef _CIRC_BUFFER_CLASS_H_

@@ -1,10 +1,9 @@
-#ifndef __SRV_H__
-#define __SRV_H__
+// #include this only from C++, not from C.
 
-/* vssSrv.h  --  #include this only from C++, not from C! */
+#pragma once
 
 #ifdef VSS_WINDOWS
-#include <windows.h> // This has to be included before most other stuff.
+#include <windows.h>
 #endif
 
 using namespace std;
@@ -18,21 +17,16 @@ using namespace std;
 #include <cstdlib>
 #include <cstring>
 
-
 #define iNil (-1)
-#define hNil (-1.f)	/* this is also defined in vssMsg.h */
+#define hNil (-1.f)	// also defined in vssMsg.h
 
 typedef unsigned long ulong;
 
-// booleans
 #ifndef true
 #define false   0
 #define true    1
 #endif
 
-//===========================================================================
-//	handy inlines
-//
 inline void
 FloatCopy( void * dst, const void * src, const int n )
 {
@@ -45,7 +39,7 @@ ZeroFloats( void *array, const int n )
 	memset( array, 0, n * sizeof(float) );
 }
 
-// Prototypes from vssSrv.c++
+// from vssSrv.c++
 
 extern void PingServer(struct sockaddr_in *cl_addr);
 extern void Srv_UpdateMasterVolume(float newGain);
@@ -61,5 +55,3 @@ extern "C" void ReturnFloatToClient(float);
 extern "C" void ReturnStringToClient(const char*);
 
 extern "C" float* PvzMessageGroupRecentHandle(void);
-
-#endif /* __SRV_H__ */

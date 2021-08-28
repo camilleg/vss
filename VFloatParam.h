@@ -1,18 +1,11 @@
-#ifndef _FLOAT_PARAM_H_
-#define _FLOAT_PARAM_H_
-//===========================================================================
 //	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
+#pragma once
 #include "VModulator.h"
 
-//===========================================================================
-//      Class FloatParam
-//
 // 	Class FloatParam updates a smoothly (linearly) modulating float 
 //	parameter. FloatParam should be set inactive whenever the slope 
 //	is zero.
-//
+
 template<class RcvrType>
 class FloatParam : public VModulatorOld<float, RcvrType>
 {
@@ -24,7 +17,6 @@ private:
 	VHandler* pparent;
 
 public:
-//	Construction (all defined inline below)
 	FloatParam(void);
 	// typedef	void (RcvrType::*UpdtFn)(float); //;;;; bielefeld
 	// FloatParam(RcvrType * r, UpdtFn f) :
@@ -48,7 +40,6 @@ public:
 	// aforementioned initalization list of a handler's constructor.
 	void init(VHandler* p) { pparent = p; }
 
-//  Destruction
 	~FloatParam() 	{}
 
 //	Return the current value of the modulation.
@@ -58,11 +49,8 @@ public:
 //	the value instantaneously.	
 	void set(float newVal, float modTime = 0.);
 
-};  // end of template class FloatParam
+};
 
-//===========================================================================
-//	FloatParam constructor
-//
 template<class RcvrType>
 FloatParam<RcvrType>::FloatParam(void) :
 	VModulatorOld<float, RcvrType>(),
@@ -75,10 +63,6 @@ FloatParam<RcvrType>::FloatParam(void) :
 	VActor::setActive(0);
 }
 
-
-//===========================================================================
-//	FloatParam constructor with initial value
-//
 template<class RcvrType>
 FloatParam<RcvrType>::FloatParam(float init) :
 	VModulatorOld<float, RcvrType>(),
@@ -91,9 +75,6 @@ FloatParam<RcvrType>::FloatParam(float init) :
 	VActor::setActive(0);
 }
 
-//===========================================================================
-//	FloatParam constructor with update function and initial value
-//
 template<class RcvrType>
 FloatParam<RcvrType>::FloatParam(RcvrType * r, typename VModulatorOld<float, RcvrType>::UpdtFn f, float init) :
 	VModulatorOld<float, RcvrType>(r, f),
@@ -106,13 +87,9 @@ FloatParam<RcvrType>::FloatParam(RcvrType * r, typename VModulatorOld<float, Rcv
 	VActor::setActive(0);
 }
 
-//===========================================================================
-//		currentValue
-//
 //	Compute the current value of the modulation from the 
 //	currentSample number, the destination sample number, 
 //	and the slope.
-//
 template<class RcvrType>
 float 
 FloatParam<RcvrType>::currentValue(void)
@@ -130,14 +107,10 @@ FloatParam<RcvrType>::currentValue(void)
 		dstVal - ((double)(dstSamp - globs.SampleCount) * slope) : 
 		dstVal;
 		
-}	// end of FloatParam::currentValue()
+}
 
-//===========================================================================
-//		set
-//
 //	Initialize the dstVal, slope, dstSamp values for modulation to 
 //	a new value.
-//
 template<class RcvrType>
 void 
 FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */)
@@ -163,7 +136,4 @@ printf("\tFloatParam modulating from %f to %f over %f samples (%ld, %ld), slope 
 	dstVal = newVal;
 //	set active accoriding to whether there is modulation to do.
 	VActor::setActive( slope != 0. );
-	
-}	// end of FloatParam::set()
-
-#endif // ndef _FLOAT_PARAM_H_
+}

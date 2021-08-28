@@ -1,19 +1,11 @@
-#ifndef _GENERATOR_ACTOR_BASE_CLASS_
-#define _GENERATOR_ACTOR_BASE_CLASS_
-
-//===========================================================================
 //	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
+#pragma once
 #include "VActor.h"
 #include <set>
 
 //	Define container type for HandlerList.
 typedef set<VHandler *> HandlerList;
 
-//===========================================================================
-//		class VGeneratorActor
-//
 //	Class VGeneratorActor is the base class for actors that create 
 //	and manipulate groups of vss algorithm instances. Algorithm
 //	instances are referenced by VHandlers (see VHandler.h), which 
@@ -67,15 +59,14 @@ private:
 	bool	fDying;
 
 public:
-//	Construction
-		VGeneratorActor(void);
+		VGeneratorActor();
 virtual ~VGeneratorActor();
 
 //	Creation of children (handlers). Derived classes must provide
 //	newHandler(). Dervied classes with additional parameters should
 //	override sendDefaults(), but remember to call the base class' 
 //	sendDefaults(), or inherited parameters will not be initialized.
-virtual	VHandler * newHandler(void) = 0;
+virtual	VHandler * newHandler() = 0;
 virtual	void sendDefaults(VHandler *);
 
 //	Message handling:
@@ -121,18 +112,13 @@ virtual	ostream &dump(ostream &os, int tabs);
 //	For identifying special kinds of actors, override as necessary.
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
 public:
-virtual VGeneratorActor * as_generator(void) { return this; }
+virtual VGeneratorActor * as_generator() { return this; }
+};
 
-};	// end of class VGeneratorActor	
-
-//===========================================================================
-//		HandlerListIterator
-//
 //	Template class for hiding all the pointer type casting that
 //	happens when iterating over a list of VGeneratorActor children
 //	(handlers). Treat it like an iterator on a HandlerList (type
 //	defined above).
-//	
 template <class HandlerType>
 class HandlerListIterator
 {
@@ -140,17 +126,14 @@ private:
 	HandlerList::iterator it;
 
 public:
-//	construction
 	HandlerListIterator() 	{}
 	HandlerListIterator( HandlerList::iterator i ) : it(i) {}
 	HandlerListIterator(const HandlerListIterator &hli) : it(hli.it) {}
 	~HandlerListIterator() 	{}
 
-//	increment 
 	HandlerListIterator & operator ++() 	{ it++; return *this; }
 	HandlerListIterator & operator ++(int) 	{ it++; return *this; }
 	
-//	assignment
 	HandlerListIterator & operator=( HandlerList::iterator i ) 
 											{ it = i; return *this; }
 
@@ -170,7 +153,4 @@ public:
 
 //	dereferencing
 	HandlerType * operator*() 	{ return (HandlerType *)(*it); }
-
-};	// end of template class HandlerListIterator
-
-#endif	// ndef _GENERATOR_ACTOR_BASE_CLASS_
+};

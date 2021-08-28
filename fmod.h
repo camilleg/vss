@@ -1,9 +1,8 @@
+#pragma once
+
 //==========================================================================================
 // FMOD Main header file. Copyright (c), FireLight Multimedia 1999-2000.
 //==========================================================================================
-
-#ifndef _FMOD_H_
-#define _FMOD_H_
 
 //===============================================================================================
 //= DEFINITIONS
@@ -80,7 +79,6 @@ enum FMOD_ERRORS
 	FMOD_ERR_RECORD,		   // Recording is not supported on this machine
 };
 
-
 /*
 [ENUM]
 [
@@ -106,7 +104,6 @@ enum FSOUND_OUTPUTTYPES
 	FSOUND_OUTPUT_DSOUND,     // DirectSound driver.  You need this to get EAX or EAX2 support.
 	FSOUND_OUTPUT_A3D,        // A3D driver.  You need this to get geometry and EAX reverb support.
 };
-
 
 /*
 [ENUM]
@@ -153,7 +150,6 @@ enum FMUSIC_TYPES
 	FMUSIC_TYPE_IT,			// Impulse Tracker.
 };
 
-
 /*
 [DEFINE_START] 
 [
@@ -174,7 +170,6 @@ enum FMUSIC_TYPES
 #define FSOUND_DSP_DEFAULTPRIORITY_USER				300	// User priority, use this as reference
 #define FSOUND_DSP_DEFAULTPRIORITY_CLIPANDCOPYUNIT	1000	// DSP CLIP AND COPY unit - last
 // [DEFINE_END]
-
 
 /*
 [DEFINE_START] 
@@ -198,7 +193,6 @@ enum FMUSIC_TYPES
 #define FSOUND_CAPS_GEOMETRY_REFLECTIONS	0x8		// This driver supports (A3D) geometry reflections
 #define FSOUND_CAPS_EAX2					0x10	// This driver supports EAX2/A3D3 reverb
 // [DEFINE_END]
-
 
 /*
 [DEFINE_START] 
@@ -231,7 +225,6 @@ enum FMUSIC_TYPES
 #define FSOUND_NORMAL		(FSOUND_LOOP_OFF | FSOUND_8BITS | FSOUND_MONO)		
 // [DEFINE_END]
 
-
 /*
 [DEFINE_START] 
 [
@@ -250,7 +243,6 @@ enum FMUSIC_TYPES
 #define FSOUND_CD_PLAYLOOPED		2	// Plays the specified track looped, forever until stopped manually.
 #define FSOUND_CD_PLAYRANDOM		3	// Plays tracks in random order
 // [DEFINE_END]
-
 
 /*
 [DEFINE_START] 
@@ -280,7 +272,6 @@ enum FMUSIC_TYPES
 #define FSOUND_UNMANAGED	-2	// value to allocate a sample that is NOT managed by FSOUND or placed in a sample slot.
 #define FSOUND_STEREOPAN	-1	// value for FSOUND_SetPan so that stereo sounds are not played at half volume.  See FSOUND_SetPan for more on this.
 // [DEFINE_END]
-
 
 /*
 [ENUM]
@@ -343,7 +334,6 @@ enum FSOUND_REVERB_ENVIRONMENTS
 #define FSOUND_REVERBMIX_USEDISTANCE	-1.0f	// used with FSOUND_Reverb_SetMix to scale reverb by distance
 // [DEFINE_END]
 
-
 /*
 [DEFINE_START] 
 [
@@ -367,7 +357,6 @@ enum FSOUND_REVERB_ENVIRONMENTS
 */
 #define FSOUND_REVERB_IGNOREPARAM	-9999999	// used with FSOUND_Reverb_SetEnvironmentAdvanced to ignore certain parameters by choice.
 // [DEFINE_END]
-
 
 /*
 [DEFINE_START] 
@@ -411,7 +400,6 @@ enum FSOUND_REVERB_ENVIRONMENTS
 #define FSOUND_PRESET_PSYCHOTIC       FSOUND_ENVIRONMENT_PSYCHOTIC,0.486f, 7.563f,  0.806f
 // [DEFINE_END]
 
-
 /*
 [DEFINE_START] 
 [
@@ -431,10 +419,6 @@ enum FSOUND_REVERB_ENVIRONMENTS
 #define FSOUND_GEOMETRY_OPENING_REFERENCE	0x04	// Overlays a transparency over the previous polygon.  The 'openingfactor' supplied is pointed to (for access when building a list)
 // [DEFINE_END]
 
-
-
-
-
 //===============================================================================================
 //= FUNCTION PROTOTYPES
 //===============================================================================================
@@ -442,7 +426,6 @@ enum FSOUND_REVERB_ENVIRONMENTS
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 // ==================================
 // Initialization / Global functions.
@@ -469,7 +452,6 @@ DLL_API void			F_API FSOUND_SetPanSeperation(float pansep);
 // Error functions
 DLL_API int				F_API _FSOUND_GetError();
 
-
 // ===================================
 // Sample management / load functions.
 // ===================================
@@ -493,7 +475,6 @@ DLL_API signed char		F_API FSOUND_Sample_SetLoopMode(FSOUND_SAMPLE *sptr, unsign
 DLL_API signed char		F_API FSOUND_Sample_SetLoopPoints(FSOUND_SAMPLE *sptr, int loopstart, int loopend);
 DLL_API signed char		F_API FSOUND_Sample_SetDefaults(FSOUND_SAMPLE *sptr, int deffreq, int defvol, int defpan, int defpri);
 DLL_API signed char		F_API FSOUND_Sample_SetMinMaxDistance(FSOUND_SAMPLE *sptr, float min, float max);
-
   
 // ============================
 // Channel control functions.
@@ -517,7 +498,6 @@ DLL_API signed char		F_API FSOUND_SetPriority(int channel, int priority);
 DLL_API signed char		F_API FSOUND_SetReserved(int channel, signed char reserved);
 DLL_API signed char		F_API FSOUND_SetPaused(int channel, signed char paused);
 DLL_API signed char		F_API FSOUND_MixBuffers(void *destbuffer, void *srcbuffer, int len, int freq, int vol, int pan, unsigned int mode);
-
 
 // ================================
 // Information retrieval functions.
@@ -560,7 +540,6 @@ DLL_API unsigned int	F_API FSOUND_Sample_GetLength(FSOUND_SAMPLE *sptr);
 DLL_API signed char		F_API FSOUND_Sample_GetLoopPoints(FSOUND_SAMPLE *sptr, int *loopstart, int *loopend);
 DLL_API signed char		F_API FSOUND_Sample_GetDefaults(FSOUND_SAMPLE *sptr, int *deffreq, int *defvol, int *defpan, int *defpri);
 DLL_API unsigned int	F_API FSOUND_Sample_GetMode(FSOUND_SAMPLE *sptr);
-
  
 // ===================
 // 3D sound functions.
@@ -575,7 +554,6 @@ DLL_API void			F_API FSOUND_3D_Listener_GetAttributes(float *pos, float *vel, fl
 DLL_API void			F_API FSOUND_3D_Listener_SetDopplerFactor(float scale);
 DLL_API void			F_API FSOUND_3D_Listener_SetDistanceFactor(float scale);
 DLL_API void			F_API FSOUND_3D_Listener_SetRolloffFactor(float scale);
-
 
 // ===================
 // Geometry functions.
@@ -676,7 +654,6 @@ DLL_API int				F_API FSOUND_CD_GetTrack();
 DLL_API int				F_API FSOUND_CD_GetNumTracks();
 DLL_API signed char		F_API FSOUND_CD_Eject();
 
-
 // ==============
 // DSP functions.
 // ==============
@@ -700,7 +677,6 @@ DLL_API FSOUND_DSPUNIT *F_API FSOUND_DSP_GetClipAndCopyUnit();
 // misc DSP functions
 DLL_API void			F_API FSOUND_DSP_ClearMixBuffer();
 DLL_API int				F_API FSOUND_DSP_GetBufferLength();
-
 
 // =========================
 // Recording functions
@@ -746,7 +722,6 @@ DLL_API signed char		F_API FMUSIC_SetRowCallback(FMUSIC_MODULE *mod, FMUSIC_CALL
 DLL_API signed char		F_API FMUSIC_SetOrderCallback(FMUSIC_MODULE *mod, FMUSIC_CALLBACK callback, int orderstep);
 DLL_API signed char		F_API FMUSIC_OptimizeChannels(FMUSIC_MODULE *mod, int maxchannels, int minvolume);
 
-
 // Runtime song functions.
 // =======================
 DLL_API signed char		F_API FMUSIC_SetOrder(FMUSIC_MODULE *mod, int order);
@@ -783,6 +758,4 @@ DLL_API unsigned int	F_API FMUSIC_GetTime(FMUSIC_MODULE *mod);
   
 #ifdef __cplusplus
 }
-#endif
-
 #endif

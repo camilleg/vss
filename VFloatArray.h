@@ -1,14 +1,8 @@
-#ifndef _FLOAT_ARRAY_H_
-#define _FLOAT_ARRAY_H_
-//===========================================================================
 //	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
+//
+#pragma once
 #include "VModulator.h"
 
-//===========================================================================
-//		Class FloatArray
-//
 //	Class FloatArray updates an array of smoothly (linearly) 
 //	modulating float parameters. To avoid dynamic allocation,
 //	make a template for different size arrays. When the destination
@@ -70,11 +64,8 @@ public:
 //	Access the current modulation state.	
 virtual float *	currentValue(void);
 
-};	// end of class FloatArray
+};
 
-//===========================================================================
-//		FloatArray constructor
-//
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray(void):
 	VModulatorOld<float *, RcvrType>(),
@@ -92,9 +83,6 @@ FloatArray<Size, RcvrType>::FloatArray(void):
 	VActor::setActive(0);
 }
 
-//===========================================================================
-//		FloatArray constructor with initial values
-//
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray(float * init):
 	VModulatorOld<float *, RcvrType>(),
@@ -109,10 +97,6 @@ FloatArray<Size, RcvrType>::FloatArray(float * init):
 	VActor::setTypeName("FloatArray");
 }
 
-
-//===========================================================================
-//		FloatArray constructor with update function and initial values
-//
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
 	VModulatorOld<float *, RcvrType>(r, f),
@@ -158,13 +142,9 @@ FloatArray<Size, RcvrType>::currentValue(void)
 	}
 	else
 		return dstVals;
-}	// end of FloatArray::currentValue()
+}
 
-//===========================================================================
-//		set
-//
 //	member for beginning modulation to new values
-//
 template<int Size, class RcvrType>
 void 
 FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
@@ -247,6 +227,4 @@ FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 		dstSamp = (long)((float)(globs.SampleCount) + modSamps + 0.5);
 		VActor::setActive( true );
 	}
-}	// end of FloatArray::set()
-
-#endif // ndef _FLOAT_ARRAY_H_
+}

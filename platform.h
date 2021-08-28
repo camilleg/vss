@@ -1,5 +1,4 @@
-#ifndef __VSS_PLATFORM_SPOOGE_H__
-#define __VSS_PLATFORM_SPOOGE_H__
+#pragma once
 
 #ifdef VSS_WINDOWS
 #include <windows.h> // This has to be included before most other stuff.
@@ -9,6 +8,7 @@
 #include <arpa/inet.h>
 
 #ifdef VSS_IRIX
+
 #include <sys/types.h>
 #include <dmedia/midi.h>
 #ifdef VSS_IRIX_53
@@ -18,7 +18,6 @@
 
 #else
 
-// Declare hypot() and sqrt().
 #include <cmath>
 static inline float fhypot(float x, float y) { return (float)hypot(x, y); }
 static inline float fsqrt(float x) { return (float)sqrt(x); }
@@ -102,12 +101,6 @@ void GraphSpect(OBJ op, float *pzwindow, int npoints);
 void GraphTimemode(OBJ op,  int time);
 void GraphBang(OBJ op, float *count);
 float dbtolin(float);
-#if 0 // UNUSED
-void SineFunction(int n, float *stab, int stride, float from, float to);
-void ExpFunction(int n, float *etab, int stride, float from, float to);
-void GaussianFunction(int n, float *stab, int stride, float from, float to);
-void GaussianFunctionWithZero(int n, float *stab, int stride, float from, float to);
-#endif // UNUSED
 void assignvec(int n, float *out, int stride,
 	 float *a, int astride);
 void addvec2(int n, float *out, int stride,
@@ -149,5 +142,3 @@ typedef struct
 	int sockfd;
 	int channel;
 } desc;
-
-#endif

@@ -1,15 +1,8 @@
 //	Globals defined in vssSrv.c++ that we need to access elsewhere.
 
-#ifndef __VSS_GLOBALS_H__
-#define __VSS_GLOBALS_H__
-
-
-////////////////////////////////////////////////////////////////////////////
-//
-// constants
+#pragma once
 
 // MaxSampsPerBuffer must be a power of two.
-
 #define MaxNumChannels          ((int) 8)
 #ifdef VSS_IRIX
 #define MaxSampsPerBuffer       ((int) 128)
@@ -105,5 +98,3 @@ inline float currentTime(void)
 #endif
 
 extern "C" int VSS_main(int argc, char *argv[]);
-
-#endif

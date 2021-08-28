@@ -1,5 +1,4 @@
-#ifndef _FMOD_ERRORS_H
-#define _FMOD_ERRORS_H
+#pragma once
 
 static char *FMOD_ErrorString(int errcode)
 {
@@ -28,5 +27,3 @@ static char *FMOD_ErrorString(int errcode)
 		default :						return "Unknown error";
 	};
 };
-
-#endif

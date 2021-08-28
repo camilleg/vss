@@ -1,7 +1,6 @@
 /* vssClient.h  --  File created by machine.  Do not modify. */
  /* Built on Wed May 5 12:31:36 CDT 1999 */
-#ifndef __VSSCLIENT_H__
-#define __VSSCLIENT_H__
+#pragma once
 #define NO_LOCAL_INCLUDES
 #include <stdlib.h>
 #include <unistd.h>
@@ -119,4 +118,3 @@ VSSMDevent* GetMidiMessages(float* pcmsg, float hMidiActor);
 #endif
 #endif
 #endif 
-#endif

@@ -1,14 +1,7 @@
-#ifndef _MODULATOR_CLASSES_H_
-#define _MODULATOR_CLASSES_H_
-//===========================================================================
 //	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
+#pragma once
 #include "VActor.h"
 
-//===========================================================================
-//		Class VModulatorOld
-//
 //	Class VModulatorOld is a template for parameter modulators of any 
 //	parameter type. It is an abstract base class: modulator classes
 //	must define a currentValue() member that computes the value
@@ -40,13 +33,8 @@ protected:
 	RcvrType	* receiver;
 	
 public:
-//	constructor
 	VModulatorOld(void) : VActor(), updateFn(NULL), receiver(NULL) {}
-
-//	constructor (with update function)
 	VModulatorOld(RcvrType * r, UpdtFn f) : VActor(), updateFn(f), receiver(r) {}
-
-//  destructor
 virtual	~VModulatorOld() {}
 
 // 	Member for implementing asynchronous modulation behavior.
@@ -67,7 +55,4 @@ virtual void act(void)
 //	current modulation value. This is the only member that must
 //	be provided by derived classes.
 virtual ParamType currentValue(void) = 0;
-
-}; 	// end of template base class VModulatorOld
-
-#endif // ndef _MODULATOR_CLASSES_H_
+};

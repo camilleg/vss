@@ -1,10 +1,4 @@
-#ifndef _VSS_ALGORITHM_BASE_CLASS_H_
-#define _VSS_ALGORITHM_BASE_CLASS_H_
-
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
+#pragma once
 #include "VCircularBuffer.h"
 #include "filter.h" // for distance cues
 #include <set>
@@ -32,35 +26,28 @@ inline double dBFromScalar(double number /*, double ref = 1.0*/)
 		log10(number /* / ref */) * 20.;
 }
 
-//===========================================================================
-
 //	Define a type for lists of VAlgorithm pointers
 class VAlgorithm;
 typedef	set<VAlgorithm *> VAlgorithmList;
 
-//===========================================================================
-//     VAlgorithm class
-//
 //	Class VAlgorithm is an abstract base class for synthesis algorithms 
 //	in VSS. All other synthesis algorithms must be derived from VAlgorithm.
-//
 class VAlgorithm
 {
 //	internal parameters (all private, only accessible thru access members)
 private:
 // 	If mute is true, this instance is _not_ directly contributing to output.
 	int		mute;	
-//	
+
 // 	If pause is true, this instance is not generating any new samples.
 	int 	pause;
-//	
+
 //	number of channels actually computed by the algorithm. 
 //	nchan = the number of active channels going into the buffer, so that
 //	buffer[i][n] is active for n within [0,nchan-1].
 //	Note that outputSamples() "intelligently" remaps (distributes and/or combines) 
 //	those "active" channels into the final output mix, according to the relationship
 //	between nchan and MaxNumChannels (the current number of vss output channels).
-//
 	int nchan;
 
 // 	The array amps contains channel amplitudes.
@@ -152,7 +139,6 @@ public:
 	void setInputGain(float, float t = 0.);
 	void setInputAmp(float, float t = 0.);
 
-
 // 	static list of all the active algorithms that get time in the
 // 	scheduler's sample loop.
 	static	VAlgorithmList Generators;
@@ -224,8 +210,6 @@ private:
 	inline void setDistanceImmediately(void);
 
 public:
-
-// 	construction/destruction
 		VAlgorithm(void);	
 		VAlgorithm(VAlgorithm&);
 		virtual ~VAlgorithm();				
@@ -260,6 +244,4 @@ public:
 		  bufDst.Map(howMany, nchansAlg, nchansDst); // Transform the samples.
 		}
 
-}; // end of class VAlgorithm
-
-#endif // ndef _VSS_ALGORITHM_BASE_CLASS_H_
+};

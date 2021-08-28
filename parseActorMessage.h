@@ -3,16 +3,12 @@
 //===========================================================================
 //	actually, this code was written by Camille, he should have his own banner.
 
-#ifndef _PARSE_ACTOR_MSG_
-#define _PARSE_ACTOR_MSG_
-
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <cstring>
-
 #include "VActor.h"
 
-//===========================================================================
 //	sscanf-parsing stuff
 
 // Does "msg" start with command "cmd"?
@@ -243,6 +239,3 @@ inline int Uncatch(void)			{ return 0; }
 				Do_AndDeleteArray(_, a) }
 
 extern "C" void CommandFromMessage(const char* message, int fGenActor=0);
-
-
-#endif	// ndef _PARSE_ACTOR_MSG_
