@@ -367,6 +367,7 @@ LDoneChans:;
 				*sample_rate = 44100.;
 				}
 #else
+			// globs.fdOfile via AIFF supports 1 to 8 channels, even non-power-of-two.
     		if (*nchansVSS < 1)
 				{
     			cerr <<"vss warning: outputing to 1 channel instead of "
@@ -386,27 +387,16 @@ LDoneChans:;
 				globs.fRemappedOutput = 0;
 				}
 #endif
-
-			// VSS_LINUX, not 8-channel.
-    		else if (*nchansVSS>2)
-    		// else if (*nchansVSS==3 || *nchansVSS==5 || *nchansVSS==6 || *nchansVSS==7)
-				{
-    			cerr <<"vss warning: outputing to 2 channels instead of "
-					 <<*nchansVSS
-					 <<"\n\n";
-    			*nchansVSS = *nchansOut = 2;
-				globs.fRemappedOutput = 0;
-				}
-
 #endif	
 
-    		if (*nchansVSS > 8)
+			if (*nchansVSS > MaxNumChannels)
 				{
-    			cerr <<"vss warning: limiting output to 8 channels from "
+				cerr <<"vss warning: limiting output to " << MaxNumChannels << " channels from "
 					 <<*nchansVSS
 					 <<"\n\n";
     			*nchansVSS = *nchansOut = 8;
 				globs.fRemappedOutput = 0;
+				// Otherwise Synth() causes a buffer overflow.
 				}
     	}
     	else
