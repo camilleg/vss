@@ -2,8 +2,12 @@
 
 #pragma once
 
-// MaxSampsPerBuffer must be a power of two.
+// MaxNumChannels may be any positive number, but it's typically 2, 4, or 8.
+// MaxSampsPerBuffer must be a power of two, typically 128 to 4096.
+// For both, smaller values conserve RAM and run faster.
+
 #define MaxNumChannels          ((int) 8)
+
 #ifdef VSS_IRIX
 #define MaxSampsPerBuffer       ((int) 128)
 #endif
@@ -45,8 +49,8 @@ public:
 	char*	rgbBufOfile;
 	char    ofile[256];
 
-	VSSglobals(void);
-	~VSSglobals(void) {}
+	VSSglobals();
+	~VSSglobals();
 };
 
 //;; These public members should be hidden behind set/get function calls,

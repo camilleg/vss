@@ -43,7 +43,7 @@ static OBJ udpDescObj = NULL;	// used to send udp messages
 
 VSSglobals globs;
 
-VSSglobals::VSSglobals(void)
+VSSglobals::VSSglobals()
 {
 	// Always update SampleRate and OneOverSR together.
 	SampleRate = 44100.0f;
@@ -77,6 +77,11 @@ VSSglobals::VSSglobals(void)
 	vibBufOfile = 0;
 	rgbBufOfile = NULL;
 	ofile[0] = '\0';
+}
+
+VSSglobals::~VSSglobals() {
+	if (rgbBufOfile)
+		delete [] rgbBufOfile;
 }
 
 /****************************************************/
@@ -793,26 +798,22 @@ extern "C" int actorMessageHandler(const char* Message)
 	return 1;
 }
 
-//===========================================================================
-//		File I/O
-//
-
 extern void OpenOfile(const char * fileName, int cbBuf)
 {
 	if (globs.fdOfile >= 0)
 		CloseOfile(globs.ofile);
-	
 	if (!*fileName)
 		return;
-
-	fprintf(stderr, "vss remark: Opening output file \"%s\".\n", fileName);
-			globs.fdOfile = open(fileName, O_CREAT/*|O_TRUNC*/|O_WRONLY, 0666);
+	globs.fdOfile = open(fileName, O_CREAT/*|O_TRUNC*/|O_WRONLY, 0666);
 	if (globs.fdOfile < 0)
 		{
 		perror(fileName);
 		*globs.ofile = '\0';
 		return;
 		}
+	fprintf(stderr, "vss remark: writing to %s.\n", fileName);
+	strcpy(globs.ofile, fileName);
+
 	if (cbBuf > 0)
 		fprintf(stderr, "vss remark: Buffering %d seconds (%d MB) of output.\n",
 			(int)(cbBuf / globs.SampleRate / globs.nchansVSS),
@@ -820,8 +821,6 @@ extern void OpenOfile(const char * fileName, int cbBuf)
 	globs.vcbBufOfile = cbBuf;
 	globs.vibBufOfile = 0;
 	globs.rgbBufOfile = new char[cbBuf];
-
-	strcpy(globs.ofile, fileName);
 }
 
 extern void CloseOfile(const char * fileName)
@@ -837,13 +836,13 @@ extern void CloseOfile(const char * fileName)
 
 	if (globs.fdOfile >= 0)
 		{
-		fprintf(stderr, "vss remark: closing output file %s.\n", globs.ofile);
+		fprintf(stderr, "vss remark: wrote to %s.\n", globs.ofile);
 		if (globs.vcbBufOfile>0 && globs.vibBufOfile>0)
 			{
 			// flush and free memory buffer.  Ignore return value, because we're closing things down anyways.
 			(void)!write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
-			globs.vibBufOfile=0;
 			globs.vcbBufOfile=0;
+			globs.vibBufOfile=0;
 			delete [] globs.rgbBufOfile;
 			globs.rgbBufOfile = NULL;
 			}
@@ -859,7 +858,7 @@ extern void CloseOfile(const char * fileName)
 				globs.nchansVSS, (int)globs.SampleRate, globs.ofile, globs.ofile);
 			(void)!system(szCmd);
 			unlink(globs.ofile);
-			fprintf(stderr, "Converted %s from raw to aiff.\n", globs.ofile);
+			fprintf(stderr, "vss remark: output is in %s.aiff.\n", globs.ofile);
 			}
 #endif
 
