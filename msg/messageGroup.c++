@@ -45,18 +45,15 @@ MessageGroup::~MessageGroup()
 	//	}
 }
 
-//===========================================================================
-//		receiveData
-//	
 //	For each parameterized message in the messageList, build up a real
 //	message and send it. If a handle was created by sending that message,
 //	store it. Those handles are only valid for this data array, reset it
 //	to hNil when done.
-//
-void 
-MessageGroup::receiveData(float * data, int dataSize)
+void MessageGroup::receiveData(float* data, int dataSize)
 {
-	//printf("\n\tgonna receiveData %x %d\n", (int)data, dataSize);;
+	if (!data)
+		fprintf(stderr, "MessageGroup::receiveData(NULL, %d): crash imminent.\n", dataSize);
+	// What should happen if dataSize <= 0?  How might that happen?
 
 #ifdef VSS_MATH_HACK
 	if (fMathHack)
