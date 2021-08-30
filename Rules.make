@@ -9,7 +9,7 @@ clean_dso:
 .PHONY: clean all
 
 clean:
-	-rm -f $(DSO) $(OBJS)
+	-rm -rf $(DSO) $(OBJS) .depend
 
 # non-windows ar might also want $(LDFLAGS) $(LIBS)
 $(DSO): $(OBJS)
