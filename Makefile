@@ -23,16 +23,6 @@ all: $(TARGET)
 sane:
 	@$(AUDTEST) sanity.aud
 
-## ;;in linux, misc.o and fft.o may need CFLAGS += -O1
-#ifeq "$(PLATFORMBASE)" "VSS_LINUX"
-#  CFLAGS += -O1
-#  cFLAGS += -O1
-#endif
-
-# for gdb
-#CFLAGS += -g -O0
-#cFLAGS += -g -O0
-
 OBJSRV := \
   fft.o \
   misc.o \
