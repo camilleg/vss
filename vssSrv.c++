@@ -47,20 +47,12 @@ VSSglobals::VSSglobals()
 {
 	// Always update SampleRate and OneOverSR together.
 	SampleRate = 44100.0f;
-#ifdef VSS_IRIX
-	nchansVSS = nchansIn = nchansOut = 1;
-#endif
-#ifdef VSS_LINUX
-	nchansVSS = nchansIn = nchansOut = 1;
-#endif
-#ifdef VSS_LINUX_SONORUS
-	nchansVSS = nchansOut = 8;
-	nchansIn = 2;
-#endif
+	OneOverSR = 1.0f / SampleRate;
 #ifdef VSS_WINDOWS
 	nchansVSS = nchansIn = nchansOut = 2;
+#else
+	nchansVSS = nchansIn = nchansOut = 1;
 #endif
-	OneOverSR = 1.0f / SampleRate;
 
 	SampleCount = 0L;
 	ofile_enabled = FALSE;

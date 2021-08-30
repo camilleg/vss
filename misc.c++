@@ -350,23 +350,7 @@ LDoneChans:;
 					}
  	     		argc--; argv++;++nargs;
 				}
-#ifdef VSS_LINUX_SONORUS
-			if (*nchansVSS != 8)
-				{
-				cerr << "vss warning: outputing to 8 channels instead of "
-					<<*nchansVSS
-					<<"\n\n";
-				*nchansVSS = *nchansOut = 8;
-				globs.fRemappedOutput = 0;
-				}
-			if ((int)*sample_rate != 44100)
-				{
-				cerr << "vss warning: forcing sampling rate to 44100 instead of "
-					<<*sample_rate
-					<<"\n\n";
-				*sample_rate = 44100.;
-				}
-#else
+
 			// globs.fdOfile via AIFF supports 1 to 8 channels, even non-power-of-two.
     		if (*nchansVSS < 1)
 				{
@@ -386,7 +370,6 @@ LDoneChans:;
     			*nchansVSS = *nchansOut = 2;
 				globs.fRemappedOutput = 0;
 				}
-#endif
 #endif	
 
 			if (*nchansVSS > MaxNumChannels)

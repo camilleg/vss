@@ -342,9 +342,6 @@ snd_pcm_format_t pformat, rformat;
 #include <csignal>
 
 int fdDAC = -1; // hardware output (and input, actually)
-#	ifdef VSS_LINUX_SONORUS
-	int fdADC = -1; // hardware input. /dev/dsp# is NOT duplex here
-#	endif
 
 //	yucky globals, IRIX-specific:
 #elif defined(VSS_IRIX)
@@ -551,108 +548,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 #endif
 #endif
 #ifdef VSS_LINUX_OSS
-#ifdef VSS_LINUX_SONORUS
-		/*
-		  This is only for studio_mode 1 (ADAT+SPDIF),
-		  using out port A(ADAT) and in port B(SPDIF).
-		  Future task: make all four combinations of I/O channel
-		  8-8, 8-2, 2-8, 2-2, to work.
-
-		  Device numbers are:
-		    out port A0-7: dsp1-8
-		    out port B0-7: dsp9-16
-		    in port A0-1: dsp17-18
-		    in port B0-1: dsp19-20
-
-		  Opening ADC before DAC causes problem. Don't know why.
-		*/
-		int chans, frag, audioformat, SR;
-
-		if (fdDAC < 0)
-		  {
-		    if ( (fdDAC = open("/dev/dsp1", O_WRONLY)) < 0 )
-		      {
-			fprintf(stderr, "vss warning: can't open Sonorus output port A0-A7.\n");
-			liveaudio = 0;
-			goto LContinue;
-		      }
-		  }
-		chans = 8;
-		if (ioctl(fdDAC, SNDCTL_DSP_CHANNELS, &chans) || chans != 8)
-		  {
-		    fprintf(stderr, "vss warning: can't set output to 8 chans but %d.\n", chans);
-		    liveaudio = 0;
-		    goto LContinue;
-		  }
-		//printf("Output chans %d %d, ", chans, globs.nchansOut);
-
-		SR = 44100;
-		if (ioctl(fdDAC, SNDCTL_DSP_SPEED, &SR) || SR != 44100)
-		  {
-		    fprintf(stderr, "vss warning: can't set output sr to 44100 but %d.\n", SR);
-//  		    liveaudio = 0;
-//  		    goto LContinue;
-		  }
-		//printf("SR %d %f\n", SR, globs.SampleRate);
-
-		frag = 0x00030000 + 8 * 8; // output 8 chan
-		if (ioctl(fdDAC, SNDCTL_DSP_SETFRAGMENT, &frag))
-			perror("vss warning: ioctl failed");
-
-		audioformat = AFMT_S16_LE;
-		if (ioctl(fdDAC, SNDCTL_DSP_SETFMT, &audioformat) ||
-			audioformat != AFMT_S16_LE)
-			{
-			fprintf(stderr, "vss error: can't set output format to signed 16-bit little-endian.\n");
-			liveaudio = 0;
-			goto LContinue;
-			}
-
-		if ( fSoundIn )
-		  if (fdADC < 0)
-		    if ( (fdADC = open("/dev/dsp19", O_RDONLY)) < 0 )
-		      {
-			fprintf(stderr, "vss warning: can't open Sonorus input port B0-B1.\n");
-			fSoundIn = 0;
-		      }
-
-		chans = nchansInArg;
-		if ( fSoundIn )
-		  if (ioctl(fdADC, SNDCTL_DSP_CHANNELS, &chans) || 
-		      chans != nchansInArg)
-		    {
-		      fprintf(stderr, "vss warning: can't set input to %d chans but %d.\n", nchansInArg, chans);
-		      fSoundIn = 0;
-		    }
-		nchansIn = chans;
-//  		printf("Input chans %d %d %d %d\n", 
-//  		       chans, nchansInArg, nchansIn, globs.nchansIn);
-
-		SR = 44100;
-		if ( fSoundIn )
-		  if (ioctl(fdADC, SNDCTL_DSP_SPEED, &SR) || SR != 44100)
-		    {
-		      fprintf(stderr, "vss warning: can't set input sr to 44100 but %d.\n", SR);
-		      fSoundIn = 0;
-		    }
-		//printf("SR %d %f\n", SR, globs.SampleRate);
-
-#define CFRAGMENT 3 /*6*/
-		if ( fSoundIn )
-		  {
-		    frag = 0x00030000 + 8 * 2; // input 2 chan
-		    if (ioctl(fdADC, SNDCTL_DSP_SETFRAGMENT, &frag))
-				perror("vss warning: ioctl failed");
-		    audioformat = AFMT_S16_LE;
-		    if (ioctl(fdADC, SNDCTL_DSP_SETFMT, &audioformat) ||
-			audioformat != AFMT_S16_LE)
-		      {
-			fprintf(stderr, "vss error: can't set input format to signed 16-bit little-endian.\n");
-			fSoundIn = 0;
-		      }
-		  }
-
-#else // non-Sonorus OSS
 
 		// If fdDAC >= 0, we already opened it -- this is a reset button or something.
 		if (fdDAC < 0)
@@ -753,7 +648,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			globs.SampleRate = SR;
 			globs.OneOverSR = 1.0 / globs.SampleRate;
 			}
-#endif // end #ifdef VSS_LINUX_SONORUS
 #endif
 #ifdef VSS_LINUX_UBUNTU
 		snd_pcm_hw_params_t *hwparams; snd_pcm_hw_params_alloca(&hwparams);
@@ -1224,13 +1118,6 @@ void Closesynth()
 #ifdef VSS_LINUX_OSS
 		close(fdDAC);
 		fdDAC = -1;
-#  ifdef VSS_LINUX_SONORUS
-		if ( fSoundIn )
-		  {
-		    close(fdADC);
-		    fdADC = -1;
-		  }
-#  endif
 #endif
 #ifdef VSS_WINDOWS
 		if (vfCalledback)
@@ -1329,9 +1216,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		(void)snd_pcm_read(pcm_handle_read, ibuf, n * nchansIn * sizeof(short));
 #endif
 #ifdef VSS_LINUX_OSS
-#ifdef VSS_LINUX_SONORUS
-		read(fdADC, ibuf, n * nchansIn * sizeof(short));
-#else
 		// EFFECTIVELY nchansIn == nchans in ALSA and OSS,
 		// even if nchansIn is actually 1.
 		// So if nchans==2, fake nchansIn to be 1 by summing the two
@@ -1351,7 +1235,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 			fprintf(stderr, "input for > 2 channels NYI.\n");
 		// read(fdDAC, ibuf, n * nchansIn * sizeof(short));
 		// identical. crashed with alsa014, didn't try alsa030.
-#endif
 #endif
 #ifdef VSS_IRIX
 		alReadFrames(alpin, ibuf, n);
