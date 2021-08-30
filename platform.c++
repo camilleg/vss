@@ -1025,10 +1025,6 @@ LContinue:
 #ifdef VSS_IRIX
 	return liveaudio ? alGetFD(alp) : -1;
 #endif
-#ifdef VSS_HAMMERFALL
-	printf("hammerfall init NYI\n");
-	return -1;
-#endif
 #ifdef VSS_WINDOWS
 		return liveaudio ? 0/*unused globs.dacfd in VSS_WINDOWS*/ : -1;
 #endif
