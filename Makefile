@@ -24,7 +24,6 @@ sane:
 	@$(AUDTEST) sanity.aud
 
 OBJSRV := \
-  fft.o \
   misc.o \
   parseActorMessage.o \
   platform.o \

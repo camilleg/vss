@@ -75,11 +75,6 @@ typedef void *OBJ;
 #define PI (3.14159265358979323)
 #endif
 
-void fftReal(int n, float *rR, float *r,int rstride);
-void ifftReal(int n, float *res, float *r,float *c, int istride);
-void fftComplex(int n, float *a,  int notinverse);
-void fftRealfast(int n, float *r);
-void ifftRealfast(int n, float *res, float *r,float *c, int istride);
 void Line_seg(OBJ *o, int n, float *out, int stride);
 OBJ Line_segNew(float srate,float initial);
 void Line_seg_start(OBJ *oo, int n, float *v, int stride);
