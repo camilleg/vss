@@ -1,10 +1,6 @@
 #include "tb303.h"
-#include <cmath>
 
-//===========================================================================
-//	tb303Alg constructor
-//
-tb303Alg::tb303Alg(void) :
+analogAlg::analogAlg(void) :
 	VAlgorithm(),
 	vco_inc(0.),
 	vco_k(-.5),
@@ -23,13 +19,13 @@ tb303Alg::tb303Alg(void) :
 }
 
 
-tb303Alg::~tb303Alg()
+analogAlg::~analogAlg()
 {
 }
 
 static const int oversampling = 4; // 3 too low, 8 too high.
 
-void tb303Alg::generateSamples(int howMany)
+void analogAlg::generateSamples(int howMany)
 {
 	vibrate();
 	recalc();
@@ -74,39 +70,39 @@ void tb303Alg::generateSamples(int howMany)
 		balance = 10.;
 }
 
-void tb303Alg::vibrate(void)
+void analogAlg::vibrate(void)
 {
 	//;; apply random 3-to-6Hz vibrato to vcf_reso vcf_envmod vcf_envdecay vcf_cutoff
 }
 
-void tb303Alg::setFreq(float zFreq)
+void analogAlg::setFreq(float zFreq)
 {
 	vco_inc = (zFreq/(float)oversampling) / globs.SampleRate;
 	vco_freq = zFreq;
 }
 
-void tb303Alg::setFilterCutoff(float z)
+void analogAlg::setFilterCutoff(float z)
 {
 	vcf_cutoff = z; // 0 to 1
 }
 
-void tb303Alg::setResonance(float z)
+void analogAlg::setResonance(float z)
 {
 	vcf_reso = z;
 	vcf_rescoeff = exp(-1.2 + 3.455 * vcf_reso);
 }
 
-void tb303Alg::setEnvMod(float z)
+void analogAlg::setEnvMod(float z)
 {
 	vcf_envmod = z;
 }
 
-void tb303Alg::setEnvDecay(float z) //;; misnamed
+void analogAlg::setEnvDecay(float z) //;; misnamed
 {
 	vcf_envdecay = z;
 }
 
-void tb303Alg::recalc(void)
+void analogAlg::recalc(void)
 {
 	/*
 		vco_freq 60: vcf_cutoff -2 to 1

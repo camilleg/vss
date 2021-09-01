@@ -1,12 +1,12 @@
 #include "tb303.h"
 
-tb303Hand::tb303Hand(tb303Alg * alg):
+analogHand::analogHand(analogAlg * alg):
 	VHandler( alg )
-{ 
-	setTypeName("tb303Hand"); 
+{
+	setTypeName("analogHand");
 }
 
-int	tb303Hand::receiveMessage(const char * Message)
+int	analogHand::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
 
@@ -48,7 +48,7 @@ int	tb303Hand::receiveMessage(const char * Message)
 	return VHandler::receiveMessage(Message);
 }
 
-void tb303Hand::SetAttribute(IParam iParam, float z)
+void analogHand::SetAttribute(IParam iParam, float z)
 {
 	if (iParam.FOnlyI())
 		{

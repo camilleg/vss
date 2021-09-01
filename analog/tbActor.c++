@@ -2,12 +2,6 @@
 
 ACTOR_SETUP(analogActor, AnalogActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for tb303 parameters, they will be
-//	sent in sendDefaults().
-//
 analogActor::analogActor(void) :
 	VGeneratorActor(),
 	defaultFreq( 110. ),
@@ -16,17 +10,14 @@ analogActor::analogActor(void) :
 	defaultEnvMod( 0. ),
 	defaultEnvDecay( 0. )
 {
-	setTypeName("Tb303Actor");
+	setTypeName("AnalogActor");
 }
 
-//===========================================================================
-//		sendDefaults
-//
 void
 analogActor::sendDefaults(VHandler * p)
 {
 	VGeneratorActor::sendDefaults(p);
-	tb303Hand * h = (tb303Hand *)p;
+	analogHand * h = (analogHand *)p;
 	h->setFreq(defaultFreq, 0.);
 	h->setFilterCutoff(defaultFilterCutoff, 0.);
 	h->setResonance(defaultResonance, 0.);
@@ -34,9 +25,6 @@ analogActor::sendDefaults(VHandler * p)
 	h->setEnvDecay(defaultEnvDecay, 0.);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int analogActor::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
@@ -151,7 +139,7 @@ void analogActor::setAllFreq(float z, float t)
 		printf("analogActor got bogus frequency %f.\n", z );
 		return;
 		}
-	HandlerListIterator< tb303Hand > it;
+	HandlerListIterator< analogHand > it;
     for (it = children.begin(); it != children.end(); it++)
 		(*it)->setFreq(z, t);
 	defaultFreq = z;
@@ -164,7 +152,7 @@ void analogActor::setAllFilterCutoff(float z, float t)
 		printf("analogActor got bogus FilterCutoff %f.\n", z );
 		return;
 		}
-	HandlerListIterator< tb303Hand > it;
+	HandlerListIterator< analogHand > it;
     for (it = children.begin(); it != children.end(); it++)
 		(*it)->setFilterCutoff(z, t);
 	defaultFreq = z;
@@ -177,7 +165,7 @@ void analogActor::setAllResonance(float z, float t)
 		printf("analogActor got bogus Resonance %f.\n", z );
 		return;
 		}
-	HandlerListIterator< tb303Hand > it;
+	HandlerListIterator< analogHand > it;
     for (it = children.begin(); it != children.end(); it++)
 		(*it)->setResonance(z, t);
 	defaultResonance = z;
@@ -190,7 +178,7 @@ void analogActor::setAllEnvMod(float z, float t)
 		printf("analogActor got bogus EnvMod %f.\n", z );
 		return;
 		}
-	HandlerListIterator< tb303Hand > it;
+	HandlerListIterator< analogHand > it;
     for (it = children.begin(); it != children.end(); it++)
 		(*it)->setEnvMod(z, t);
 	defaultEnvMod = z;
@@ -203,21 +191,16 @@ void analogActor::setAllEnvDecay(float z, float t)
 		printf("analogActor got bogus EnvDecay %f.\n", z );
 		return;
 		}
-	HandlerListIterator< tb303Hand > it;
+	HandlerListIterator< analogHand > it;
     for (it = children.begin(); it != children.end(); it++)
 		(*it)->setEnvDecay(z, t);
 	defaultFreq = z;
 }
 
-//===========================================================================
-//	dump
-//
 ostream &
 analogActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
-
 	indent(os, tabs) << "Freq: " << defaultFreq << endl;
-
 	return os;
 }
