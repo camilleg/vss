@@ -1,5 +1,8 @@
 #include "VAlgorithm.h"
 
+// #define NDEBUG // Disable assert().
+#include <cassert>
+
 #ifdef VSS_WINDOWS
 	const int csampChunk = 64;
 	const int cChunk = MaxSampsPerBuffer / csampChunk;
@@ -12,12 +15,6 @@
 // howMany, passed into outputSamples(), is assumed to be a multiple of cChunk.
 // As howMany is now always 128,
 // that means updateAmps() is called every 128/32 = 4 samples.
-
-#ifndef assert
-#define assert(_) ((void)0)
-#endif
-
-#define DEBUG
 
 //===========================================================================
 //	static list of algorithm instances
