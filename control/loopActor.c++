@@ -89,11 +89,11 @@ void loopActor::act()
 	MaybeDump();
 }
 
-// receiveMessage
-
 int loopActor::receiveMessage(const char* Message)
 {
-	int ret = receiveMessageCore(strdup(Message)); // memory leak
+	const auto s = strdup(Message);
+	const auto ret = receiveMessageCore(s);
+	free(s);
 	MaybeDump();
 	return ret;
 }
