@@ -326,17 +326,6 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 snd_pcm_format_t pformat, rformat;
 #endif
 
-//#ifdef DEBUG
-//extern "C" void assert(int x)
-//{
-	//if (x) return;
-//
-	//VSS_BeginCriticalError();
-	//fprintf(stderr, "vss internal error: assertion failure.\n");
-	//VSS_EndCriticalError();
-//}
-//#endif
-
 #if defined(VSS_LINUX)
 #include <linux/soundcard.h>
 #include <csignal>
@@ -655,13 +644,13 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 		int err = snd_output_stdio_attach(&alsa_output, stdout, 0);
 		if (err < 0)
 		      {
-		      fprintf(stderr, "vss error: alsa output failed: %s\n", snd_strerror(err));
+		      fprintf(stderr, "vss error: no alsa: %s\n", snd_strerror(err));
 		      liveaudio = 0;
 		      goto LContinue;
 		      }
 		if ((err = snd_pcm_open(&pcm_handle_write, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
 		      {
-		      fprintf(stderr, "vss error: can't open audio output port: %s\n", snd_strerror(err));
+		      fprintf(stderr, "vss error: no audio out: %s\n", snd_strerror(err));
 		      liveaudio = 0;
 		      goto LContinue;
 		      }
@@ -1264,11 +1253,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 
 	if (!sfunc)
 		{
-#if 0
-		printf("vss internal error: null sfunc passed to Synth() (%x).\n", (int)vsfunc);
-#else /* BS: fixed 04/24/2006 */
-		printf("vss internal error: null sfunc passed to Synth() (%p).\n", vsfunc);
-#endif
+		printf("vss internal error: Synth(NULL) (%p).\n", vsfunc);
 		return FALSE;
 		}
 	if (!(*sfunc)(n, outvecp, nchans))
@@ -1289,7 +1274,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 
 	if (vfLimitClip)
 		{
-#if 0
+/*
 		very fast gain reduction and a very slow gain increase.
 		if level gets within -2dB of clip, reduce gain "immediately"
 			(within 128 samples, = 3 msec at 44kHz) by 5dB.
@@ -1299,7 +1284,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		Boost is no more than 60dB, though (600 seconds).
 		Cut is no more than 200dB (120 msec).
 		slower pumping to keep it between -15dB and -5dB.
-#endif
+*/
 
 		static float zLimitdB = 0.;
 
@@ -1369,7 +1354,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 				{
 				if (!fShoutedSoft && !fShouted)
 					{
-					fprintf(stderr, "vss remark: soft clipping on output.\n");
+					fprintf(stderr, "vss remark: soft clipping.\n");
 					// report this not more than once every 10 seconds
 					fShoutedSoft = (int)(10.0 * globs.SampleRate/MaxSampsPerBuffer);
 					}
@@ -1378,7 +1363,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 					wAmpl = wSoftclipLim;
 					if (!fShouted)
 						{
-						fprintf(stderr, "vss warning: hard clipping on output (%.2f\n", fabs(outvecp[i]) * k / 32768);
+						fprintf(stderr, "vss warning: hard clipping (%.2f\n", fabs(outvecp[i]) * k / 32768);
 						// report this not more than once every 2 seconds
 						fShouted = (int)(2.0 * globs.SampleRate/MaxSampsPerBuffer);
 						fShoutedSoft = (int)(10.0 * globs.SampleRate/MaxSampsPerBuffer);
@@ -2120,7 +2105,7 @@ LAgain:
 	if (liveaudio && (vv.dacfd < 0))
 		{
 		// This was already reported.
-		// fprintf(stderr, "vss error: couldn't open hardware audio output port.\n");
+		// fprintf(stderr, "vss error: no audio out.\n");
 		goto LDie;
 		}
 
@@ -2154,8 +2139,8 @@ LAgain:
 		;
 
 LDie:
-	// we got a ^C, or the control panel's Quit button was pushed.
-	vfDie = 1; // Tell the control panel to die.
+	// We got a ctrl+C.
+	vfDie = 1;
 	deleteActors();
 	if (fWantToResetsynth)
 		cerr <<"vss internal error: confused between quit and reset.\n";
