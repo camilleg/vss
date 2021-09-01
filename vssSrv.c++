@@ -520,11 +520,15 @@ VActor* dummy(void) { return NULL; }
 VActor* newActor(const char* szName)
 {
 	// search for szName in map.  If found, call its new().
-	for (int i=0; i<cactor; ++i)
-	  {
-	  if (!strcmp(szName, m[i].name))
-	    return m[i].pfn();
-	  }
+	for (int i=0; i<cactor; ++i) {
+		if (!strcmp(szName, m[i].name)) {
+			const auto p = m[i].pfn();
+			if (!p)
+				fprintf(stderr, "vss error: failed to create a \"%s\" actor.\n", szName);
+			return p;
+		}
+	}
+	fprintf(stderr, "vss error: can't create unrecognized \"%s\" actor.\n", szName);
 	return NULL;
 }
 
@@ -533,9 +537,6 @@ static void InternalCreateActor(const char* s)
 	VActor* anActor = newActor(s);
 	if (!anActor)
 		{
-		VSS_BeginCriticalError();
-		fprintf(stderr, "vss error: failed to create an actor of type \"%s\".\n", s);
-		VSS_EndCriticalError();
 		ReturnFloatToClient(hNil);
 		return;
 		}
@@ -543,7 +544,7 @@ static void InternalCreateActor(const char* s)
 	if (aHandle == hNil)
 		{
 		VSS_BeginCriticalError();
-		fprintf(stderr, "vss error: failed to create an actor of type \"%s\" (got a nil handle).\n", s);
+		fprintf(stderr, "vss error: got a nil handle to a new \"%s\" actor.\n", s);
 		VSS_EndCriticalError();
 		}
 	ReturnFloatToClient(aHandle);
