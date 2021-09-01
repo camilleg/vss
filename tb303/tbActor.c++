@@ -2,13 +2,7 @@
 
 ACTOR_SETUP(tb303Actor, Tb303Actor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for tb303 parameters, they will be
-//	sent in sendDefaults().
-//
-tb303Actor::tb303Actor(void) :
+tb303Actor::tb303Actor() :
 	VGeneratorActor(),
 	defaultFreq( 110. ),
 	defaultFilterCutoff( 0. ),
@@ -19,9 +13,6 @@ tb303Actor::tb303Actor(void) :
 	setTypeName("Tb303Actor");
 }
 
-//===========================================================================
-//		sendDefaults
-//
 void
 tb303Actor::sendDefaults(VHandler * p)
 {
@@ -34,9 +25,6 @@ tb303Actor::sendDefaults(VHandler * p)
 	h->setEnvDecay(defaultEnvDecay, 0.);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int tb303Actor::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
@@ -209,15 +197,10 @@ void tb303Actor::setAllEnvDecay(float z, float t)
 	defaultFreq = z;
 }
 
-//===========================================================================
-//	dump
-//
 ostream &
 tb303Actor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
-
 	indent(os, tabs) << "Freq: " << defaultFreq << endl;
-
 	return os;
 }

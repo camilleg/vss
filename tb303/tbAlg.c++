@@ -1,10 +1,6 @@
 #include "tb303.h"
-#include <cmath>
 
-//===========================================================================
-//	tb303Alg constructor
-//
-tb303Alg::tb303Alg(void) :
+tb303Alg::tb303Alg() :
 	VAlgorithm(),
 	vco_inc(0.),
 	vco_k(0),
@@ -21,19 +17,12 @@ tb303Alg::tb303Alg(void) :
 {
 }
 
-
-//===========================================================================
-//	tb303Alg destructor
-//
 tb303Alg::~tb303Alg()
 {
 }
 
-//===========================================================================
-//	tb303Alg generateSamples
 //	This algorithm is loosely derived from the TB303 emulator included
 //	with the package "gsynth 0.4.8" by Andy Sloane.
-//
 void tb303Alg::generateSamples(int howMany)
 {
 	if (!fStarted)
@@ -94,7 +83,7 @@ void tb303Alg::setEnvDecay(float z)
 	vcf_envdecay = pow(.1, 1./((2.3*z + .2) * globs.SampleRate));
 }
 
-void tb303Alg::recalc(void)
+void tb303Alg::recalc()
 {
 	vcf_e1 = exp(6.109 + 1.5876*vcf_envmod + 2.1553*vcf_cutoff
 		- 1.2 * (1.-vcf_reso)) * M_PI / globs.SampleRate;
