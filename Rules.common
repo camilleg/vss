@@ -15,9 +15,6 @@ endif
 ifeq "$(PLATFORM)" "VSS_IRIX_63"
   PLATFORMBASE := VSS_IRIX
 endif
-ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
-  PLATFORMBASE := VSS_IRIX
-endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
   PLATFORMBASE := VSS_IRIX
 endif
@@ -43,10 +40,6 @@ ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   PLATFORMBASE := VSS_WINDOWS
 endif
 
-ifeq "$(PLATFORMBASE)" "VSS_LINUX"
-  VSSLIBS := -lpthread
-endif
-
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
   VSSLIBS := -laudio -lmd -ldmedia
   # -ldmedia is only for dmGetUST(), in platform.c++
@@ -55,8 +48,6 @@ ifneq "$(PLATFORM)" "VSS_IRIX_53"
   VSSLIBS := -lpthread
 endif
 endif
-
-VSSLIBS += -lm
 
 CCC := gcc
 CC := g++
@@ -69,19 +60,12 @@ CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
 # VSS-specific
 # CcFLAGS += -DVERIFY_ALG_POINTERS
 # CcFLAGS += -DVERBOSE
-# CcFLAGS += -Weffc++
 # CcFLAGS += -DVSS_COMPILERBUG1
-# ;;;; LDFLAGS := -D$(PLATFORM)
-# LDFLAGS := -lasound
-# LDFLAGS := -s
 LDFLAGS :=
 
 ifeq "$(PLATFORM)" "VSS_IRIX_53"
-  # THIS FAILS!!!!        INC += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
   CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
-  # -I/usr/bulk5/cg/gcc/libstdc++
   CcFLAGS += -mips2
-  # ;;;;needed?   CcFLAGS += -DVSS_OLD_H_FILES
   CFLAGS := $(CcFLAGS)
   cFLAGS := $(CcFLAGS)
   LDFLAGS += -L/usr/local/gnu/lib		# to find libstdc++.a
@@ -89,25 +73,6 @@ endif
 ifeq "$(PLATFORM)" "VSS_IRIX_62"
   CFLAGS := $(CcFLAGS)
   cFLAGS := $(CcFLAGS)
-endif
-ifeq "$(PLATFORM)" "VSS_IRIX_65_MIPS3"
-    CcFLAGS += -woff 1424,3201,1110 -DVSS_OLD_H_FILES -DVSS_IRIX_63PLUS
-    # MIPSpro 7.3, not gcc 2.95.2.  Abandoned.
-    CCC := cc
-    CC := CC
-    CcFLAGS += \
-		-TARG:processor=r4400 -TARG:platform=ip22 \
-		-fullwarn -ptused \
-		-TENV:X=4 \
-		-mips3 \
-		-exceptions=OFF \
-		-OPT:IEEE_arithmetic=3 -OPT:alias=typed -LNO:opt=1 \
-		-OPT:Olimit=0 \
-		-LANG:std
-#		-trapuv    -- inconsistent with -O3 -mips3, see "man rld" on "The aggregate IEEE exceptions required".
-#		-mcpu=r4000 
-	CFLAGS := $(CcFLAGS)
-	cFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
   CcFLAGS += -DVSS_IRIX_63PLUS
@@ -167,8 +132,6 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 	CFLAGS = $(CcFLAGS) -fno-exceptions
 	cFLAGS = $(CcFLAGS)
 endif
-
-#CcFLAGS += -g -O0 # debugging
 
 AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.
 

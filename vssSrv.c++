@@ -247,7 +247,7 @@ extern "C" int VSS_main(int argc,char *argv[])
 	struct utsname name;
 	(void)uname(&name);
 	char* sz = name.release;
-#if defined(VSS_IRIX_65) || defined(VSS_IRIX_65_MIPS3)
+#if defined(VSS_IRIX_65)
 	if (!(sz[0]=='6' && sz[1]=='.' &&sz[2] >= '5'))
 		{
 		fprintf(stderr, "This copy of VSS requires IRIX 6.5 or greater.\n");
@@ -268,17 +268,13 @@ extern "C" int VSS_main(int argc,char *argv[])
 		return -1;
 		}
 #endif
-#ifdef VSS_IRIX_53
-	// No limiter here.  It's useful for later Irixes with R4000-class CPUs.
-#endif
 	}
 #endif
 
 #ifndef VSS_WINDOWS
 	{
 	szDirOfVSS = SzWhichdir(argv[0]);
-	// szDirOfVSS should technically be free()'d,
-	// but why bother since it's only alloc'd once and sticks around forever.
+	// szDirOfVSS should technically be free()'d.
 	}
 #endif
 
