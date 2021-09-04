@@ -122,11 +122,6 @@ void RvecBhwind3(int n, float *wind,int stride);
 void RvecRecwind(int n, float *sig, int stride);
 void RvecHammingwind(int n, float *sig, int stride);
 
-void *platform_dlopen(const char *pathname);
-int   platform_dlclose(void *handle);
-void *platform_dlsym(void *handle, const char *name);
-char *platform_dlerror(void);
-
 OBJ BgnMsgsend(const char *szHostname, int channel);
 void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, void* pv);
 

@@ -35,10 +35,6 @@
 #include <limits.h>
 #endif
 
-/****************************************************
- *  GLOBALS GLOBALS GLOBALS GLOBALS GLOBALS GLOBALS *
- ****************************************************/
-
 static OBJ udpDescObj = NULL;	// used to send udp messages
 
 VSSglobals globs;
@@ -76,8 +72,6 @@ VSSglobals::~VSSglobals() {
 		delete [] rgbBufOfile;
 }
 
-/****************************************************/
-
 static int sample(int length,  float* out, int nchans)
 {
 	VAlgorithmList::iterator it;
@@ -91,12 +85,11 @@ static int sample(int length,  float* out, int nchans)
 	return 1;
 }
 
-// Server calls this in response to a "Ping" request from client,
-// to reply back to the client.
+// Server calls this in response to a "Ping" request from client, to reply.
 void PingServer(struct sockaddr_in *cl_addr)
 {
 	mm mmT;
-	mmT.fRetval = 0; // Be hygienic, don't leave this uninitialized
+	mmT.fRetval = 0;
 	char *addr = inet_ntoa(cl_addr->sin_addr);
 	fprintf(stderr, "vss remark: ping from %s\n",
 		strcmp(addr, "127.0.0.1") ? addr : "local client");
@@ -114,7 +107,6 @@ void Srv_UpdateMasterVolume(float newGain)
 	VSS_SetGlobalAmplitude(ScalarFromdB(newGain));
 }
 
-
 void AddToCreatedlist(const char*) {}
 
 // Irix 5.3 and 6.2 needs sproc, everything else can use pthreads.
@@ -130,9 +122,6 @@ static void SynthThread(void *)
 }
 
 #elif defined(VSS_WINDOWS)
-
-// nothing
-
 #else // VSS_LINUX, etc.
 
 #include <pthread.h>
@@ -167,72 +156,8 @@ static void* SynthThread(void *)
 }
 #endif
 
-
-/**********************************************/
-
 #ifdef VSS_IRIX
 #include <sys/utsname.h>
-#endif
-
-#ifndef VSS_WINDOWS
-
-#include <sys/stat.h>
-
-static inline int FExecutable( char *fname )
-{
-	struct stat st;
-	return stat(fname, &st) < 0 ? 0 :
-		S_ISREG(st.st_mode) && access(fname, X_OK) == 0;
-}
-static const char *SzWhichdir(char *prog)
-{
-	char *path = getenv("PATH");
-	char *cp, *result;
-
-	if((cp = strrchr(prog, '/')) != NULL && FExecutable(prog)) {
-		result = (char *)malloc( cp - prog + 1 );
-		memcpy( result, prog, cp-prog );
-		result[cp-prog] = '\0';
-		return result;
-	}
-
-	if(path == NULL)
-		return strdup( "." );   /* huh? */
-
-	int len = strlen(prog);
-	int room = len + strlen(path) + 2;      /* absolute upper limit */
-	char* fname = (char *)malloc(room);
-
-	sprintf( &fname[room - len - 2], "/%s", prog);
-
-	cp = path;
-	for(;;) {
-		int plen;
-
-		char* tail = strchr(cp, ':');
-		plen = (tail == NULL) ? strlen(cp) : tail - cp;
-		result = &fname[room - len - 2 - plen];
-		memcpy(result, cp, plen);
-		if(plen == 0)           /* empty $PATH component? */
-			*--result = '.';    /* => "." */
-		if(FExecutable(result))
-			break;
-		cp = tail;
-		if(cp == NULL) {
-			result = strdup("?");               /* what to do if we find nothing? */
-			break;
-		}
-		cp++;
-	}
-	fname[room - len - 2] = '\0';       /* break name at final '/' */
-	result = strdup(result);
-	free(fname);
-	return result;
-}
-
-extern const char* szDirOfVSS;
-const char* szDirOfVSS = NULL;
-
 #endif
 
 extern "C" int VSS_main(int argc,char *argv[])
@@ -268,13 +193,6 @@ extern "C" int VSS_main(int argc,char *argv[])
 		return -1;
 		}
 #endif
-	}
-#endif
-
-#ifndef VSS_WINDOWS
-	{
-	szDirOfVSS = SzWhichdir(argv[0]);
-	// szDirOfVSS should technically be free()'d.
 	}
 #endif
 
