@@ -12,13 +12,9 @@ VHandler** VHandler::pDyingHandler2 = rgDyingHandler2;
 VAlgorithm* valgT = NULL;
 #endif
 
-//===========================================================================
-//		constructor
-//
 //	Creating a handler without an algorithm instance to handle makes no 
 //	sense. The default constructor for derived handler classes may specify
 //	a default algorithm to be sent to the VHandler constructor as follows:
-//
 //		myHandlerType(myAlgType* a = new myAlgType) : VHandler(a) {}
 //
 VHandler::VHandler(VAlgorithm * const a) :
@@ -36,14 +32,12 @@ VHandler::VHandler(VAlgorithm * const a) :
 	parentHandle(-1.)
 {
 	setTypeName("VHandler");
-
 	if (!valg)
 		{
 		printf("vss internal error: new Handler got a NULL Algorithm.\n");
 		delete this;
 		return;
 		}
-
 	if (!VAlgorithm::Verify(valg))
 		{
 		printf("vss internal error: new Handler got an invalid Algorithm.\n");
@@ -51,24 +45,16 @@ VHandler::VHandler(VAlgorithm * const a) :
 		}
 }
 
-//===========================================================================
-//		destructor
-//
 //	Remove this handler from the parent's brood, and destroy 
 //	the algorithm managed by this handler.
-//
 VHandler::~VHandler()
 {
 	pDyingHandler[cDyingHandler++] = this; // So this->FValid() will work correctly.
-
 	//printf("\t\t\t\tcDyingHandler++\n");;
 	VGeneratorActor * myParent = getParent();
 	if (myParent != NULL) 
 		myParent->removeChild(this);
-
-	VAlgorithm * alg = getAlg();
-	if (alg != NULL)
-		delete alg;
+	delete getAlg();
 }
 
 // Any entry point of a handler (act(), receiveMessage(), etc.)
@@ -95,7 +81,6 @@ int VHandler::FValid(void)
 void VHandler::allAct(void)
 {
 	// Swap buffers for the FValid() test.
-
 	if (pDyingHandler == rgDyingHandler)
 		{
 		pDyingHandler = rgDyingHandler2;
@@ -112,25 +97,16 @@ void VHandler::allAct(void)
 	cDyingHandler = 0;
 }
 
-//===========================================================================
-//		act
-//
 //	Control-rate behavior.
-//
 void VHandler::act(void)
 {
 	modpool.act(this);
 	VActor::act();
 }
 
-//===========================================================================
-//		receiveMessage
-//
 //	Derived classes should override this member if they receive messages.
 //	DON'T FORGET TO CALL THE PARENT'S RECEIVEMESSAGE() FOR MESSAGES YOU 
 //	DON'T HANDLE.
-//
-//
 int	VHandler::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
@@ -310,11 +286,7 @@ void VHandler::setDebug(int f)
 	getAlg()->setDebug(f);
 }
 
-//===========================================================================
-//      setInput
-//
 //  Specify a source for ring modulation.
-//
 void VHandler::setInput(float hSrc)
 {
 	input = getByHandle( hSrc )->as_handler();
@@ -335,14 +307,10 @@ void VHandler::setInput(void)
 	getAlg()->setSource(NULL);
 }
 
-//===========================================================================
-//		restrike
-//
 //	Derived classes that need to do something fancier to initialize 
 //	themselves should override restrike(). In most cases, the derived
 //	class should call its parent class' restrike() in addition to
 //	performing its own state initialization.
-//
 void
 VHandler::restrike(const char * inits_msg)
 {
@@ -367,11 +335,9 @@ void VHandler::SetAttribute(IParam iParam, float* rgz)
 	cerr << "vss warning: SetAttribute() unimplemented in handler " << typeName() << endl;
 }
 
-
 //===========================================================================
 //		setGain, etc.
 //		Send these values to the algorithm.
-//
 
 float VHandler::AdjustTime(float& time)
 {
@@ -550,23 +516,15 @@ VHandler::RampUpAmps(float time)
 	setAmp(a, time);
 }
 
-//===========================================================================
-//		dump
-//
-//	Print biographical info on os.
-//
+//	Print biographical info.
 ostream & 
 VHandler::dump(ostream &os, int tabs)
 {
 	VActor::dump(os, tabs);
-
-	indent(os, tabs) << "Parent generator actor handle: " << parentHandle 
-		<< endl;
-
+	indent(os, tabs) << "Parent generator actor handle: " << parentHandle << endl;
 	indent(os, tabs) << "Amp: " << zAmp << endl;
 	return os;
 }
-
 
 //===========================================================================
 // VModulator stuff.
@@ -679,7 +637,6 @@ float* VFloatArray::currentValue(void)
 	return curVals;
 }
 
-
 int VFloatParam::SetAttribute(VHandler* phandler, IParam iParam)
 {
 	// This if() is the only difference between classes VFloatParam and VFloatArrayElement.
@@ -715,14 +672,12 @@ int VFloatArray::SetAttribute(VHandler* phandler, IParam iParam)
 	return !fDone;
 }
 
-
 void VModulatorPool::insert(int iParam,
 	float duration, float zCur, float zEnd)
 {
 	IParam i(iParam);
 	insertPrep(i);
-	VModulator* p = (VModulator*) new
-		VFloatParam(zCur, zEnd, duration);
+	auto p = (VModulator*)new VFloatParam(zCur, zEnd, duration);
 	m.insert(make_pair(i, p));
 }
 
@@ -731,8 +686,7 @@ void VModulatorPool::insert(int iParam,
 {
 	IParam i(iParam, iz);
 	insertPrep(i);
-	VModulator* p = (VModulator*) new
-		VFloatArrayElement(zCur, zEnd, duration);
+	auto p = (VModulator*)new VFloatArrayElement(zCur, zEnd, duration);
 	m.insert(make_pair(i, p));
 }
 
@@ -741,12 +695,9 @@ void VModulatorPool::insert(int iParam,
 {
 	IParam i(iParam, cz);
 	insertPrep(i);
-	VModulator* p = (VModulator*) new
-		VFloatArray(cz, rgzCur, rgzEnd, duration);
+	auto p = (VModulator*)new VFloatArray(cz, rgzCur, rgzEnd, duration);
 	m.insert(make_pair(i, p));
 }
-
-
 
 //===========================================================================
 // VModulatorPool stuff.
