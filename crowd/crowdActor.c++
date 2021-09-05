@@ -22,9 +22,7 @@ CrowdActor::CrowdActor() :
 
 	for (int i=0; i<iSndMax; i++)
 		rgh[i].Init(hNil, 0.);
-	actorMessageHandler("LoadDSO samp.so");
-	actorMessageHandler("LoadDSO msgGroup.so"); // for DeleteWhenDoneMG
-	mgDelete = newActor("MessageGroup");
+	mgDelete = newActor("MessageGroup"); // for DeleteWhenDoneMG
 	sampActor = newActor("SampleActor");
 	hSampActor = sampActor->handle();
 	hMGDelete = mgDelete->handle();
@@ -117,8 +115,6 @@ printf("XYZs:\n");
 for (i=0; i<ihMax; i++)
 	printf("\t\t\tid=%g, %g %g %g\n", rgxyz[i].id, rgxyz[i].x, rgxyz[i].y, rgxyz[i].z);
 }*/
-
-
 
 	// This is a Request to play another sound.
 	// Let's see if we should accommodate it.
@@ -361,7 +357,7 @@ for (i=0; i<ih; i++)
 			// Add this id,h to the list.
 			const XYZ& xyz = XYZFromId(id);
 
-			char szCmd[1100];
+			char szCmd[2400];
 			sprintf(szCmd, "BeginSound %g SetFile %s SetGain %.2f SetXYZ %.2f %.2f %.2f SetLoop 1",
 				hSampActor, szFile, dB, xyz.x,xyz.y,xyz.z);
 			if (zRateMin != 0. && zRateMax != 0.)
@@ -403,7 +399,6 @@ for (i=0; i<ihMax; i++)
 }*/
 }
 
-
 /*
 void CrowdActor::act()
 {
@@ -414,10 +409,6 @@ void CrowdActor::act()
 }
 */
 
-
-//===========================================================================
-//		receiveMessage
-//
 int CrowdActor::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
