@@ -475,18 +475,6 @@ float dbtolin(float x)
 	return exp(x*0.1151292546497f);
 }	
 
-/*___________________________ HANNING WINDOW ____________________________*/
-#define hana	0.5f
-#define	hanb	0.5f
-void hanning(int n, float *sig, int stride)
-{
-	int	i;
-	float k = 1.0f  /n ;
-	double ka = M_PI * (2.0/n);
-	for(i=0;i < n; ++i)
-		sig[i*stride] = k*(hana + hanb * cos(i*ka - M_PI));
-}
-
 /*_____________________ BLACKMAN-HARRIS WINDOW __________________________*/
 
 #define  a03   0.42323f
@@ -540,44 +528,5 @@ void RvecBhwind(int n, float *wind,int stride, int k)
 		  wind[i*stride] = t;
 		  }
 		break;
-	}
-}
-
-/*_________________________ RECTANGULAR WINDOW __________________________*/
-void RvecRecwind(int n, float *sig, int stride)
-{
-	kvec(1.0f/n, n, sig,stride);	 
-}
-
-/*_________________________ TRIANGULAR  WINDOW __________________________*/
-void RvecTriangularwind(int n, float *sig, int stride)
-{
-	int i = 0;
-	float k = 2.0f/(n*n);
-
-	while(i <= n/2.0)
-	{
-		sig[i*stride] = i * k;
-		i++;
-	}
-	while(i <= n - 1)
-	{
-		sig[i*stride] = (n - i) * k;
-		i++;
-	}
-}
-
-/*___________________________ HAMMING WINDOW ____________________________*/
-#define hama	0.5f
-#define	hamb	0.426f
-void RvecHammingwind(int n, float *sig, int stride)
-{
-	int	i = 0;
-	float k = 1.0f/n;
-	double ka = M_PI * (2.0/n);
-	while(i < n)
-	{
-		sig[i*stride] = k*(hama + hamb * cos(i*ka - M_PI));
-		i++;
 	}
 }
