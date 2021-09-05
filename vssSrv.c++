@@ -128,29 +128,11 @@ static void SynthThread(void *)
 #include <ctime>
 #include <sys/resource.h>
 
-//#ifdef VSS_IRIX
-//#include <sys/mman.h> // for mlockall()
-//#endif
-
 static void* SynthThread(void *)
 {
-#if defined(VSS_LINUX) || defined(VSS_IRIX)
-	// In Irix, mlockall() up to 32MB of memory (max # lockable pages is maxlkmem in /var/sysgen/mtune/kernel, page size is 16KB).
-
-#if 0
-  // Disabled in 2011: SampleActor new's and mallocs fail on a PC that's already using swap space.
-	{
-	if (mlockall(MCL_FUTURE) == 0)
-		fprintf(stderr, "vss remark: locked into memory.\n");
-	// If this failed, it just means we're not root.
-	}
-#endif
-#endif
-
 	// In IRIX don't bother with schedctl(), setpriority() suffices.
 	if (setpriority(PRIO_PROCESS, 0, -10 /* -20 to 0 */) == 0)
 		fprintf(stderr, "vss remark: set priority to -10\n");
-
 	schedulerMain(globs, &sample);
 	return NULL;
 }
