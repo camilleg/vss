@@ -6,26 +6,21 @@
 #include <windows.h>
 #endif
 
-using namespace std;
-
-#include "platform.h"
-#include "vssglobals.h"
-
 #include <iostream>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
+using namespace std;
+
+#include "platform.h"
+#include "vssglobals.h"
+
 #define iNil (-1)
 #define hNil (-1.f)	// also defined in vssMsg.h
 
 typedef unsigned long ulong;
-
-#ifndef true
-#define false   0
-#define true    1
-#endif
 
 inline void
 FloatCopy( void * dst, const void * src, const int n )

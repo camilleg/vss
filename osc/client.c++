@@ -26,13 +26,11 @@ University of California, Berkeley.
      ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-
 /* 
   Author: Matt Wright
   Version 2.1
   Minor hackage thereafter by Camille Goudeseune
  */
-
 
 /* Here are the possible values of the state field: */
 
@@ -48,10 +46,10 @@ University of California, Berkeley.
 
 #include <cstdio>
 #include <netinet/in.h> // for htonl
+#include <unistd.h>
 #include "./client.h"
 
 const char *OSC_errorMessage;
-
 
 static int strlen(char *s);
 static int OSC_padString(char *dest, const char *str);
@@ -161,7 +159,6 @@ int OSC_openBundle(OSCbuf *buf, OSCTimeTag tt) {
     return 0;
 }
 
-
 int OSC_closeBundle(OSCbuf *buf) {
     if (buf->bundleDepth == 0) {
 	/* This handles EMPTY, ONE_MSG, ARGS, and DONE */
@@ -186,7 +183,6 @@ int OSC_closeBundle(OSCbuf *buf) {
     --buf->bundleDepth;
     return 0;
 }
-	
 
 int OSC_closeAllBundles(OSCbuf *buf) {
     if (buf->bundleDepth == 0) {
@@ -238,7 +234,6 @@ int OSC_writeAddress(OSCbuf *buf, char *name) {
     return 0;
 }
 
-
 int OSC_writeFloatArg(OSCbuf *buf, float arg) {
     CheckOverflow(buf, 4);
 	*(long*)&arg = htonl(*(long*)&arg);
@@ -272,8 +267,6 @@ int OSC_writeIntArg(OSCbuf *buf, int4byte arg) {
 //			  (int)string[2],
 //			  (int)string[3]);;;;
 
-
-
     buf->bufptr += 4;
     return 0;
 }
@@ -295,7 +288,6 @@ static int strlen(char *s) {
 #define STRING_ALIGN_PAD 4
 int OSC_effectiveStringLength(char *string) {
     int len = strlen(string) + 1;  /* We need space for the null char. */
-    
     /* Round up len to next multiple of STRING_ALIGN_PAD to account for alignment padding */
     if ((len % STRING_ALIGN_PAD) != 0) {
         len += STRING_ALIGN_PAD - (len % STRING_ALIGN_PAD);
@@ -305,18 +297,13 @@ int OSC_effectiveStringLength(char *string) {
 
 static int OSC_padString(char *dest, const char *str) {
     int i;
-    
     for (i = 0; str[i] != '\0'; i++) {
         dest[i] = str[i];
     }
-    
     dest[i] = '\0';
     i++;
-    
     for (; (i % STRING_ALIGN_PAD) != 0; i++) {
         dest[i] = '\0';
     }
-    
     return i;
 }
- 

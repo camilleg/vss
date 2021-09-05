@@ -4,24 +4,18 @@
 
 #include "VActor.h"
 
-#include <cstdlib>
-#include <cstdio>
 #include <fcntl.h>
-#include <cctype> // for isprint()
+#include <map>
+#include <netdb.h>
 #include <poll.h>
+#include <unistd.h>
 
 #ifdef VSS_IRIX
-#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/time.h>
 #endif
 
-#include <netdb.h>
-#include <sys/socket.h>
-
-#include <string>
-#include <map>
 using namespace std;
 
 const int cbBuf = 5000;
