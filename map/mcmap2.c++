@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <math.h>
 #include <string.h> // for memset()
 
 #include "platform.h"
@@ -42,7 +40,7 @@ int MCMap::FindClosest(MCPoint& /*pt*/, Barycoords& bary, int fUseRGQ, int fOnly
 		}
 
 	int itetMin = -1;
-	float zMin = MAXFLOAT;
+	float zMin = FLT_MAX;
 	for (itet=0; itet<ctet; itet++)
 		{
 		float z = rgzexcess[itet];  // A measure of badness.

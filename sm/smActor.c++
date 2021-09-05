@@ -3,9 +3,9 @@ ACTOR_SETUP(smActor, SmActor)
 
 smActor::smActor():
   VActor(),
-  initGraph(FALSE),
-  coupling(FALSE),
-  whileInit(TRUE),
+  initGraph(false),
+  coupling(false),
+  whileInit(true),
   doorNum(1),
   MaxNodeNum(1),
   TIME_NoEvent(100.),
@@ -90,10 +90,10 @@ void smActor::setDirectory(const char* dirname)
 
 void smActor::setPresetFile(char * prefile)
 {
-  whileInit = TRUE;
+  whileInit = true;
   int i;
   for (i=0; i<MAX_DOOR; i++)
-    door[i].inited = FALSE;
+    door[i].inited = false;
   {
     const char* temp = strrchr(szFilename, '/');
     const int dirLen = strlen(szFilename) - (strlen(temp)-1);
@@ -105,7 +105,7 @@ void smActor::setPresetFile(char * prefile)
   if (!inFile)
     {
       printf("Error in opening preset file %s\n",szFilename);
-      initGraph=FALSE;
+      initGraph = false;
       return;
     }
 
@@ -219,7 +219,7 @@ void smActor::setPresetFile(char * prefile)
 		 node[i].term[j].edge[k].tp);
       printf("\n\n");
     }
-  initGraph=TRUE;
+  initGraph = true;
 }
 
 void smActor::setDoorNum(const int Num)
@@ -260,10 +260,10 @@ smActor::initDoor(const int Num, const int iNode)
   door[Num].range=1;
   InitDoorNode[Num]=iNode;
 
-  whileInit = FALSE;
+  whileInit = false;
   for (int i=0; i<doorNum; i++)
     if (door[i].inited == 0)
-      whileInit = TRUE;
+      whileInit = true;
   printf("Door %d initialized to Node %d\n", Num, iNode);
   /*
     printf("Node %d: start %.1f, stop %.1f, dur %.1f\n",

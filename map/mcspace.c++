@@ -1,9 +1,5 @@
-#include <cstdlib>
-#include <iostream>
+#include <cfloat>
 #include <fstream>
-#include <cmath>
-#include <string>
-#include <sys/types.h>
 
 #ifdef VSS_IRIX
 #include <unistd.h>

@@ -4,7 +4,6 @@
 #include <windows.h> // This has to be included before most other stuff.
 #endif
 
-#include <dlfcn.h>
 #include <arpa/inet.h>
 
 #ifdef VSS_IRIX
@@ -66,14 +65,6 @@ int mdClosePortOutput(MDport port);
 extern "C" const float* VssInputBuffer(void);
 
 typedef void *OBJ;
-
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
-#ifndef PI
-#define PI (3.14159265358979323)
-#endif
 
 void Line_seg(OBJ *o, int n, float *out, int stride);
 OBJ Line_segNew(float srate,float initial);

@@ -1,37 +1,25 @@
-#ifdef COMMENTS //----------------------------------------------------
-
+/*
 Use GA to get an approximate solution,
 then use relaxation/iteration to converge to the local maximum which
 the GA was approaching.
+Don't optimize this further until we profile it.
+*/
 
-// Don't optimize this further until we profile it.
-
-#endif //-------------------------------------------------------------
-
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <cfloat>
 
 #include "platform.h"
 
 #include "ga.h"
 #include "gacli.h"
 
-// irix 5.3 needs this, for some reason.
-#ifndef MAXFLOAT
-#define MAXFLOAT ((float)3.40282346638528860e+38) // not from math.h?
-#endif
-
 // static variables.  doit() is non-reentrant.
 // make them class variables if you want reentrancy.
 int cpt = -1;
 int cdimSrc = -1;
 int cdimDst = -1;
-
-//UNUSED static float* rgzSrc0;
-//---------------------------------------------------------------------------
-
 
 // instead of a[i][j] in rgz[cpt][cpt],
 // b[Tri(cpt-2-i) + cpt-1-j] in rgz[Tri(cpt-1)]
@@ -75,8 +63,8 @@ void InitDistanceMatrixZ(int cpt, int cdimSrc, float* rgzDist, float* rgzPt)
 // compute scaling factors for each dimension
 	for (int idim=0; idim<cdimSrc; idim++)
 		{
-		float zMin =  MAXFLOAT;
-		float zMax = -MAXFLOAT;
+		float zMin =  FLT_MAX;
+		float zMax = -FLT_MAX;
 		for (i=0; i<cpt; i++)
 			{
 			if (rgzPt[i * cdimSrc + idim] < zMin)
@@ -378,24 +366,6 @@ printf("$$$$$$$$$$$$$$$$$$$$$$\n");
 	for (int i=cpt*cdimDst-1; i>=0; i--)
 		ps[i] = (short)((float)(ps[i]) / zTweakBuffer);
 	}
-
-#ifdef ASDFASDF
-	{
-	MySystem("cat head.ps > x.ps");
-	FILE* pfPS = fopen("x.ps", "a");
-	for (int i=0; i<cpt; i++)
-		{
-		fprintf(pfPS, "%g %g m %g %g l\n",
-			500 * (float)pmemberBest->rgl[i*cdimDst + 0] / sHuge,
-			500 * (float)pmemberBest->rgl[i*cdimDst + 1] / sHuge,
-			500 * (float)pmemberBest->rgl[i*cdimDst + 0] / sHuge + 4,
-			500 * (float)pmemberBest->rgl[i*cdimDst + 1] / sHuge + 4);
-		fprintf(pfPS, "\t\t\t( %d ) show\n", i);
-		}
-	fclose(pfPS);
-	MySystem("cat tail.ps >> x.ps");
-	}
-#endif
 
 #ifdef VERBOSE
 	{

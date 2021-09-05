@@ -1,23 +1,14 @@
-#include <climits> // for LONG_MAX
-
 #ifndef VSS_WINDOWS
 #include <malloc.h>
 #endif
 
-#include <cstring> // for strstr()
-#include "platform.h"
-
-#include <iostream>
-using namespace std;
-#include <cmath>
-#include <cstdlib>
-#include <cstdio>
-
-#include <unistd.h>
+#include <cstring>
 #include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <iostream>
+#include <unistd.h>
+
+#include "platform.h"
+using namespace std;
 
 // Create a socket for sending msgs back to clients.
 
@@ -26,9 +17,8 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 	struct sockaddr_in  cl_addr;
 	int  sockfd;
 	desc *o = (desc *)malloc(sizeof(desc));
-
 	if (!o)
-		return (OBJ)0;
+		return nullptr;
 
 	o->channel = channel;
 	memset((char *)&o->addr, 0, sizeof(o->addr));
@@ -165,7 +155,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-limit")==0)
     	{
     		argc--; argv++;++nargs;
-    		vfLimitClip = TRUE;
+			vfLimitClip = true;
     	}
 	    else	if(strcmp(*argv,"-nopanel")==0)
 		{
@@ -175,13 +165,13 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-silent")==0)
     	{
     		argc--; argv++;++nargs;
-    		*liveaudio = FALSE;
+			*liveaudio = false;
     	}
 #ifdef VSS_WINDOWS
 	    else	if(strcmp(*argv, "-mmio")==0)
     	{
     		argc--; argv++;++nargs;
-    		vfMMIO = TRUE;
+			vfMMIO = true;
 			if (vfNeededMMIO)
 				cerr << "vss remark: try using -mmio before other flags.\n";
     	}
@@ -210,17 +200,17 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-soft")==0)
     	{
     		argc--; argv++;++nargs;
-    		vfSoftClip = TRUE;
+			vfSoftClip = true;
     	}
 	    else	if(strcmp(*argv, "-graphoutput")==0)
     	{
     		argc--; argv++;++nargs;
-    		vfGraphOutput = TRUE;
+			vfGraphOutput = true;
     	}
 	    else	if(strcmp(*argv, "-graphspectrum")==0)
     	{
     		argc--; argv++;++nargs;
-    		vfGraphSpectrum = TRUE;
+			vfGraphSpectrum = true;
     	}
 	    else	if(strcmp(*argv, "-lowlatency")==0)
     	{
@@ -272,7 +262,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-input")==0)
     	{
     		argc--; argv++;++nargs;
-    		SetSoundIn(TRUE);
+			SetSoundIn(true);
 			if (argc>0)
 				{
 				int w = atoi(*argv);
@@ -492,9 +482,9 @@ void hanning(int n, float *sig, int stride)
 {
 	int	i;
 	float k = 1.0f  /n ;
-	double ka = PI * (2.0/n) ;
+	double ka = M_PI * (2.0/n);
 	for(i=0;i < n; ++i)
-		sig[i*stride] = k*(hana + hanb * cos( i*ka -PI));
+		sig[i*stride] = k*(hana + hanb * cos(i*ka - M_PI));
 }
 
 /*_____________________ BLACKMAN-HARRIS WINDOW __________________________*/
@@ -516,7 +506,7 @@ void RvecBhwind(int n, float *wind,int stride, int k)
 	float ph1,dph1,ph2,dph2,ph3,dph3;
 	long i;
 
-	dph1 = 2.0*PI/n;
+	dph1 = 2.0*M_PI/n;
 	dph2 = 2.0*dph1;
 	ph1  = 0; 
 	ph2  = 0; 
@@ -536,7 +526,7 @@ void RvecBhwind(int n, float *wind,int stride, int k)
 		break;
 	 case 4:
 		dph3 = 3*dph1;
-		ph3  = -3*PI-dph3;
+		ph3  = -3*M_PI-dph3;
 		for (i=0; i<n; ++i)
 		{
 		  t = a04;
@@ -584,10 +574,10 @@ void RvecHammingwind(int n, float *sig, int stride)
 {
 	int	i = 0;
 	float k = 1.0f/n;
-	double ka = PI * (2.0/n) ;
+	double ka = M_PI * (2.0/n);
 	while(i < n)
 	{
-		sig[i*stride] = k*(hama + hamb * cos( i*ka -PI));
+		sig[i*stride] = k*(hama + hamb * cos(i*ka - M_PI));
 		i++;
 	}
 }

@@ -33,7 +33,7 @@ public:
 		const float fNyquist = globs.SampleRate / 2.0;
 		if (f > fNyquist)
 			f = fNyquist; // clamp at Nyquist for stability
-		w0 = f * 2.0 * PI;
+		w0 = f * 2.0 * M_PI;
 		za0 = tan(w0 * globs.OneOverSR / 2.0);
 		computeCoef();
 		}

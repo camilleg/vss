@@ -1,28 +1,9 @@
-// General things.
-
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <assert.h>
-//;;#ifndef VSS_WINDOWS
 #include <unistd.h>
-//;;#endif
-#include <cfloat> // for DBL_MAX
 
 #include "platform.h"
-
-// constants _____________________________________________________________
-
-#define iNil (-1)
-#define Pi2 (2 * 3.141592653589793231)
-#ifndef MAXFLOAT
-#define MAXFLOAT ((float)3.40282346638528860e+38) // not from math.h?
-#endif
-#ifndef DBL_MAX
-#define DBL_MAX (1.7976931348E+308) // in float.h?
-#endif
-
-// functions _____________________________________________________________
 
 inline void crash() {}
 
@@ -47,12 +28,6 @@ inline void SetPt(float *pz, float x, float y, float z)
 
 inline float sq(float z)
 	{ return z * z; }
-
-inline void MySystem(const char *sz)
-{
-	if (system(sz) == -1)
-		perror("system() call failed");
-}
 
 inline float dist2D(const float a[3], const float b[3])
 {

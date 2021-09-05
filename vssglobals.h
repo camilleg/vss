@@ -68,37 +68,30 @@ typedef struct mm
 	char rgch[cchmm];	// ASCII string containing the message.
 } mm;
 
-////////////////////////////////////////////////////////////////////////////
-//
-// Accessors for VSSglobals
-
-#if defined(VSS_LINUX)
-#include <unistd.h>
-#include <sys/time.h> // for struct timeval, and gettimeofday()
-#else
-#include <ctime>
-#endif
-
-inline int Nchans(void) 
+inline int Nchans()
 	{ return globs.nchansVSS; }
-inline int NchansIn(void) 
+inline int NchansIn()
 	{ return globs.nchansIn; }
-inline int NchansOut(void) 
+inline int NchansOut()
 	{ return globs.nchansOut; }
-inline unsigned long SamplesToDate(void) 
+inline unsigned long SamplesToDate()
 	{ return globs.SampleCount; }
-inline float currentTime(void) 
+
 #ifdef VSS_LINUX
+#include <sys/time.h>
+#endif
+inline float currentTime()
 	{
+#ifdef VSS_LINUX
 	if (globs.liveaudio)
 		return (float)globs.SampleCount * globs.OneOverSR;
 	struct timeval tNow;
 	gettimeofday(&tNow, 0);
 	tNow.tv_sec -= 86400*365*36; // seconds since 1/1/2006 approx.
 	return tNow.tv_sec + (float)tNow.tv_usec / 1e6;
-	}
 #else
-	{ return (float)globs.SampleCount * globs.OneOverSR; }
+	return (float)globs.SampleCount * globs.OneOverSR;
 #endif
+	}
 
 extern "C" int VSS_main(int argc, char *argv[]);

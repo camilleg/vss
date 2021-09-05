@@ -391,24 +391,24 @@ SwitchCombiner SwitchActor::getSwitchCombiner(const char* combinerName)
 }
 
 /*
-  Each gate is expected to return 0.0f or 1.0f, which are interpreted as FALSE and TRUE.
-  Return Logical AND of these.  This short-circuits evaluation when a FALSE is found.
+  Each gate is expected to return 0.0f or 1.0f, which are interpreted as false and true.
+  Return Logical AND of these.  This short-circuits evaluation when a false is found.
  */
 int SwitchActor::AND_Combiner(SwitchInputGateL& gates, FloatL& inputs)
 {
   int count = gates.count();
   for (int i=0; i<count; i++) {
-    if (gates[i].isFalse(inputs[i])) return FALSE;
+    if (gates[i].isFalse(inputs[i])) return false;
   }
-  return TRUE;
+  return true;
 }
 int SwitchActor::OR_Combiner(SwitchInputGateL& gates, FloatL& inputs)
 {
   int count = gates.count();
   for (int i=0; i<count; i++) {
-    if (gates[i].isTrue(inputs[i])) return TRUE;
+    if (gates[i].isTrue(inputs[i])) return true;
   }
-  return FALSE;
+  return false;
 }
 /* !(A && B && C ...) == !A || !B || !C ...
  */
@@ -416,14 +416,14 @@ int SwitchActor::NAND_Combiner(SwitchInputGateL& gates, FloatL& inputs)
 {
   int count = gates.count();
   for (int i=0; i<count; i++) {
-    if (gates[i].isFalse(inputs[i])) return TRUE;
+    if (gates[i].isFalse(inputs[i])) return true;
   }
-  return FALSE;
+  return false;
 }
 /* Compute logical XOR over all values. */
 int SwitchActor::XOR_Combiner(SwitchInputGateL& gates, FloatL& inputs)
 {
-  int fl=FALSE;
+  int fl=false;
   int count = gates.count();
   for (int i=0; i<count; i++) {
     // For XOR, each true value reverses the flag state.

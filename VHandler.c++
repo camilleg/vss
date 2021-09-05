@@ -460,7 +460,7 @@ void VHandler::setXYZ(float x, float y, float z, float time)
 			myPan *= (1 - centerweighting);
 		}
 	else
-		myPan = atan2(x, -z) / PI;
+		myPan = atan2(x, -z) / M_PI;
 	setPan(myPan, time);
 	// Kinda bogus: can't distinguish elevations > .61 radians
 	// (atan(1/sqrt(2)).

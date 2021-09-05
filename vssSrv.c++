@@ -31,9 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifndef INT_MAX
-#include <limits.h>
-#endif
+#include <climits>
 
 static OBJ udpDescObj = NULL;	// used to send udp messages
 
@@ -49,10 +47,9 @@ VSSglobals::VSSglobals()
 #else
 	nchansVSS = nchansIn = nchansOut = 1;
 #endif
-
 	SampleCount = 0L;
-	ofile_enabled = FALSE;
-	liveaudio = TRUE;
+	ofile_enabled = false;
+	liveaudio = true;
 	smax = INT_MAX;
 	hog = 0;
 	lwm = 384;
