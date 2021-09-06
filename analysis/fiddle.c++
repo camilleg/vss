@@ -1272,6 +1272,11 @@ PitchAlg::PitchAlg(void) :
 
 PitchAlg::~PitchAlg()
 {
+	// The second arg is ignored.
+	freebytes(x->x_inbuf, 0);
+	freebytes(x->x_lastanalysis, 0);
+	freebytes(x->x_spiral, 0);
+	freebytes(x->x_peakbuf, 0);
 }
 
 void PitchAlg::setRate(float z)
