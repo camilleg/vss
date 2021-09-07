@@ -35,8 +35,12 @@ CrowdActor::CrowdActor() :
 
 CrowdActor::~CrowdActor()
 {
+	// Wait for VActor::flushActorList() to delete these,
+	// to avoid heap-use-after-free.
+#if 0
 	delete mgDelete;
 	delete sampActor;
+#endif
 }
 
 void CrowdActor::setDirectory(char* sz)
