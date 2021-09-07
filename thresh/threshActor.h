@@ -48,15 +48,16 @@ typedef int (* ThreshTest)(float, float);
 
 //	initializing 
 	void setInitialVal(float);
-	void setCross(int f=1);
-	void setNoRedundancies(int f)
+	void setCross(bool f=true)
+		{ crossSwitch = f; }
+	void setNoRedundancies(bool f)
 		{ fNoRedundancies = f; }
 	void setPrefixMessage(char* m)
 		{ msgPrefix.addMessage( m ); }
 	void setSuffixMessage(char* m)
 		{ msgSuffix.addMessage( m ); }
 	void setTimeWait(float t)
-		{ timeWait=t; setNoRedundancies(1); }
+		{ timeWait=t; setNoRedundancies(true); }
 
 //	list of thresholds
 protected:
@@ -65,8 +66,7 @@ typedef deque<ThreshTestNmsg *> ThreshDeque;
 
 //	When the last message was sent.
 	float timeSent;
-//	True if a message is pending to be sent.
-	int fPending;
+
 	float timePending;
 //	How long to wait before sending a pending message.
 	float timeWait;
@@ -80,19 +80,19 @@ typedef deque<ThreshTestNmsg *> ThreshDeque;
 // huazheng: but I find occasions when I need to use the threshold actor
 // simply as an if statement, that is to ignore previous value and only
 // test current value. So here's a switch that can be set by SetCross 1
-	int crossSwitch; 
+	bool crossSwitch;
 
 // If true, operate in the traditional way.  If false, try to be smart
 // and if several messages would be sent at once, send only the "last" one
 // (in the proper sense of whether the value is increasing or decreasing).
-	int fNoRedundancies;
+	bool fNoRedundancies;
 
 // Messages which should be sent always before or always after
 // any other messages which get sent.
 	MessageGroup msgPrefix;
 	MessageGroup msgSuffix;
 
-// Pending message (fPending, timePending).
+// Pending message (timePending).
 	MessageGroup* pmsgPending;
 	float rgzPending[200];
 	int czPending;

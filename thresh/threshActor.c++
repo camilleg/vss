@@ -4,13 +4,14 @@
 
 #include "threshActor.h"
 
-//===========================================================================
-//		construction
-//
 ThresholdActor::ThresholdActor() :
-	timeSent( -1e9 ),
-	prevTestVal( 0. ),
-	crossSwitch( 1 )
+	timeSent(-1e9),
+	timeWait(-1e9),
+	prevTestVal(0.0),
+	crossSwitch(true),
+	fNoRedundancies(true),
+	pmsgPending(nullptr),
+	czPending(0)
 {
 	setTypeName("ThresholdActor");
 }
@@ -89,13 +90,13 @@ void
 ThresholdActor::act()
 {
 	VActor::act();
-	if (fPending && (currentTime() > timePending))
+	if (pmsgPending && (currentTime() > timePending))
 		{
 		// ok, NOW we send it.
 	//	printf("%g > %g\n", currentTime(), timePending);
-		fPending = 0;
 		msgPrefix.receiveData( NULL, 0 );
 		pmsgPending->receiveData(rgzPending, czPending);
+		pmsgPending = nullptr;
 		msgSuffix.receiveData( NULL, 0 );
 		timeSent = currentTime();
 		}
@@ -172,7 +173,6 @@ ThresholdActor::testThresholds(float newTestVal, float * dataArray, int size)
 
 			if (currentTime() < timeSent + timeWait)
 				{
-				fPending = 1;
 				timePending = timeSent + timeWait;
 			//	printf("waiting: %g + %g < %g\n",
 			//		timeSent, timeWait, currentTime());
@@ -190,19 +190,9 @@ ThresholdActor::testThresholds(float newTestVal, float * dataArray, int size)
 				}
 			}
 		}
-	// update prevTestVal
 	prevTestVal = newTestVal;
 }
 
-void
-ThresholdActor::setCross(int f)
-{
-	crossSwitch = f;
-}
-
-//===========================================================================
-//		receiveMessage
-//
 int 
 ThresholdActor::receiveMessage(const char* Message)
 {
