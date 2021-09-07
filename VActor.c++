@@ -4,11 +4,19 @@
 #include <map>
 #include <vector>
 
-// Global list of Actors
-static map<ActorHandle, VActor *, less<ActorHandle> > Actors;
+// All Actors.
+static map<ActorHandle, VActor*> Actors;
+
+// Actors that have been ~VActor()'d, but still need to be removed from Actors.
+static std::vector<ActorHandle> deletia;
+static void ProcessDeletia() {
+	for (const auto handle: deletia)
+		Actors.erase(handle);
+	deletia.clear();
+}
+
 static ActorHandle	NextHandle = 0;
 int VActor::fWantToFlush = 0;
-std::vector<ActorHandle> deletia;
 
 VActor::VActor() :
 	myHandle(NextHandle++),
@@ -17,7 +25,7 @@ VActor::VActor() :
 	fDestroy(false)
 {
 	setTypeName("VActor");
-	Actors[ myHandle ] = this;	// add me to VActor::Actors
+	Actors[myHandle] = this;
 }
 
 //===========================================================================
@@ -33,12 +41,12 @@ VActor::VActor(VActor & joe) :
 {
   assert(false);
 	setTypeName("VActor");
-	Actors[ myHandle ] = this;	// add me to VActor::Actors
+	Actors[myHandle] = this;
 }
 
 VActor::~VActor()
 {
-	deletia.push_back(myHandle); // remove me from VActor::Actors
+	deletia.push_back(myHandle);
 }
 
 void 
@@ -53,9 +61,17 @@ VActor::curtainCall(ostream &os)
 void 
 VActor::flushActorList(void)        
 { 
-	for (const auto a: Actors)
-		delete a.second;
-	Actors.clear();
+	// "delete a.second" may ITSELF grow deletia, if a.second has members that are themselves actors,
+	// like ThresholdActor has MessageGroups.
+	// So ProcessDeletia() after every single delete, i.e., every single ~Vactor().
+	while (true) {
+		ProcessDeletia();
+		if (Actors.empty())
+			break;
+		const auto a = Actors.begin();
+		delete a->second;
+		Actors.erase(a);
+	}
 	NextHandle = 0;
 }
 
@@ -82,16 +98,14 @@ VActor::allAct()
 			}
 		}
 	}
-	for (const auto handle: deletia) Actors.erase(handle);
-	deletia.clear();
+	ProcessDeletia();
 }
 
 void 
 VActor::allActCleanup()
 {
 	// A VHandler might have been deleted, whose pointer we'll blithely dereference, heap-usr-after-free.
-	for (const auto handle: deletia) Actors.erase(handle);
-	deletia.clear();
+	ProcessDeletia();
 	for (const auto a: Actors) {
 		VActor* p = a.second;
 		if (!p)

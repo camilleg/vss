@@ -2,10 +2,9 @@
 #include "vssSrv.h"
 using namespace std;			/* BS: added 04/24/2006 */
 
-//	define a type for unique indetifiers for Actors.
-//	Each Actor knows its ActorHandle, a global map in
-//	VActor.c++ relates ActorHandles to Actors.
-typedef unsigned short ActorHandle;
+//	A unique indetifiers for Actors.
+//	Each Actor knows its ActorHandle, a key into the map Actors.
+typedef unsigned ActorHandle;
 
 class VHandler;
 class VGeneratorActor;
@@ -20,7 +19,6 @@ class VGeneratorActor;
 //
 class VActor
 {
-//	An ActorHandle is used by the client to identify an actor. 
 private:
 	ActorHandle	myHandle;
 public:
