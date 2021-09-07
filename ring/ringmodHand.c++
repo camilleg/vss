@@ -58,7 +58,6 @@ ringmodHand::setModInput(float hSrc)
 	if (!h || !h->FValid())
 		{
 		fprintf(stderr, "vss %s error: invalid mod input\n", typeName());
-		inputMod = NULL;
 		getAlg()->setModSource( NULL );
 		return;
 		}
@@ -67,7 +66,6 @@ ringmodHand::setModInput(float hSrc)
 void
 ringmodHand::setModInput(void)
 {
-	inputMod = NULL;
 	getAlg()->setModSource(NULL);
 }
 
@@ -100,15 +98,9 @@ void ringmodHand::SetAttribute(IParam iParam, float z)
 void ringmodHand::actCleanup(void)
 {
 	// If our source got deleted, clean up after it.
-
 	if (input && !input->FValid())
 		{
 		input = NULL;
 		getAlg()->setSource(NULL);
-		}
-	if (inputMod && !inputMod->FValid())
-		{
-		inputMod = NULL;
-		getAlg()->setModSource(NULL);
 		}
 }

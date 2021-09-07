@@ -56,7 +56,6 @@ class ringmodHand : public VHandler
 private:
 	float	modFreq;
 	float	modIndex;
-	VHandler* inputMod;
 
 	enum {isetModFreq, isetModIndex };
 
