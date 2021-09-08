@@ -1,16 +1,15 @@
 #include "crowdActor.h"
 
-//===========================================================================
-//	dso magic
-//
 extern const char* actorlist[]; const char* actorlist[] = { "CrowdActor", "" };
 ACTOR_SETUP(CrowdActor, CrowdActor)
 
 extern VActor* newActor(const char* ActorType);
 
 CrowdActor::CrowdActor() :
-	sampActor(NULL),
-	hSampActor(0.),
+	mgDelete(newActor("MessageGroup")), // for DeleteWhenDoneMG
+	sampActor(newActor("SampleActor")),
+	hSampActor(sampActor->handle()),
+	hMGDelete(mgDelete->handle()),
 	ih(0), ihMax(1),
 	dB(0.),
 	zRateMin(0.), zRateMax(0.),
@@ -22,10 +21,6 @@ CrowdActor::CrowdActor() :
 
 	for (int i=0; i<iSndMax; i++)
 		rgh[i].Init(hNil, 0.);
-	mgDelete = newActor("MessageGroup"); // for DeleteWhenDoneMG
-	sampActor = newActor("SampleActor");
-	hSampActor = sampActor->handle();
-	hMGDelete = mgDelete->handle();
 
 	char szCmd[200];
 	sprintf(szCmd, "AddMessage %g NotifyDeletion %g *0 *1",
@@ -65,7 +60,6 @@ void CrowdActor::setRate(float rMin, float rMax)
 		fprintf(stderr, "vss error: CrowdActor::SetRate args must be > 0\n");
 		return;
 		}
-
 	zRateMin = log(rMin);
 	zRateMax = log(rMax);
 }
@@ -89,9 +83,10 @@ inline float DistSquaredXYZ(const XYZ* p1, const XYZ* p2 = &xyzListener)
 	return sq(p1->x-p2->x) + sq(p1->y-p2->y) + sq(p1->z-p2->z);
 }
 
+// The return value may be modified.
 float& CrowdActor::PhFromId(float id)
 {
-	static /*const*/ float _ = 1e9;
+	static float _ = hNil;
 	for (int i=0; i<ihMax; i++)
 		if (id == rgh[i].id)
 			return rgh[i].h;
@@ -324,6 +319,7 @@ for (i=0; i<ihMax; i++)
 		if (!FTopN(id))
 			{
 			// Delete id's handler, then take that id,h out of the list.
+			// Yes, h will be overwritten.
 			float& h = PhFromId(id);
 			char szCmd[200];
 			// It'd be nice to fade out first with "Delete %g 0.1".
