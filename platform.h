@@ -37,9 +37,6 @@ extern "C" void srand48(long seedval);
 extern void OpenOfile(const char*, int cbBuf);
 extern void CloseOfile(const char*);
 
-extern void VSS_BeginCriticalError(void);
-extern void VSS_EndCriticalError(void);
-
 extern void  VSS_SetGlobalAmplitude(float ampl);
 extern float VSS_GetGlobalAmplitude(void);
 

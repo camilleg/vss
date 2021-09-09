@@ -435,11 +435,7 @@ static void InternalCreateActor(const char* s)
 		}
 	float aHandle = anActor->handle();
 	if (aHandle == hNil)
-		{
-		VSS_BeginCriticalError();
 		fprintf(stderr, "vss error: got a nil handle to a new \"%s\" actor.\n", s);
-		VSS_EndCriticalError();
-		}
 	ReturnFloatToClient(aHandle);
 }
 

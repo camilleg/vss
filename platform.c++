@@ -1494,42 +1494,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 	return TRUE;
 }
 
-extern void VSS_BeginCriticalError(void)
-{
-#ifdef VSS_IRIX
-	cerr << "\n\033[30m\033[41mVSS CRITICAL ERROR:\n";
-#else
-	// security hole -- use tgetent()/tgetstr() instead?
-	// portability hole -- requires tcsh.
-	// system("echotc so");
-#endif
-}
-
-extern void VSS_EndCriticalError(void)
-{
-#ifdef VSS_IRIX
-	cerr << "\033[0m\n\n";
-
-	// We should really do this with Xforms.
-	unlink("/tmp/...vss...");
-	system("/usr/bin/X11/xconfirm -b 'I read it.' -B 'Quit VSS' -c -icon critical -t 'VSS critical error' -header VSS | wc -c > /tmp/...vss...");
-
-	// sleep(2); // wait for two seconds, so user notices this critical error!
-
-	FILE* pf = fopen("/tmp/...vss...", "r");
-	if (!pf)
-		return; // don't bother reporting errors for this.
-	int cch = -1;
-	fscanf(pf, "%d", &cch);
-	fclose(pf);
-	unlink("/tmp/...vss...");
-	if (cch == 9)
-		kill(getpid(), SIGINT); // user clicked "Quit VSS" not "I read it."
-#else
-	// system("echotc se");
-#endif
-}
-
 #ifndef VSS_WINDOWS
 int main(int argc,char *argv[])
 {
@@ -1622,9 +1586,6 @@ void catch_sigint(SignalHandlerType)
 #include <dmedia/midi.h>
 
 extern void CloseOfile(char*);
-
-extern void VSS_BeginCriticalError(void);
-extern void VSS_EndCriticalError(void);
 
 extern void VSS_SetGlobalAmplitude(float ampl);
 extern float VSS_GetGlobalAmplitude(void);
