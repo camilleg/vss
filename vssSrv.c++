@@ -381,14 +381,7 @@ extern "C" int actorMessageMM(const void* pv, struct sockaddr_in *cl_addr)
 	// First whitespace-delimited token in message is the command
 
 	if (printCommands >= 1)
-		{
-#ifndef VSS_WINDOWS
-		fprintf(stderr, "\033[32m\033[3m%s\033[0m\n", message);
-#else
 		fprintf(stderr, "%s\n", message);
-		fflush(stderr);
-#endif
-		}
 
 	vfAlreadyLogged = 1;
 	int liveOn = actorMessageHandler(message);
@@ -603,18 +596,13 @@ int actorMessageHandlerCore(const char* Message)
 	return 2;
 }
 
-//===========================================================================
-//		actorMessageHandler
-//
 //	vzReturnToClient is a float that can be returned to the client, if the
 //	client requests it. It should be set to hNil before the message is 
 //	processed, rather than just leaving whatever whatever was left over from 
 //	the previous message, so that there will be no confusion about which message 
 //	produced the return value. 
 //
-//	actorMessageHandler() returns 1 almost always, zero means that we received a
-//	message that should cause vss to exit.
-//
+//	Returns 0 iff the message told vss to quit.
 extern "C" int actorMessageHandler(const char* Message)
 {
 	vzReturnToClient = hNil;
@@ -624,44 +612,34 @@ extern "C" int actorMessageHandler(const char* Message)
 		return 0;
 
 	if (printCommands >= 2 && !vfAlreadyLogged)
-		{
-#ifndef VSS_WINDOWS
-		// 30-37  Set the text color to black, red, green, yellow, blue,
-		// magenta, cyan or white, respectively (ISO 6429).
-		// 40-47  Set the page color to black, red, green, yellow, blue,
-		// magenta, cyan or white, respectively (ISO 6429).
-		fprintf(stderr, "\033[34m\033[47m%s\033[0m\n", Message);
-#else
-		fprintf(stderr, "\t(internal)  %s\n", Message);
-#endif
-		}
+		fprintf(stderr, "%s (internal)\n", Message);
 	vfAlreadyLogged = 0; // This was the 2nd time.  Allow later msgs to be printf'ed now.
 
 	switch(caught)
 		{
 	case 0:
-		fprintf(stderr, "vss error: built-in message had garbled arguments: <%s>\n", Message);
+		fprintf(stderr, "vss error: garbled args in message: <%s>\n", Message);
 		return 1;
 	case 1:
 		return 1;
 	case 2:
 		break;
 	default:
-		printf("vss error: internal error #1 in actorMessageHandler()\n");
+		printf("vss error: actorMessageHandler internal error\n");
 		return 1;
 		}
 
 	if (!*Message)
 		{
-		// We printed an error message already in CommandFromMessage().
+		// CommandFromMessage() already printed an error message.
 		return 1;
 		}
 
-	// Now deal with any messages sent to an individual actor instance
+	// Process a message sent to an individual actor.
 	float aHandle;
 	if (1 != sscanf(Message, "%*s %f", &aHandle))
 		{
-		cerr << "vss error: garbled message \"" << Message << "\": missing actor handle?" << endl;
+		cerr << "vss error: no actor handle in message \"" << Message << "\"\n";
 		return 1;
 		}
 
