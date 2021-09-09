@@ -45,7 +45,7 @@ inline int Catch(void)				{ return 1; }
 inline int Uncatch(void)			{ return 0; }
 #endif
 
-//         ifXYZ(x,y,z, foo(x,y,z) );
+//         ifXYZ(x,y,z, foo(x,y,z));
 // means:
 // If the arglist for this command begins with args x y z of type X Y Z respectively,
 // call the function foo with those args (x,y,z), note that we caught the message
@@ -64,7 +64,6 @@ inline int Uncatch(void)			{ return 0; }
 // handling that particular message.
 
 #define Do_(_)                  { _; return Catch(); }
-#define Do_AndDeleteArray(_, a) { _; delete[] a; return Catch(); }
 
 #define ifNil(_) { Do_(_) }
 
@@ -179,63 +178,53 @@ inline int Uncatch(void)			{ return 0; }
 #define ifSSM(a,b,c,_) 		{ int cch; char a[300],b[300],c[500]; if (3 == sscanf(sscanf_msg, "%s %s %[^\001]%n", a,b,c,&cch)) Do_(_) }
 #define ifSSSM(a,b,c,d,_) 		{ int cch; char a[300],b[300],c[300],d[500]; if (4 == sscanf(sscanf_msg, "%s %s %s %[^\001]%n", a,b,c,d,&cch)) Do_(_) }
 
-#define	MaxArrayLen 1000
+// It's OK for array 'a' to vanish after an ifFAFAFA,
+// because when modulate() passes it to VModulatorPool::insert,
+// its contents are copied by VFloatArray's constructor.
 
-#define ifIntArray(a, count, _) \
-	{ int *a = new int[MaxArrayLen]; int count=-1; \
-	if ( a!=NULL) { \
-		if ( 0 <= (count = SscanfInts(MaxArrayLen, a, sscanf_msg))) \
-			Do_AndDeleteArray(_, a) \
-		else /* count<0, we got a syntax error, so don't Catch(). */ \
-			{ delete[] a; } } }
+#define MaxArrayLen (500)
 
-#define ifFloatArray(a, count, _) \
-	{ float *a = new float[MaxArrayLen]; int count=-1; \
-	if ( a!=NULL) { \
-		if ( 0 <= (count = SscanfFloats(MaxArrayLen, a, sscanf_msg))) \
-			Do_AndDeleteArray(_, a) \
-		else /* count<0, we got a syntax error, so don't Catch(). */ \
-			{ delete[] a; } } }
+#define ifIntArray(a, count, _) { \
+	int a[MaxArrayLen]; int count = -1; \
+	if (0 <= (count = SscanfInts(MaxArrayLen, a, sscanf_msg))) \
+		Do_(_) }
 
+#define ifFloatArray(a, count, _) { \
+	float a[MaxArrayLen]; int count = -1; \
+	if (0 <= (count = SscanfFloats(MaxArrayLen, a, sscanf_msg))) \
+		Do_(_) }
 
-#define ifFloatArrayFloat(a, count, f, _) \
-	{ float *a = new float[MaxArrayLen], f; int count=-1; \
-		if (a!=NULL && \
-			0<=(count = SscanfFloats(MaxArrayLen, a, sscanf_msg)) && \
-			1 == sscanf( strchr(sscanf_msg, ']')+1, "%f", &f) ) \
-				Do_AndDeleteArray(_, a) }
+#define ifFloatArrayFloat(a, count, f, _) { \
+	float a[MaxArrayLen], f; int count = -1; \
+	if (0 <= (count = SscanfFloats(MaxArrayLen, a, sscanf_msg)) && \
+		1 == sscanf(strchr(sscanf_msg, ']')+1, "%f", &f)) \
+		Do_(_) }
 
-#define ifFloatFloatArray(f, a, count, _) \
-	{ float *a = new float[MaxArrayLen], f; int count=-1; char cT; \
-		if (a!=NULL && \
-			2 == sscanf(sscanf_msg, "%f %c", &f, &cT) && \
-			cT == '[' && \
-			0 <= (count = SscanfFloats(MaxArrayLen, a, strchr(sscanf_msg, '[')))) \
-				Do_AndDeleteArray(_, a) }
+#define ScanArray(a) (SscanfFloats(MaxArrayLen, a, strchr(sscanf_msg, '[')))
 
-#define ifIntFloatArray(b, a, count, _) \
-	{ float *a = new float[MaxArrayLen]; int b; int count=-1; char cT; \
-		if (a!=NULL && \
-			2 == sscanf(sscanf_msg, "%d %c", &b, &cT) && \
-			cT == '[' && \
-			0 <= (count = SscanfFloats(MaxArrayLen, a, strchr(sscanf_msg, '[')))) \
-				Do_AndDeleteArray(_, a) }
+#define ifFloatFloatArray(f, a, count, _) { \
+	float f, a[MaxArrayLen]; int count = -1; \
+	if (1 == sscanf(sscanf_msg, "%f [", &f) && \
+		0 <= (count = ScanArray(a))) \
+		Do_(_) }
 
-#define ifIntIntFloatArray(b, c, a, count, _) \
-	{ float *a = new float[MaxArrayLen]; int b,c; int count=-1; char cT; \
-		if (a!=NULL && \
-			3 == sscanf(sscanf_msg, "%d %d %c", &b, &c, &cT) && \
-			cT == '[' && \
-			0 <= (count = SscanfFloats(MaxArrayLen, a, strchr(sscanf_msg, '[')))) \
-				Do_AndDeleteArray(_, a) }
+#define ifIntFloatArray(b, a, count, _) { \
+	int b; float a[MaxArrayLen], f; int count = -1; \
+	if (1 == sscanf(sscanf_msg, "%d [", &b) && \
+		0 <= (count = ScanArray(a))) \
+		Do_(_) }
 
-#define ifFloatFloatArrayFloat(f, a, f2, count, _) \
-	{ float *a = new float[MaxArrayLen], f, f2; int count=-1; char cT; \
-		if (a!=NULL && \
-			2 == sscanf(sscanf_msg, "%f %c", &f, &cT) && \
-			cT == '[' && \
-			0 <= (count = SscanfFloats(MaxArrayLen, a, strchr(sscanf_msg, '['))) &&  \
-			1 == sscanf( strchr(sscanf_msg, ']')+1, "%f", &f2) ) \
-				Do_AndDeleteArray(_, a) }
+#define ifIntIntFloatArray(b, c, a, count, _) { \
+	int b, c; float a[MaxArrayLen]; int count = -1; \
+	if (2 == sscanf(sscanf_msg, "%d %d [", &b, &c) && \
+		0 <= (count = ScanArray(a))) \
+		Do_(_) }
+
+#define ifFloatFloatArrayFloat(f, a, f2, count, _) { \
+	float f, a[MaxArrayLen], f2; int count = -1; \
+	if (1 == sscanf(sscanf_msg, "%f [", &f) && \
+		0 <= (count = ScanArray(a)) && \
+		1 == sscanf(strchr(sscanf_msg, ']')+1, "%f", &f2)) \
+		Do_(_) }
 
 extern "C" void CommandFromMessage(const char* message, int fGenActor=0);
