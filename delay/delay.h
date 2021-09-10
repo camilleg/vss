@@ -1,17 +1,11 @@
-#ifndef _DELAY_H_
-#define _DELAY_H_
-
+#pragma once
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 
-//===========================================================================
-//		delayAlg 
-//
 //	class delayAlg echos its input
 //	source (samples from another algorithm) to its output, delayed
-//	by X seconds, where X is the "delay" value (mnemonic, huh).
-//
+//	by X seconds.
 //	It should have a message that resets the line to a specified max size
 //	and zeros it.  Right now it's set to a maximum length of 2 seconds.
 //
@@ -25,13 +19,10 @@ private:
 	float alpha, coeff, lastIn[MaxNumChannels], lastOutput[MaxNumChannels];
 	float* inputs[MaxNumChannels];
 
-//	access members
 public:
-	float	getDelay(void)   { return delaySeconds; }
-
-//	parameter update members
-    void	setDelay(float f);
-    void	setFB(float f);
+	float	getDelay() const { return delaySeconds; }
+    void	setDelay(float);
+    void	setFB(float);
 
 private:
 //	sample generation
@@ -44,26 +35,17 @@ public:
 		~delayAlg();
 		void clear(void);
 
-};	// end of class delayAlg
+};
 
-//===========================================================================
-//		delayHand 
-//
-//	class delayHand is a handler class for delayAlg.
-//
 class delayHand : public VHandler
 {
 //	modulating parameters of delayAlg
-private:
 	float delaySeconds;
 	float zFB;
-
 	enum { isetDelay, isetFB };
 
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to dumbfmAlg.
 protected:
-	delayAlg * getAlg(void)	{ return (delayAlg *) VHandler::getAlg(); }
+	delayAlg* getAlg() { return (delayAlg*)VHandler::getAlg(); }
 
 //	parameter modulation
 public:
@@ -75,57 +57,35 @@ public:
 	void clear(void);
 	
 //	damp amplitude changes
-	float	dampingTime(void)	{ return 0.03; }
+	float dampingTime() { return 0.03; }
 
-//	construction
 	delayHand(delayAlg * alg = new delayAlg);
+	virtual void actCleanup();
+	virtual ~delayHand() {}
 
-	virtual void actCleanup(void);
+	int receiveMessage(const char *);
+};
 
-//	destruction
-virtual	~delayHand() {}
-
-	int receiveMessage(const char * Message);
-
-};	// end of class delayHand
-
-//===========================================================================
-//		delayActor
-//
-//	class delayActor is a generator actor class for dumbfmAlg
-//
 class delayActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new delayHand(); }
+	virtual VHandler* newHandler() { return new delayHand(); }
 
-//	construction/destruction
-public:
 	delayActor(void);
-virtual	~delayActor() {}
+	virtual ~delayActor() {}
 
-virtual	void 	sendDefaults(VHandler *);
-virtual int		receiveMessage(const char * Message);
+	virtual void sendDefaults(VHandler*);
+	virtual int receiveMessage(const char*);
 
-//	parameter setting members
-	void	setDelay(float f);
-	void	setFB(float f);
-	void	setAllDelay(float f, float t = 0.);
-	void	setAllFB(float f, float t = 0.);
+	void setDelay(float);
+	void setFB(float);
+	void setAllDelay(float f, float t = 0.);
+	void setAllFB(float f, float t = 0.);
 
-//	default parameters
 protected:
-	float	defaultDelay;
-	float	defaultFB;
+	float defaultDelay;
+	float defaultFB;
+};
 
-};	// end of class delayActor
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
-static	inline int	CheckDelay(float f) 	{ return f >= 0.; }
-static	inline int	CheckFB(float f) 	{ return f >= 0. && f < 1; }
-
-#endif // ndef _DELAY_H_
+static inline int CheckDelay(const float f) { return 0.0 <= f; }
+static inline int CheckFB(const float f) { return 0.0 <= f && f < 1.0; }

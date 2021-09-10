@@ -1,17 +1,11 @@
 #include "delay.h"
 
-//===========================================================================
-//		construction
-//
-delayHand::delayHand( delayAlg * alg ):
+delayHand::delayHand(delayAlg* alg):
 	VHandler( alg )
 { 
 	setTypeName("delayHand"); 
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int	
 delayHand::receiveMessage(const char * Message)
 {
@@ -66,12 +60,12 @@ void delayHand::SetAttribute(IParam iParam, float z)
 		printf("vss error: delayHandler got bogus element-of-float-array-index %d.\n", iParam.i);
 }
 
-void delayHand::clear(void)
+void delayHand::clear()
 {
 	getAlg()->clear();
 }
 
-void delayHand::actCleanup(void)
+void delayHand::actCleanup()
 {
 	// If our source got deleted, clean up after it.
 	if (input && !input->FValid())

@@ -2,38 +2,26 @@
 
 ACTOR_SETUP(delayActor, DelayActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for delay parameters, they will be
-//	sent in sendDefaults().
-//
-delayActor::delayActor(void) : 
+delayActor::delayActor():
 	VGeneratorActor(),
-	defaultDelay(0.)
+	defaultDelay(1.0),
+	defaultFB(0.5)
 {
 	setTypeName("DelayActor");
 }
 
-//===========================================================================
-//		sendDefaults
-//
-void 
-delayActor::sendDefaults(VHandler * p)
+void delayActor::sendDefaults(VHandler* p)
 {
 	VGeneratorActor::sendDefaults(p);
-	delayHand * h = (delayHand *)p;
-	h->setDelay(defaultDelay, 0.);
-	h->setFB(defaultFB, 0.);
+	delayHand* h = (delayHand*)p;
+	h->setDelay(defaultDelay, 0.0);
+	h->setFB(defaultFB, 0.0);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int
 delayActor::receiveMessage(const char * Message)
 {
-	CommandFromMessage(Message);
+  CommandFromMessage(Message);
 
 	if (CommandIs("SetAllDelay"))
     {
@@ -64,15 +52,10 @@ delayActor::receiveMessage(const char * Message)
 	return VGeneratorActor::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setDelay
-//
-//	Set default mod index for this actor.
-//
 void
 delayActor::setDelay(float f)
 {
-	if (! CheckDelay(f)) 
+	if (!CheckDelay(f))
 		printf("delayActor got bogus delay length %f.\n", f );
 	else
 		defaultDelay = f;
@@ -81,21 +64,16 @@ delayActor::setDelay(float f)
 void
 delayActor::setFB(float f)
 {
-	if (! CheckFB(f)) 
+	if (!CheckFB(f))
 		printf("delayActor got bogus feedback value %f.\n", f );
 	else
 		defaultFB = f;
 }
 
-//===========================================================================
-//		setAllDelay	
-//
-//	Call setDelay for all of my children.
-//
 void
 delayActor::setAllDelay(float f, float t)
 {
-	if (! CheckDelay(f)) 
+	if (!CheckDelay(f))
 	{
 		printf("delayActor got bogus delay length %f.\n", f );
 		return;
@@ -106,14 +84,13 @@ delayActor::setAllDelay(float f, float t)
 	{
 		(*it)->setDelay(f, t);
 	}
-
 	defaultDelay = f;
 }
 
 void
 delayActor::setAllFB(float f, float t)
 {
-	if (! CheckFB(f)) 
+	if (!CheckFB(f))
 	{
 		printf("delayActor got bogus feedback value %f.\n", f );
 		return;
@@ -124,7 +101,5 @@ delayActor::setAllFB(float f, float t)
 	{
 		(*it)->setFB(f, t);
 	}
-
 	defaultFB = f;
 }
-
