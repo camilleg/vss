@@ -536,19 +536,19 @@ VFloatParam::VFloatParam(float oldVal, float newVal, float modTime) :
 	// special case, which is quite common actually
 	if (oldVal == newVal)
 		{
-		dstSamp = -1000000;
+		// Don't bother to initialize dstSamp, because when fDone, only newVal is used.
 		fDone = 1;
 		return;
 		}
 
-	float modSamps = modTime * globs.SampleRate;
+	const float modSamps = modTime * globs.SampleRate;
 	slope = modSamps < 1. ? 0. : (newVal - oldVal) / modSamps;
 #ifdef DEBUG
 	if (oldVal != oldVal)
 		cerr << "vss internal error: VFloatParam::VFloatParam(oldval) bogus, probably from an uninitialized member variable.\n";
 	printf("\t\tVFloatParam::VFloatParam(%g %g %g)\n", oldVal, newVal, modTime);
 #endif
-	dstSamp = (long)((float)(globs.SampleCount) + modSamps);
+	dstSamp = globs.SampleCount + modSamps;
 }
 
 float VFloatParam::currentValue(void)
