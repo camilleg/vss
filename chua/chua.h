@@ -1,6 +1,4 @@
-#ifndef _CHUA_H_
-#define _CHUA_H_
-
+#pragma once
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
@@ -8,18 +6,11 @@
 #define	CHUA_DIM	3
 #define	TAUMAX		1000
 
-//===========================================================================
-//		chuaAlg 
-//
-//	class chuaAlg is a test algorithm with sample generation
-//	code copied from the old classFMnote.
-//
 //	Note that some members are defined in the class definition 
 //	owing to the lameness of our compiler.
 //
 class chuaAlg : public VAlgorithm
 {
-private:
 //	synthesis parameters
 
 	float	potentiometer;
@@ -47,15 +38,11 @@ private:
 
 	double	vector_pos[CHUA_DIM];
 
-/*
-	vars used in itegration
-*/
+//	for itegration
 	double	g, REGbp1, REGbp2, REGbph1, REGbph2, REGbpdiff;
 	double	g0BPH1, g0BPH2, AA, BB, MA, MB, rho, p5m;
 
-
 public:
-//	access members
 	double		getR(void)			{ return ( R ); }
 	double		getR0(void)			{ return ( R0 ); }
 	double		getC1(void)			{ return ( C1 ); }
@@ -72,9 +59,7 @@ public:
 	void		getVector(double * putItHere)
 				{ memcpy ( putItHere, vector_pos, CHUA_DIM * sizeof(double)); }
 
-//	parameter update members
 	void	setFundamental(float, float);
-
 	void		setR(float newR)			{ R = newR; }
 	void		setR0(float newR0)			{ R0 = newR0; }
 	void		setC1(float newC1)			{ C1 = newC1; }
@@ -97,29 +82,20 @@ public:
 	void		resetVector(void);
 	void		resetState(void);
 
-/*
-	This is the Runge-Kutta integration stuff. It is living in the class definition
-	so that it will be forced to compile in-place, for efficiency.
-*/
+//	Runge-Kutta integration stuff, inline for speed.
 	void		difeq(double * xx, double * xdot)
 	{
-	/*
-		Define nonlinear resistor function g(v1)
-	*/
+		// Define nonlinear resistor function g(v1)
 		g = (xx[0] < REGbph1) ?
-				M2 * (xx[0] - REGbph1) + g0BPH1 :
+			M2 * (xx[0] - REGbph1) + g0BPH1 :
 	    (xx[0] > REGbph2) ?
-		M3 * (xx[0] - REGbph2) + g0BPH2 :
-		MB * xx[0] + p5m * (fabs(xx[0] + REGbp1) -
-				 fabs(xx[0] - REGbp2) + REGbpdiff);
-	/*
-		Vectorfield
-	*/
+			M3 * (xx[0] - REGbph2) + g0BPH2 :
+			MB * xx[0] + p5m * (fabs(xx[0] + REGbp1) - fabs(xx[0] - REGbp2) + REGbpdiff);
+		// Vector field
 		xdot[0] = AA * ( xx[1] - xx[0] - g);
 		xdot[1] = xx[0] - xx[1] + xx[2];
 		xdot[2] = - BB * (xx[1] + rho * xx[2]);
-
-	}; /* end of difeq() */
+	};
 
 	void		rk4(void)
 	{
@@ -149,26 +125,15 @@ public:
 //		printf("R %f, R0 %f, C1 %e, C2 %e, L %f, BP1 %f, BP2 %f, M0 %e, M1 %e, M2 %e, M3 %e, X %f, Y %f, Z %f\n ",
 //				R, R0, C1, C2, L, BP1, BP2, M0, M1, M2, M3, 
 //				vector_pos[0], vector_pos[1], vector_pos[2]);
-	}; /* end of rk4() */
+	};
 
-//	sample generation
 	void	generateSamples(int);
+	chuaAlg();
+	~chuaAlg();
+};
 
-//	construction/destruction
-		chuaAlg(void);
-		~chuaAlg();
-
-};	// end of class chuaAlg
-
-//===========================================================================
-//		chuaHand 
-//
-//	class chuaHand is a handler class for chuaAlg.
-//
 class chuaHand : public VHandler
 {
-//  Algorithm access:
-//  Define a version of getAlg() that returns a pointer to chuaAlg.
 protected:
     chuaAlg * getAlg(void) { return (chuaAlg *) VHandler::getAlg(); }
 
@@ -190,7 +155,6 @@ private:
 
 	enum { isetR, isetR0, isetC1, isetC2, isetL, isetBPH1, isetBPH2, isetBP1, isetBP2, isetM0, isetM1, isetM2, isetM3 };
 
-//	parameter access
 public:
 #ifdef UNUSED
 	double		getR(void)			{ return getAlg()->getR() ; }
@@ -245,38 +209,20 @@ public:
 //	damp amplitude changes
 	float	dampingTime(void)	{ return 0.03; }
 
-//	construction
-		chuaHand(chuaAlg * alg = new chuaAlg);
-		
-//	destruction
-virtual		~chuaHand() {}
-
+	chuaHand(chuaAlg* alg = new chuaAlg);
+	virtual ~chuaHand() {}
 	int receiveMessage(const char * Message);
+};
 
-};	// end of class chuaHand
-
-//===========================================================================
-//		chuaActor
-//
-//	class chuaActor is a generator actor class for chuaAlg
-//
 class chuaActor : public VGeneratorActor
 {
-private:
-	static int initialized;		// We need to know (and keep track of)
-					// whether the CHANT libraries have 
-					// been initialized
-//	construction/destruction
+	static int initialized;
 public:
 	chuaActor(void);
-virtual	~chuaActor() {}
-
-virtual VHandler * newHandler(void) { return new chuaHand(); }
-
-virtual	void 	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
-
-//	parameter setting members
+	virtual	~chuaActor() {}
+	virtual VHandler* newHandler() { return new chuaHand(); }
+	virtual void sendDefaults(VHandler *);
+	virtual int receiveMessage(const char *);
 
 	void		resetAllChuaState(void);
 
@@ -319,9 +265,7 @@ virtual int	receiveMessage(const char * Message);
 	void		setM3(float z);
 	void		setAllM3(float z, float t = 0.);
 
-//	default parameters
 protected:
-
 	float	defaultR ;
 	float	defaultR0 ;
 	float	defaultC1 ;
@@ -335,13 +279,4 @@ protected:
 	float	defaultM1 ;
 	float	defaultM2 ;
 	float	defaultM3 ;
-
-};	// end of class chuaActor
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
-
-#endif // ndef _CHUA_H_
+};
