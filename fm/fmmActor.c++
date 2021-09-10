@@ -21,6 +21,8 @@ fmmActor::fmmActor(void) :
 	default2CarFreq( 100 ),
 	default2ModFreq( 100 ),
 	default2CMratio( 1 ),
+	default2CCratio( 1.0 ),
+	default2CCModIndex( 1.0 ),
 	default2ModIndex( 0 ),
 	default2CarFeedback( 0 ),
 	default2ModFeedback( 0 ),
