@@ -2,12 +2,6 @@
 
 ACTOR_SETUP(logisticActor, LogisticActor)
   
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for logistic parameters, they will be
-//	sent in sendDefaults().
-//
 logisticActor::logisticActor(void) : 
   VActor(),
   outputMode(0),
@@ -22,39 +16,31 @@ logisticActor::logisticActor(void) :
   setTypeName("LogisticActor");
 }
 
-//===========================================================================
-//		act
-//
 void
 logisticActor::act()
 {
   VActor::act();
-  
   if (!*szMG) return;
   if (!go) return;
   go = 0;
-  
   state = ctrl * state * (1.-state);
-
+  // This switch() only sets output, but that's immediately overwritten!
+  // This is so in every version I have, back to 1999 Aug 3.
   switch (outputMode) {
-  case (LINBIN):
-    {
+  case LINBIN:
       output = floor(state*float(binNum));
-      if (output >= binNum) output -= 1;
+      if (output >= binNum)
+	output -= 1;
       break;
-    }
-  case (LOGBIN):
-    {
+  case LOGBIN:
       output = (pow(10.f, state)-1.f)/9.f;
       output = floor(output*float(binNum));
-      if (output >= binNum) output -= 1;
+      if (output >= binNum)
+	output -= 1;
       break;
-    }
-  case (SEQ):
+  case SEQ:
   default:
-    {
       break;
-    }
   }
 
   output = scale * state + offset;
@@ -67,9 +53,6 @@ logisticActor::act()
   actorMessageHandler(szCmd);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int
 logisticActor::receiveMessage(const char * Message)
 {
@@ -194,4 +177,3 @@ void logisticActor::setBinNum(float z)
     }
   binNum = int(z);
 }
-
