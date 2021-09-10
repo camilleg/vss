@@ -25,9 +25,7 @@ public:
 
 	int FOnlyI() { return j == jUnused; }
 
-	IParam() : i(-1), j(jUnused) {}
-	IParam(int iArg) : i(iArg), j(jUnused) {}
-	IParam(int iArg, int jArg) : i(iArg), j(jArg) {}
+	IParam(int iArg = -1, int jArg = jUnused) : i(iArg), j(jArg) {}
 	~IParam() {}
 };
 
@@ -36,10 +34,8 @@ public:
 
 #include <iostream>
 
-//  Class VModulator is a template for parameter modulators of any
-//  parameter type. It is an abstract base class: modulator classes
-//  must define a currentValue() member that computes the value
-//  of the modulation at any time.
+//  Abstract base class for parameter modulators.
+//  Derived classes define a private currentValue().
 //  It is *not* derived from class VActor, even though it looks like might be.
 class VModulator
 {
@@ -47,22 +43,18 @@ protected:
 	int fDone;
 	long dstSamp;
 public:
-	VModulator(): fDone(0) {}
+	VModulator(): fDone(0), dstSamp(0L) {}
 	virtual ~VModulator() {}
 
-	// Should return 0 when it finishes modulating,
-	// so VModulatorPool::act() knows to clean us up.
+	// Returns 0 when it finishes modulating,
+	// to tell VModulatorPool::act() to clean us up.
 	virtual int SetAttribute(VHandler*, IParam) = 0;
 };
 
-
 class VFloatParam : public VModulator
 {
-//  Modulation parameters
-private:
 	float   dstVal;
 	float   slope;
-
 	float currentValue();
 public:
 	VFloatParam(float oldVal, float newVal, float modTime);
@@ -73,7 +65,6 @@ class VFloatArrayElement : public VModulator
 {
 	float   dstVal;
 	float   slope;
-
 	float currentValue();
 public:
 	VFloatArrayElement(float oldVal, float newVal, float modTime);
@@ -82,13 +73,10 @@ public:
 
 class VFloatArray : public VModulator
 {
-//  Modulation parameters
-private:
 	int size;
 	float*  dstVals;
 	float*  curVals;
 	float*  slopes;
-
 	float* currentValue();
 public:
 	VFloatArray(int sizeArg, const float* oldVals, const float* newVals, float modTime);
