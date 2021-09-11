@@ -32,8 +32,6 @@ public:
 //===========================================================================
 // VModulator stuff.
 
-#include <iostream>
-
 //  Abstract base class for parameter modulators.
 //  Derived classes define a private currentValue().
 //  It is *not* derived from class VActor, even though it looks like might be.
@@ -83,7 +81,6 @@ public:
 	~VFloatArray();
 	int SetAttribute(VHandler*, IParam);
 };
-
 
 #include <map>
 typedef map<IParam, VModulator*> Modmap;
@@ -264,10 +261,6 @@ public:
 int FValid();
 static void allAct();
 };
-
-#ifdef VSS_COMPILERBUG1
-extern VAlgorithm* valgT;
-#endif
 
 //	Access to the handler's algorithm must go through this function
 //	which can be compiled to provide pointer verification for debugging

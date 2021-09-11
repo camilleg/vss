@@ -8,10 +8,6 @@ int VHandler::cDyingHandler2 = 0;
 VHandler** VHandler::pDyingHandler  = rgDyingHandler;
 VHandler** VHandler::pDyingHandler2 = rgDyingHandler2;
 
-#ifdef VSS_COMPILERBUG1
-VAlgorithm* valgT = NULL;
-#endif
-
 //	Creating a handler without an algorithm instance to handle makes no 
 //	sense. The default constructor for derived handler classes may specify
 //	a default algorithm to be sent to the VHandler constructor as follows:
@@ -22,13 +18,7 @@ VHandler::VHandler(VAlgorithm * const a) :
 	zInputAmp(1.),
 	fLinearEnv(0),
 	input(NULL),
-	valg(
-#ifdef VSS_COMPILERBUG1
-	valgT
-#else
-	a
-#endif
-	),
+	valg(a),
 	parentHandle(-1.)
 {
 	setTypeName("VHandler");

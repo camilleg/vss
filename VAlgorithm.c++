@@ -16,18 +16,9 @@
 // As howMany is now always 128,
 // that means updateAmps() is called every 128/32 = 4 samples.
 
-//===========================================================================
-//	static list of algorithm instances
-//
+// Instances of algorithms.
 VAlgorithmList VAlgorithm::Generators;
 
-#ifdef VSS_COMPILERBUG1
-extern VAlgorithm* valgT; // in VHandler.c++
-#endif
-
-//===========================================================================
-//     VAlgorithm constructor
-//
 VAlgorithm::VAlgorithm(void) :
 	mute(false),
 	pause(false),
@@ -82,13 +73,6 @@ VAlgorithm::VAlgorithm(void) :
 	// Subaudio highpass
 	hpf_d.setFrequency(10.0);
 	hpf_d.setHiAllLopassGain(1., 0., 0.);
-
-#ifdef VSS_COMPILERBUG1
-	// hack for VSS_REDHAT7's gcc 2.96, for VHandler.
-	// The this-pointer changes value from, e.g., chuaAlg::chuaAlg()
-	// to VHandler::valg's initialization.
-	valgT = this;
-#endif
 }
 
 //===========================================================================
@@ -116,9 +100,6 @@ VAlgorithm::VAlgorithm(VAlgorithm& alg) :
 	setInputGain(alg.getInputGain());
 }
 
-//===========================================================================
-//     VAlgorithm destructor
-//
 VAlgorithm::~VAlgorithm()
 {
 // remove the dead generator from the list
@@ -510,9 +491,6 @@ void VAlgorithm::setDistanceHorizon(float a)
 }
 
 
-//===========================================================================
-//	updateAmps()
-//
 //	Computes the new (modulated) amplitude values
 //	in place, and halts modulation if necessary.
 inline void
@@ -621,9 +599,6 @@ VAlgorithm::updateAmps(int nchans)
 		}
 }
 
-//===========================================================================
-//	updateDistance()
-//
 inline void
 VAlgorithm::updateDistance(void)
 {
@@ -642,11 +617,8 @@ VAlgorithm::updateDistance(void)
 //=====================  The final mixing bus of VSS ========================
 //===========================================================================
 //===========================================================================
-//
-//
-//===========================================================================
+
 //	FOutputSamples 1,2
-//
 // Utility functions to handle pause and mute states,
 // for classes with overridden outputSamples().
 // ProcessorActors commonly pass in (source != NULL) for fValidForOutput.
@@ -677,10 +649,7 @@ VAlgorithm::FOutputSamples2(int /*howMany*/, int nchans)
 	return 1;
 }
 
-
-//===========================================================================
 //	OutputSamples 3,4
-//
 // Functions to map the computed buffer of samples to the vss output channels, 
 // then fade, scale, and pan the mapped result onto the vss output busses
 inline void
@@ -765,7 +734,6 @@ VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans)
 		// convert # of channels to vss's width, using a temporary buffer.
 		VCircularBuffer bufferT = *p;
 		bufferT.Map(howMany, nchansAlgorithm, nchans);
-
 		OutputSamples4(howMany, putEmHere, nchansAlgorithm, nchans, bufferT);
 		}
 }
@@ -773,7 +741,6 @@ VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans)
 //;;;; dynamically variable cChunk and csampChunk.
 //;;;; if (nothing's changing /*updateAmps isn't doing anything*/)
 //;;;;    { cChunk=1; csampChunk=howMany; }
-
 
 inline void
 VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg)
@@ -871,14 +838,10 @@ VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, i
 		}
 }
 
-
-//===========================================================================
-//     outputSamples
+//	Called for each algorithm in the list.
+//	This in turn calls generateSamples() if necessary.
 //
-//	vss calls this member for each algorithm in its list. 
-//	This member, in turn calls generateSamples() if necessary.
-//
-// 	Derived algorithms may override this member if necessary,
+// 	Derived algorithms may override this member,
 //	as in the case of algorithms that generate stereo samples,
 //	for example (such algorithms need some other prescription 
 //	for copying and scaling their samples into putEmHere[]).
