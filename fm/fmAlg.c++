@@ -13,11 +13,6 @@ float	FMsintab[SINTABSZ+1];
 int	flagFMsintab = 0;
 
 //===========================================================================
-//	for run-time optimization of generateSamples
-//
-#define MODI_MIN 0.005
-
-//===========================================================================
 //	fmAlg constructor
 //
 //	Besides other inits, also initialize the lookup wavetable, if not already
@@ -132,8 +127,11 @@ fmAlg::generateSamples(int howMany)
 	int	iTotPhase;	// integer part of TPS
 	float fTotPhase;// fractional part of TPS
 
+	const float MODI_MIN = 0.005;
 	if ((fabsf(carFeedback) < MODI_MIN) && (fabsf(modFeedback) < MODI_MIN))
 	{
+		// (Supposedly) faster calculation, ignoring negligibly quiet feedback.
+		// Like the old fm2.3 that sat around since 1997 Nov 19, but likely was never again used.
 		for (int j = 0; j < howMany; j++)
 		{
 			// update, wrap modulator phase accumulator
