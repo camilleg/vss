@@ -52,6 +52,7 @@ SUBDIRS := \
   crowd \
   debug \
   delay \
+  distance \
   env \
   filter \
   fm \
@@ -93,6 +94,7 @@ SUBLIBS := \
   crowd/crowd.a \
   debug/debug.a \
   delay/delay.a \
+  distance/distance.a \
   env/env.a \
   filter/filter.a \
   fm/fm.a \

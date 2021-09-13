@@ -1,17 +1,11 @@
 #include "distance.h"
 
-//===========================================================================
-//		construction
-//
 distanceHand::distanceHand( distanceAlg * alg ):
 	VHandler( alg )
 { 
 	setTypeName("distanceHand"); 
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int	
 distanceHand::receiveMessage(const char * Message)
 {

@@ -1,28 +1,14 @@
 #include "distance.h"
 
-//===========================================================================
-//	dso magic
-//
-#include "actorDso.h"
-extern char* actorlist[]; char* actorlist[] = { "DistanceActor", "" };
-DSO_DECLARE(distanceActor, DistanceActor)
+ACTOR_SETUP(distanceActor, DistanceActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for distance parameters, they will be
-//	sent in sendDefaults().
-//
 distanceActor::distanceActor(void) :
-	defaultDistance( 0. ), 
-	VGeneratorActor() 
+	VGeneratorActor(),
+	defaultDistance(0.0)
 {
 	setTypeName("distanceActor");
 }
 
-//===========================================================================
-//		sendDefaults
-//
 void 
 distanceActor::sendDefaults(VHandler * p)
 {
@@ -31,9 +17,6 @@ distanceActor::sendDefaults(VHandler * p)
 	h->setDistance(defaultDistance, 0.);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int
 distanceActor::receiveMessage(const char * Message)
 {
@@ -55,11 +38,7 @@ distanceActor::receiveMessage(const char * Message)
 	return VGeneratorActor::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setDistance
-//
 //	Set default distance for this actor.
-//
 void
 distanceActor::setDistance(float f)
 {
@@ -69,12 +48,8 @@ distanceActor::setDistance(float f)
 		defaultDistance = f;
 }
 
-//===========================================================================
-//		setAllDistance
-//	
 //	Call setDistance for all of my children, and
 //	set default distance for this actor.
-//
 void
 distanceActor::setAllDistance(float f, float t)
 {
@@ -92,4 +67,3 @@ distanceActor::setAllDistance(float f, float t)
 
 	defaultDistance = f;
 }
-

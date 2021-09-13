@@ -1,13 +1,8 @@
 #include "distance.h"
 
-#include <cmath>
-
-//===========================================================================
-//	distanceAlg constructor
-//
 distanceAlg::distanceAlg(void) :
-	dist(0.0),
-	VAlgorithm()
+	VAlgorithm(),
+	dist(0.0)
 {
 	Nchan(1);	// only compute, output the current # vss chans
 
@@ -25,16 +20,10 @@ distanceAlg::distanceAlg(void) :
 	hpf_d.setAllpassGain(0.0);
 }
 
-//===========================================================================
-//	distanceAlg destructor
-//
 distanceAlg::~distanceAlg()
 {
 }
 
-//===========================================================================
-//	distanceAlg setDistance
-//
 void
 distanceAlg::setDistance(float d) 
 {
@@ -52,16 +41,11 @@ distanceAlg::setDistance(float d)
 	hpf_d.setFrequency( fc );
 }
 
-//===========================================================================
-//	distanceAlg generateSamples
-//
+//	map the source channels to bufIn for processing
+//	for now, ALWAYS map N-ch source down to one input
 void
 distanceAlg::generateSamples(int howMany)
 {
-	
-//	map the source channels to bufIn for processing
-//	for now, ALWAYS map N-ch source down to one input
-
 #ifdef ALLOW_MORE_THAN_MONO_INPUT
 	source->MapBuffer(bufIn, howMany, source->Nchan(), 1);
 #define slartibartfast bufIn

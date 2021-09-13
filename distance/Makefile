@@ -1,6 +1,6 @@
-include ../../Rules.dso
+include ../Rules.dso
 
-DSO = distance.so
+DSO = distance.a
 OBJS = distanceAlg.o distanceHand.o distanceActor.o
 
-include ../../Rules.make
+include ../Rules.make
