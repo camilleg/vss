@@ -1,47 +1,51 @@
 #include "piano.h"
 
-//===========================================================================
-//	pianoAlg constructor
-//
-pianoAlg::pianoAlg(void) :
-  VAlgorithm()
+// Many members remain uninitialized.
+pianoAlg::pianoAlg():
+  VAlgorithm(),
+  pianod(nullptr),
+  tabsize(TABSIZE),
+  tabsize1(tabsize+1),
+  tabsizef(float(TABSIZE)),
+  wavetab(nullptr),
+  gmag(nullptr),
+  gmag1(nullptr),
+  gmag2(nullptr),
+  offsetwave(nullptr),
+  offsetgmag(nullptr),
+  attn(nullptr),
+  rlsn(nullptr),
+  attndur(0.5),
+  rlsndur(0.65),
+  noteOn(0),
+  noteDone(0),
+  noteOffTime(120.0),
+  rlstime(120.0),
+  sr(globs.SampleRate),
+  sampperiod(1.0 / globs.SampleRate),
+  freq(0.0),
+  inhrange(0.0002),
+  dyna(0),
+  susPedal(0),
+  attnamp(0.5),
+  rlsnamp(0.05),
+  attni(0),
+  rlsni(0),
+  synmax(0.0),
+  maxinhar(0.002),
+  t(0.0),
+  iInRls(0)
 {
-  sr = globs.SampleRate;
-  sampperiod = 1. / sr;
-  susPedal = 0;
-  attndur=0.5;
-  attnamp=.5;
-  rlsndur=0.65;
-  rlsnamp=.05;
-  tabsize = TABSIZE;
-  tabsize1 = tabsize+1;
-  tabsizef = float(TABSIZE);
-
-  synmax = t = freq = dyna = 0.;
-  attni = rlsni = 0;
-  noteOn = noteDone = iInRls = 0;
-  noteOffTime = 120;
-  rlstime = 120;
-  maxinhar = 0.002;
-  inhrange = 0.0002;
-
-  printf("pianoAlg construction done.\n"); fflush(stdout);
 }
 
-//===========================================================================
-//	pianoAlg destructor
-//
 pianoAlg::~pianoAlg()
 {
   printf("synmax %f, t %f, noteOffTime %f, noteOn %d, noteDone %d\n",synmax,t,noteOffTime,noteOn,noteDone);
-  delete[] wavetab;
-  delete[] gmag1;
-  delete[] gmag2;
+  delete [] wavetab;
+  delete [] gmag1;
+  delete [] gmag2;
 }
 
-//===========================================================================
-//	pianoAlg generateSamples
-//
 void
 pianoAlg::generateSamples(int howMany)
 {
@@ -92,7 +96,7 @@ pianoAlg::generateSamples(int howMany)
 		  for (i=0; i<ngroup2; i++)
 		    scale1[i] *= scalegmag1[i];
 		}
-	      
+
 	      if (iframe2 >= npts2-1) 
 		{
 		  tempi = npts1 - 1 - hkframe1;
@@ -113,7 +117,7 @@ pianoAlg::generateSamples(int howMany)
 		  ftime = ti[i] - float(itime);
 		  ti[i] += tstep[i];
 		  wi = itime + offsetw;
-		  
+
 //  		  tempgmag1 = scale1[i]*linterp(fframe1, gmag[iframe1], gmag[iframe1+1]);
 //    		  tempgmag2 = scale2[i]*linterp(fframe2, gmag[iframe2], gmag[iframe2+1]);
 
@@ -122,7 +126,7 @@ pianoAlg::generateSamples(int howMany)
 
   		  tempgmag[i] = linterp(fracfreq, tempgmag1, tempgmag2);
 		  sum +=  tempgmag[i] * linterp(ftime, wavetab[wi], wavetab[wi+1]);
-		  
+
 		  iframe1 += npts1;
 		  iframe2 += npts2;
 		  offsetw += tabsize1;
@@ -131,7 +135,7 @@ pianoAlg::generateSamples(int howMany)
 	  else
 	    sum = 0.;
 	} // end of if ( t < noteOffTime )
-      
+
       else if ( t <= noteOffTime + rlstime ) // rls decay
 	{
 	  if (!iInRls)
@@ -151,7 +155,7 @@ pianoAlg::generateSamples(int howMany)
 	      ftime = ti[i] - float(itime);
 	      ti[i] += tstep[i];
 	      wi = itime + offsetw;
-	      
+
 	      tempgmag[i] *= rlsratesamp;
 	      sum += tempgmag[i] * linterp(ftime, wavetab[wi], wavetab[wi+1]);
 	      offsetw += tabsize1;
@@ -171,10 +175,6 @@ pianoAlg::generateSamples(int howMany)
     } // end of for (int s=0; s<howMany; s++) 
 }
 
-//===========================================================================
-//	pianoAlg set parameters
-//
-
 void pianoAlg::setKey(int z) 
 {
   midiKey = z;
@@ -189,6 +189,8 @@ void pianoAlg::setKey(int z)
 
 void pianoAlg::setFreq(float z) 
 { 
+  if (!pianod || !pianod->fValid)
+    return;
   printf("pianoAlg get freq %f\n",z);
   freq = z; 
   for (int i=0; i<9; i++)
@@ -228,6 +230,10 @@ void pianoAlg::setDur(float z)
 
 void pianoAlg::setWhichOne()
 {
+  if (!pianod->wavetab || !pianod->gmag) {
+    fprintf(stderr, "pianoAlg::setWhichOne: PIANODATA failed to read data files.\n");
+    return;
+  }
   for (i=0; i<NPITCH; i++)
     {
       if (freq < pianod->fa[i])
@@ -271,7 +277,6 @@ void pianoAlg::setWhichOne()
   gmag2 = new float[tempi];
   for (i=0; i<tempi; i++)
     gmag2[i] = pianod->gmag[offsetg2+i];
-
 }
 
 void pianoAlg::setTstep()
@@ -305,6 +310,8 @@ void pianoAlg::setBoth()
   rlsratesamp = pianod->rlsratetab[key*128+dyna];
   rlsratesec = powf(rlsratesamp, sr);
 
+  printf("foo %d\n", pianod->gmaxtabdim[1]);
+  printf("foo %d\n", pianod->gmaxtabdim[2]);
   k = pianod->gmaxtabdim[1]*pianod->gmaxtabdim[2];
   j = whichone*k + dyna*pianod->gmaxtabdim[2];
   for (i=0;i<pianod->gmaxtabdim[2];i++) 
@@ -333,9 +340,9 @@ void pianoAlg::setBoth()
 
 void pianoAlg::setPianoData(PIANODATA * data)
 {
+  if (!data->fValid)
+    return;
   pianod = data;
-
-//    wavetab = pianod->wavetab;
 
   //  gmag = pianod->gmag;
 

@@ -1,5 +1,4 @@
-#ifndef _PIANO_H_
-#define _PIANO_H_
+#pragma once
 
 #include <math.h>
 #include <stdio.h>
@@ -19,9 +18,7 @@
 #define MAXNHAR 801
 #define NODAMPERKEY 90
 
-//===========================================================================
-//		global data class
-//
+// global data class
 class PIANODATA
 {
 public:
@@ -53,24 +50,21 @@ public:
   float *attn, attndur;
   float *rlsn, rlsndur;
 
+  bool fValid;
+
   // reading data file 
   int readcwdcomm(FILE *fp, CWDHDR *cwdHdr, COMMCK *commCk);
   int readcwddata(FILE *fp, DATACK *dataCk, CKID ckID);
-  char * getckname(CKID ckID);
-  int readdat( char *filename, int *dim, float *data);
-  int readpcm( char *filename, float *data, int size);
+  const char* getckname(CKID ckID) const;
+  int readdat(const char *filename, int *dim, float *data);
+  int readpcm(const char *filename, float *data, int size);
 
   PIANODATA(float sr);
   ~PIANODATA();
 };
 
-//===========================================================================
-//		pianoAlg 
-//
-
 class pianoAlg : public VAlgorithm
 {
- private:
   PIANODATA * pianod;
   int tabsize, tabsize1;
   float tabsizef;
@@ -120,7 +114,6 @@ class pianoAlg : public VAlgorithm
 
   static inline float linterp(float f, float a, float b) { return f*(b-a) + a ; }
 
-// access members
  public:
   void setTstep();
   void setWhichOne();
@@ -141,27 +134,17 @@ class pianoAlg : public VAlgorithm
 
   void setPianoData(PIANODATA * data);
 
-// sample generation
   void	generateSamples(int);
 
-// construction/destruction
   pianoAlg(void);
   ~pianoAlg();
+};
 
-};	// end of class pianoAlg
-
-//===========================================================================
-//		pianoHand 
-//
-//	class pianoHand is a handler class for pianoAlg.
-//
 class pianoHand : public VHandler
 {
-//	Algorithm access:
 protected:
 	pianoAlg * getAlg(void)	{ return (pianoAlg *) VHandler::getAlg(); }
 
-//	parameter modulation
 public:
   void	setFreq(float);
   void	setKey(float);
@@ -176,58 +159,31 @@ public:
 	
   void setPianoData(PIANODATA * data) { getAlg()->setPianoData(data); }
 
-//	actor behavior
   void	act(void);
   virtual void actCleanup(void) {}
 
-//	construction
   pianoHand(pianoAlg * alg = new pianoAlg);
-		
-//	destruction
   virtual	~pianoHand() {}
-
-//	message reception
   int receiveMessage(const char * Message);
+};
 
-};	// end of class pianoHand
-
-//===========================================================================
-//		pianoActor
-//
-//	class pianoActor is a generator actor class for pianoAlg
-//
 class pianoActor : public VGeneratorActor
 {
   PIANODATA * pianod;
 
 public:
-  virtual VHandler * newHandler(void)	{ return new pianoHand(); }
-
-//	construction/destruction
-public:
+  virtual VHandler* newHandler() { return new pianoHand(); }
   pianoActor(void);
-  virtual ~pianoActor() 
-    { delete pianod; printf("\tPianoActor destruction done.\n"); }
+  virtual ~pianoActor() { delete pianod; }
 
   virtual void	sendDefaults(VHandler *);
   virtual int	receiveMessage(const char * Message);
   PIANODATA * getPianoData(void) { return pianod; }
 
-//	parameter setting members
-
-//	default parameters
 protected:
   float defaultFreq;
   float defaultDyna;
+};
 
-};	// end of class pianoActor
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
 static inline int	CheckFreq(float f) { return f>=27.5 && f<=3520.; }
 static inline int	CheckMIDI(float f) { return f>=0 && f<=127; }
-
-#endif // ndef _PIANO_H_

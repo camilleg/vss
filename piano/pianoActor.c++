@@ -1,22 +1,11 @@
 #include "piano.h"
 
-//===========================================================================
-//	dso magic
-//
-#include "actorDso.h"
-extern char* actorlist[]; char* actorlist[] = { "PianoActor", "" };
-DSO_DECLARE(pianoActor, PianoActor)
+ACTOR_SETUP(pianoActor, PianoActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for piano parameters, they will be
-//	sent in sendDefaults().
-//
 pianoActor::pianoActor(void) : 
   VGeneratorActor(),
-  defaultFreq(110),
-  defaultDyna(120)
+  defaultFreq(110.0),
+  defaultDyna(120.0)
 {
   setTypeName("PianoActor");
   pianod = new PIANODATA(globs.SampleRate);
@@ -24,14 +13,13 @@ pianoActor::pianoActor(void) :
   // for (int i=0; i<NPITCH; i++) printf("%d %.2f %f %d %d %d %d\n",i,pianod->fa[i],pianod->dt[i],pianod->npts[i],pianod->ngroup[i],pianod->offsetwave[i],pianod->offsetgmag[i]);
 }
 
-//===========================================================================
-//		sendDefaults
-//
 void 
 pianoActor::sendDefaults(VHandler * p)
 {
   VGeneratorActor::sendDefaults(p);
   pianoHand * h = (pianoHand *)p;
+  if (!pianod->fValid)
+    return;
   printf("\tpianoActor send pianod\n"); fflush(stdout);
   h->setPianoData(pianod);
   printf("\tpianoActor send freq\n"); fflush(stdout);
@@ -40,23 +28,18 @@ pianoActor::sendDefaults(VHandler * p)
   h->setDyna(defaultDyna);
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int
 pianoActor::receiveMessage(const char * Message)
 {
+	if (!pianod->fValid) {
+		fprintf(stderr, "PianoActor corrupt, ignoring all messages.\n");
+		Uncatch();
+	}
 	CommandFromMessage(Message);
-
 	return VGeneratorActor::receiveMessage(Message);
 }
 
-
-//===========================================================================
-//		class holding global data
-//
-//		destruction
-//
+// Class holding global data.
 PIANODATA::~PIANODATA()
 {
   delete[] wavetab;
@@ -66,15 +49,17 @@ PIANODATA::~PIANODATA()
 //   delete[] durtab;
 //   delete[] rlsratetab;
   free(gmag);
-  printf("\tPIANODATA destruction done.\n");
 }
 
-//===========================================================================
-//		construction: reading in all data
-//
-PIANODATA::PIANODATA(float z)
+// Read all data.
+PIANODATA::PIANODATA(float z):
+	wavetab(nullptr),
+	gmag(nullptr),
+	sr(z),
+	attn(nullptr),
+	rlsn(nullptr),
+	fValid(false)
 {
-  sr = z;
   printf("\tPIANODATA construction with sampling rate %.0f...\n",sr);
 
   /* frequencies of C notes calculated from a0=27.5Hz */
@@ -86,25 +71,19 @@ PIANODATA::PIANODATA(float z)
 
   hkframe[0]=66; hkframe[1]=73; hkframe[2]=82; hkframe[3]=90; hkframe[4]=99; hkframe[5]=108;hkframe[6]=116;hkframe[7]=123;hkframe[8]=130;hkframe[9]=135;hkframe[10]=138;hkframe[11]=140;hkframe[12]=138;hkframe[13]=133;hkframe[14]=126;hkframe[15]=117;hkframe[16]=107;hkframe[17]=102;hkframe[18]=105; hkframe[19]=127; hkframe[20]=153; hkframe[21]=187;
 
-  //
-  // Reading in data tables
-  //
+  // Read data tables.
 
-  char filename[20], path[100];
-  int i,j,k,h,tempi;
-  float temp,sum;
-
-  FILE *fp;
-  CWDHDR cwdHdr;
-  COMMCK commCk;
-  DATACK dataCk;
-
+  char filename[200], path[100];
   tabsize = TABSIZE;
   tabsize1 = tabsize+1;
   tabsizef = float(TABSIZE);
 
+#if 0
   strcpy(path, getenv("SOUNDSERVER_DSO"));
   strcat(path, "/pianodata/");
+#else
+  strcpy(path, "piano/pianodata/"); // Works only when run as ./vss.
+#endif
 
   sprintf(filename, "%sgmax.tab", path);
   if ( !readdat(filename, gmaxtabdim, gmaxtab) ) return;
@@ -112,10 +91,16 @@ PIANODATA::PIANODATA(float z)
   if ( !readdat(filename, durtabdim, durtab) ) return;
   sprintf(filename, "%srlsrate.tab", path);
   if ( !readdat(filename, rlsratetabdim, rlsratetab) ) return;
+  fValid = true;
 
-  //
-  // Reading in cwd files
-  //
+  // Read cwd files.
+
+  int i,j,k,h,tempi;
+  float temp,sum;
+  FILE *fp;
+  CWDHDR cwdHdr;
+  COMMCK commCk;
+  DATACK dataCk;
 
   gmag = (float *)calloc(1,SZFLOAT);
   sizegmag = offsetgmag[0] = 0;
@@ -155,8 +140,8 @@ PIANODATA::PIANODATA(float z)
 	sizegmag += tempi*SZFLOAT;
 	if ( (gmag = (float *)realloc(gmag, sizegmag)) == NULL)
 	  {
-	    printf("\nMemory allocation error for gmag: %d %d %d.\n",
-		   i, sizegmag, (int)&offsetgmag[0]);
+	    printf("\nMemory allocation error for gmag: %d %d %p.\n",
+		   i, sizegmag, offsetgmag);
 	    return;
 	  }
 	for (j=0; j<tempi; j++) gmag[j+offsetgmag[i]] = dataCk.data[j];
@@ -202,8 +187,8 @@ PIANODATA::PIANODATA(float z)
 
   if ( (wavetab = new float[offsetwave[NPITCH]]) == NULL)
     {
-      printf("Memory allocation error for wavetab: %d %d.\n",
-	     sizewave, (int)&offsetwave[0]);
+      printf("Memory allocation error for wavetab: %d %p.\n",
+	     sizewave, offsetwave);
       return;
     }
 
@@ -299,15 +284,14 @@ int PIANODATA::readcwdcomm(FILE *fp, CWDHDR *cwdHdr, COMMCK *commCk)
 //
 int PIANODATA::readcwddata(FILE *fp, DATACK *dataCk, CKID ckID)
 {
-  int n;
-  char *ckName;
-  if ( (ckName=getckname(ckID)) == NULL )
-    {
-      printf("Invalide chunk ID.\n");
-      return(1);
-    }
-  fseek(fp, SZCWDHDR+SZCOMM, SEEK_SET);
-  
+	const char *ckName = getckname(ckID);
+	if (!ckName)
+	{
+		printf("Invalid chunk ID.\n");
+		return 1;
+	}
+	fseek(fp, SZCWDHDR+SZCOMM, SEEK_SET);
+
 	while (1)
 	{
 		if ( fread(&dataCk->hdr, SZCKHDR, 1, fp) != 1 )
@@ -328,7 +312,7 @@ int PIANODATA::readcwddata(FILE *fp, DATACK *dataCk, CKID ckID)
 		printf("Error in reading %s chunk data (int).\n", ckName);
 		return(1);
 	}
-	n = ( int(dataCk->hdr.ckSize) - 3*SZINT)/SZFLOAT;
+	const size_t n = (int(dataCk->hdr.ckSize) - 3*SZINT) / SZFLOAT;
 	dataCk->data = new float[n];
 	if ( fread(dataCk->data, SZFLOAT, n, fp) != n )
 	{
@@ -338,69 +322,56 @@ int PIANODATA::readcwddata(FILE *fp, DATACK *dataCk, CKID ckID)
 	return(0);
 }
 
-//===========================================================================
-//		get chunk name of cwd file
-//
-char * PIANODATA::getckname(CKID ckID)
+// get chunk name of cwd file
+const char* PIANODATA::getckname(CKID ckID) const
 {
-	if ( ckID == ID_GRUP ) return "group";
-	else if ( ckID == ID_GMAG ) return "group mag";
-	else if ( ckID == ID_WAVE ) return "wavetable";
-	else if ( ckID == ID_PART ) return "partial";
-	else return NULL;
+	switch (ckID) {
+		case ID_GRUP: return "group";
+		case ID_GMAG: return "group mag";
+		case ID_WAVE: return "wavetable";
+		case ID_PART: return "partial";
+	}
+	return NULL;
 }
 
-//===========================================================================
-//		read data table file
-//
-int PIANODATA::readdat( char *filename, int *dim, float *data)
-{
-  FILE *fp;
-
-  printf("Reading in %s...", filename);
-  if ( (fp = fopen(filename, "rb")) != NULL )
-    {
-      fread(dim, SZINT, 4, fp);
-      printf("dimensions %d %d %d %d\n",dim[0],dim[1],dim[2],dim[3]);
-      fread(data, SZFLOAT, dim[3], fp);
-    }
-  else
-    {
-      printf("Data file %s not found.\n", filename);
-      return(0);
-    }
-  fclose(fp);
-  return(1);
+// read data table file
+int PIANODATA::readdat(const char *filename, int *dim, float *data) {
+	FILE* fp = fopen(filename, "rb");
+	if (!fp) {
+		printf("Data file %s not found.\n", filename);
+		return 0;
+	}
+	printf("Reading in %s...", filename);
+	(void)!fread(dim, SZINT, 4, fp);
+	printf("dimensions %d %d %d %d\n",dim[0],dim[1],dim[2],dim[3]);
+	if (abs(dim[0]) > 10000 || abs(dim[1]) > 10000 || abs(dim[2]) > 10000 || abs(dim[3]) > 10000) {
+		fprintf(stderr, "Corrupt data in file %s.\n", filename);
+		return 0;
+	}
+	(void)!fread(data, SZFLOAT, dim[3], fp);
+	fclose(fp);
+	return 1;
 }
 
-//===========================================================================
-//		read PCM sample file
-//
-int PIANODATA::readpcm( char *filename, float *data, int size)
+// read PCM sample file
+int PIANODATA::readpcm(const char *filename, float *data, int size)
 {
-  FILE *fp;
-  int i=0;
-  short temp;
-
-  printf("Reading in %s...", filename);
-  if ( (fp = fopen(filename, "rb")) != NULL )
-    {
-      while (!feof(fp))
-        {
-          fread(&temp, SZSHORT, 1, fp);
-          data[i++] = float(temp) / 32768.;
-        }
-    }
-  else
-    {
-      printf("Data file %s not found.\n", filename);
-      return(0);
-    }
-  fclose(fp);
-  printf("actual samples %d in %d.\n",i,size);
-  for (i=i;i<size;i++)
-    data[i] = 0.;
-  return(1);
+	FILE* fp = fopen(filename, "rb");
+	if (!fp) {
+		printf("Data file %s not found.\n", filename);
+		return 0;
+	}
+	printf("Reading in %s...", filename);
+	int i=0;
+	while (!feof(fp))
+	{
+		short temp;
+		(void)!fread(&temp, SZSHORT, 1, fp);
+		data[i++] = temp / 32768.0; // buffer overflow
+	}
+	fclose(fp);
+	printf("actual samples %d in %d.\n",i,size);
+	for (i=i;i<size;i++)
+		data[i] = 0.0;
+	return 1;
 }
-
-

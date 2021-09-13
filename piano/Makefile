@@ -1,6 +1,6 @@
-include ../../Rules.dso
+include ../Rules.dso
 
-DSO = piano.so
+DSO = piano.a
 OBJS = pianoAlg.o pianoHand.o pianoActor.o
 
-include ../../Rules.make
+include ../Rules.make

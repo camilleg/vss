@@ -67,6 +67,7 @@ SUBDIRS := \
   osc \
   particle \
   penta \
+  piano \
   pnoise \
   process \
   reverb \
@@ -109,6 +110,7 @@ SUBLIBS := \
   osc/opensoundctrl.a \
   particle/particle.a \
   penta/pentatonic.a \
+  piano/piano.a \
   pnoise/pnoise.a \
   process/process.a \
   reverb/reverb.a \
