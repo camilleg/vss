@@ -191,17 +191,11 @@ pnoiseActor::setAllModIndex(float f, float t)
 	defaultModIndex = f;
 }
 
-//===========================================================================
-//	dump
-//
-ostream &
-pnoiseActor::dump(ostream &os, int tabs)
+ostream& pnoiseActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
-
-	indent(os, tabs) << "Cutoff Frequency: " << defaultCutoff << endl;
-	indent(os, tabs) << "Modulator Cutoff Frequency: " << defaultModCutoff << endl;
-	indent(os, tabs) << "Modulation Index: " << defaultModIndex << endl;
-
+	indent(os, tabs) << "cutoff: " << defaultCutoff << endl;
+	indent(os, tabs) << "mod cutoff: " << defaultModCutoff << endl;
+	indent(os, tabs) << "mod index: " << defaultModIndex << endl;
 	return os;
 }

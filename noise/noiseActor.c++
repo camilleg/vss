@@ -134,16 +134,10 @@ noiseActor::setAllOrder(float f)
 	defaultOrder = f;
 }
 
-//===========================================================================
-//	dump
-//
-ostream &
-noiseActor::dump(ostream &os, int tabs)
+ostream& noiseActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
-
-	indent(os, tabs) << "Cutoff: " << defaultCutoff << endl;
-	indent(os, tabs) << "Order: " << defaultOrder << endl;
-
+	indent(os, tabs) << "cutoff: " << defaultCutoff << endl;
+	indent(os, tabs) << "order: " << defaultOrder << endl;
 	return os;
 }
