@@ -1,6 +1,6 @@
-include ../../Rules.dso
+include ../Rules.dso
 
-DSO = ledlpt.so
+DSO = ledlpt.a
 OBJS = ledActor.o
 
-include ../../Rules.make
+include ../Rules.make

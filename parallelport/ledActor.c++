@@ -1,41 +1,18 @@
 #include "ledActor.h"
-#include <unistd.h>
+
 #include <assert.h>
+#include <sys/io.h> // for ioperm()
+#include <unistd.h>
 
-#ifdef VSS_IRIX
-// disabled under Irix... hardware's probably incompatible.
-#define outb(byte, port)
-#define inb(port)
-#else
-#ifdef VSS_WINDOWS
-// These are the visual c++ definitions, but they're not in cygwin.  Handcode the assembler output?
-//#define outb(byte, port) _outp(port, byte)
-//#define inb(port)        _inb(port)
-#define outb(byte, port)
-#define inb(port)
-#else
+ACTOR_SETUP(LedActor, LedActor)
 
-	/*
-	// fails on Linz's IA64 prism
-	#include <asm/io.h> // for writing to the parallel port
-	*/
-	#define outb(a,b) ((void)0)
-	#define inb(a) ((void)0)
-
-// for some reason ioperm() isn't in <unistd.h>, so declare it explicitly.
-extern "C" int ioperm(unsigned long from, unsigned long num, int turn_on);
-#endif
-#endif
-
-
-#include "actorDso.h"
-extern char* actorlist[]; char* actorlist[] = { "LedActor", "" };
-DSO_DECLARE(LedActor, LedActor)
+#define outb(a,b) ((void)0)
+#define inb(a) ((void)0)
 
 /* /dev/lp[012] */
-#define LPT0 0x3bc
-#define LPT1 0x378
-#define LPT2 0x278
+#define LPT0 (0x3bc)
+#define LPT1 (0x378)
+#define LPT2 (0x278)
 #define BASE LPT0
 
 #define DATA    (BASE+0)
@@ -45,21 +22,12 @@ DSO_DECLARE(LedActor, LedActor)
 static int __VSS__LedActorCount = 0;
 
 LedActor::LedActor() :
-	zBright(0.),
-	zHue(0.),
-	zBlinkPeriod(1),
-	zBlinkDutyCycle(1)
+	zBright(0.0),
+	zHue(0.0),
+	zBlinkPeriod(1.0),
+	zBlinkDutyCycle(1.0)
 {
 	setTypeName("LedActor");
-
-#ifdef VSS_IRIX
-	cerr << "vss error: LedActor disabled in Irix.\n";
-	fDisabled = 1;
-#else
-#ifdef VSS_WINDOWS
-	cerr << "vss error: LedActor disabled in Windows.\n";
-	fDisabled = 1;
-#else
 
 	// Can't have more than one of these, because there's only 1 parallel port.
 	// (well, if we use LPT0 LPT1 and LPT2...)
@@ -70,31 +38,25 @@ LedActor::LedActor() :
 		return;
 		}
 
-	if (ioperm(BASE, 3, 1))
-		/*perror("vss error: failed to access parallel port")*/;
-		// Don't complain.  This ioperm() is only for if vss runs as root,
-		// and we forgot to wrap vss inside an ioperm(1).
+	(void)ioperm(BASE, 3, 1);
+	// Don't complain if we can't access the parallel port.
+	// This ioperm() is only for if vss runs as root,
+	// and we forgot to wrap vss inside an ioperm(1).
 
 	// Don't zero the outputs.  Leave them as however they are right now.
-#endif
-#endif
 }
 
 LedActor::~LedActor()
 {
 	--__VSS__LedActorCount;
-#if !defined(VSS_IRIX) && !defined(VSS_WINDOWS)
 	if (!fDisabled)
-		if (ioperm(BASE, 3, 0))
-			/*perror("vss warning: failed to relinquish parallel port")*/;
-#endif
+		(void)ioperm(BASE, 3, 0);
 	// Don't zero the outputs.  We might want them to stay lit.
 }
 
 void LedActor::act()
 {
 	VActor::act();
-
 	if (fDisabled)
 		return;
 

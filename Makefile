@@ -66,6 +66,7 @@ SUBDIRS := \
   noise \
   osc \
   particle \
+  parallelport \
   penta \
   piano \
   pnoise \
@@ -109,6 +110,7 @@ SUBLIBS := \
   noise/noise.a \
   osc/opensoundctrl.a \
   particle/particle.a \
+  parallelport/ledlpt.a \
   penta/pentatonic.a \
   piano/piano.a \
   pnoise/pnoise.a \

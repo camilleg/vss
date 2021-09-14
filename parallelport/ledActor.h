@@ -1,19 +1,12 @@
-#if !defined(ledActor_inc)
-#define ledActor_inc
-
+#pragma once
 #include "VActor.h"
 
-//===========================================================================
-//		class LedActor
-//
 //	An LedActor sends a data byte out the parallel port of the PC on which
 //	VSS is running.
 //	With the appropriate circuitry (an 8-bit latch, 3 transistors,
 //	and a pile of resistors) this can adjust the hue and brightness
 //	of a red-green-blue LED.
-//
-//	Camille Goudeseune, 1/5/2000
-//
+
 class LedActor : public VActor	
 {
 public:
@@ -45,7 +38,4 @@ private:
 	unsigned char bPrev; // local cache
 
 	int fDisabled;
-
-};	// 	end of class LedActor
-
-#endif
+};
