@@ -83,8 +83,6 @@ SUBDIRS := \
   test \
   thresh \
 
-# ./python is broken.
-
 SUBLIBS := \
   add/add.a \
   analog/analog.a \

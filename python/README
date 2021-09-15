@@ -1,5 +1,0 @@
-First make 'frozen' before you try to make depend. 
-
-You need to make 'frozen' again after making clean. 
-
-Make 'cleanfreeze' to clean up the freezer directory.
