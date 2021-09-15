@@ -104,65 +104,34 @@ static void WantToFlush()
 virtual	VHandler * as_handler() { return NULL; }
 virtual VGeneratorActor * as_generator() { return NULL; }
 
-//	Debugging info:
-//	These members are included for debugging purposes, mostly. 
-//	They are used when the DumpAll message is sent to vss, and 
-//	provide a way of idenitifying the actors the server is holding.
-//	Each actor should set its type name in its constructor using
-//	setTypeName().
+	// Debugging info:
+	// These methods handle the DumpAll message, to report about actors.
+	// Each actor's constructor must call setTypeName().
 private:
 	char myTypeName[30];
 public:
 	void setTypeName(const char * str) { strncpy(myTypeName, str, 29); }
 	char const * typeName() { return myTypeName; }
 	
-//	Actors should override dump() to print out useful information
-//	about themselves.
-virtual std::ostream &dump(std::ostream &os, int tabs);
+	// Override this to print actor-specific details.
+	virtual std::ostream &dump(std::ostream &os, int tabs);
 
-//	These members make the output beautiful(?).
-	std::ostream &bio(std::ostream &os, int tabs = 0);
-	std::ostream &indent(std::ostream &os, int tabs) const;
-	std::ostream &startDump(std::ostream &os, int tabs) const;
-	std::ostream &endDump(std::ostream &os, int tabs) const;
+	std::ostream &indent(std::ostream &os, int tabs) const {
+		os << std::string(3*tabs, ' ');
+		return os;
+	}
+
+	std::ostream &bio(std::ostream &os, int tabs = 0) {
+		indent(os, tabs) << myTypeName << endl;
+		dump(os, tabs+1);
+		return os;
+	}
 	
 //	curtainCall() prints out evberybody's bio.
 public:
 static void curtainCall(std::ostream &os);
-	
-};	// end of class VActor
+};
 
-//===========================================================================
-//	debugging inlines
-//
-inline std::ostream &VActor::indent(std::ostream &os, int tabs) const
-{
-	for(int i=0 ; i<tabs ; i++)
-		os << "   ";
-	return os;
-}
-
-inline std::ostream &VActor::startDump(std::ostream &os, int tabs) const
-{
-	indent(os, tabs) << myTypeName << endl;
-	return os; // indent(os, tabs) << '{' << endl;
-}
-
-inline std::ostream &VActor::endDump(std::ostream &os, int tabs) const
-{
-	return os; // indent(os, tabs) << "}" << endl;
-}
-
-inline std::ostream &VActor::bio(std::ostream &os, int tabs)
-{
-	startDump(os, tabs);
-	dump(os, tabs+1);
-	return endDump(os, tabs);
-}
-
-//===========================================================================
-//	include message parsing macros
-//
 #include "parseActorMessage.h"
 
-#define ACTOR_SETUP(T, t) extern "C" VActor* t##_New() { return (VActor*) new T; }
+#define ACTOR_SETUP(T, t) extern "C" VActor* t##_New() { return new T; }

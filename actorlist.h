@@ -1,5 +1,6 @@
-#undef ACTOR_SETUP
-#define ACTOR_SETUP(ignored, t) extern "C" VActor* t##_New(void);
+#undef ACTOR_SETUP // Override VActor.h's definition with a typeless one.
+#define ACTOR_SETUP(ignored, t) extern "C" VActor* t##_New();
+
 #define FOO(T, t) { T, t##_New },
 
 // grep ACTOR_SETUP */*.cpp
