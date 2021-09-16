@@ -143,25 +143,6 @@ public:
 // 	scheduler's sample loop.
 	static	VAlgorithmList Generators;
 
-//	Verify pointers to VAlgorithms.
-//	Return true iff a is in the list of known algorithms.
-	static int Verify(VAlgorithm * a)
-		{
-#ifndef VERBOSE
-		return Generators.find(a) != Generators.end();
-#else
-		if (Generators.find(a) != Generators.end())
-			return 1;
-		fprintf(stderr, "vss internal error: VAlgorithm* %lx not found (that old address of foo bug???? ;;;;;;;;;;;;;;).\n",
-			(long)a);
-		fprintf(stderr, "generator list is: ");
-		for (VAlgorithmList::iterator i = Generators.begin(); i != Generators.end(); ++i)
-			fprintf(stderr, "%lx ", (long)*i);
-		fprintf(stderr, "\n\n");
-		return 0;
-#endif
-		}
-
 //	Each algorithm instance remembers its position in the 
 //	Generators list for efficiency when it (the instance)
 //	is deleted and needs to be removed from the list.

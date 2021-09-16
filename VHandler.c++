@@ -8,12 +8,11 @@ int VHandler::cDyingHandler2 = 0;
 VHandler** VHandler::pDyingHandler  = rgDyingHandler;
 VHandler** VHandler::pDyingHandler2 = rgDyingHandler2;
 
-//	Creating a handler without an algorithm instance to handle makes no 
-//	sense. The default constructor for derived handler classes may specify
+//	The default constructor for derived handler classes may specify
 //	a default algorithm to be sent to the VHandler constructor as follows:
 //		myHandlerType(myAlgType* a = new myAlgType) : VHandler(a) {}
 //
-VHandler::VHandler(VAlgorithm * const a) :
+VHandler::VHandler(VAlgorithm* const a) :
 	zAmp(1.),
 	zInputAmp(1.),
 	fLinearEnv(0),
@@ -25,12 +24,6 @@ VHandler::VHandler(VAlgorithm * const a) :
 	if (!valg)
 		{
 		printf("vss internal error: new Handler got a NULL Algorithm.\n");
-		delete this;
-		return;
-		}
-	if (!VAlgorithm::Verify(valg))
-		{
-		printf("vss internal error: new Handler got an invalid Algorithm.\n");
 		delete this;
 		}
 }
@@ -94,9 +87,6 @@ void VHandler::act(void)
 	VActor::act();
 }
 
-//	Derived classes should override this member if they receive messages.
-//	DON'T FORGET TO CALL THE PARENT'S RECEIVEMESSAGE() FOR MESSAGES YOU 
-//	DON'T HANDLE.
 int	VHandler::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
@@ -120,7 +110,7 @@ int	VHandler::receiveMessage(const char * Message)
 	{
 LBeginSound:
 		restrike( sscanf_msg );
-		setPause(CommandIs("BeginSoundPaused") ? true : false);
+		setPause(CommandIs("BeginSoundPaused"));
 		return Catch();
 	}
 
@@ -284,8 +274,7 @@ void VHandler::setInput(float hSrc)
 		{
 		// That handler must have just got deleted.  Oh well.
 		fprintf(stderr, "vss %s error: invalid input\n", typeName());
-		input = NULL;
-		getAlg()->setSource(NULL);
+		setInput();
 		return;
 		}
 	getAlg()->setSource( (VAlgorithm*)input->getAlg() );
@@ -427,7 +416,6 @@ void VHandler::setXYZ(float x, float y, float z, float time)
 {
 	// Calls SetPan SetElev SetDistance, in cave coords.
 	// Passes on "time" literally to SetPan SetElev SetDistance.
-
 	AdjustTime(time);
 
 	y -= 5.; // Origin is (0, 5, 0) in cave coords.
@@ -506,7 +494,6 @@ VHandler::RampUpAmps(float time)
 	setAmp(a, time);
 }
 
-//	Print biographical info.
 ostream & 
 VHandler::dump(ostream &os, int tabs)
 {
@@ -570,14 +557,13 @@ VFloatArrayElement::VFloatArrayElement(float oldVal, float newVal, float modTime
 	// special case, which is quite common actually
 	if (oldVal == newVal)
 		{
-		dstSamp = -1000000;
+		dstSamp = -1000000L;
 		fDone = 1;
 		return;
 		}
-
 	float modSamps = modTime * globs.SampleRate;
 	slope = modSamps < 1. ? 0. : (newVal - oldVal) / modSamps;
-	dstSamp = (long)((float)(globs.SampleCount) + modSamps);
+	dstSamp = globs.SampleCount + modSamps;
 }
 
 VFloatArray::VFloatArray(int sizeArg, const float* oldVals, const float* newVals, float modTime) :
@@ -588,20 +574,18 @@ VFloatArray::VFloatArray(int sizeArg, const float* oldVals, const float* newVals
 	slopes(new float[sizeArg])
 {
 	FloatCopy(dstVals, newVals, size);
-
 	// special case, which is quite common actually: old=new
 	if (!memcmp(oldVals, newVals, size*sizeof(float)))
 		{
-		dstSamp = -1000000;
+		dstSamp = -1000000L;
 		fDone = 1;
 		return;
 		}
-
 	float modSamps = modTime * globs.SampleRate;
 	for (int i=0; i<size; i++)
 		slopes[i] = modSamps < 1. ? 0. :
 			(newVals[i] - oldVals[i]) / modSamps;
-	dstSamp = (long)((float)(globs.SampleCount) + modSamps);
+	dstSamp = globs.SampleCount + modSamps;
 }
 
 VFloatArray::~VFloatArray()

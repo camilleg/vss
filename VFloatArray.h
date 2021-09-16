@@ -58,12 +58,10 @@ public:
 	// aforementioned initalization list of a handler's constructor.
 	void init(VHandler* p) { pparent = p; }
 
-//  Destruction
 	~FloatArray() {} 
 
 //	Access the current modulation state.	
 virtual float *	currentValue(void);
-
 };
 
 template<int Size, class RcvrType>
@@ -72,14 +70,9 @@ FloatArray<Size, RcvrType>::FloatArray(void):
 	dstSamp(0),
 	pparent(NULL)
 {
-//	zero the arrays
 	ZeroFloats(dstVals, Size);
 	ZeroFloats(slopes, Size);
-	
-//	for debugging, let 'em know who you are.
 	VActor::setTypeName("FloatArray");
-
-//	initially, be inactive	
 	VActor::setActive(0);
 }
 
@@ -89,11 +82,8 @@ FloatArray<Size, RcvrType>::FloatArray(float * init):
 	dstSamp(0),        
 	pparent(NULL)
 {
-//  fill the arrays
 	FloatCopy(dstVals, init, Size);
 	ZeroFloats(slopes, Size);    
-
-//  for debugging, let 'em know who you are.
 	VActor::setTypeName("FloatArray");
 }
 
@@ -103,7 +93,6 @@ FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
 	dstSamp(0),
 	pparent(NULL)
 {
-//	fill the arrays
 	FloatCopy(dstVals, init, Size);
 	ZeroFloats(slopes, Size);
 	
@@ -111,10 +100,7 @@ FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
 	if (VModulatorOld<float *, RcvrType>::receiver != NULL)
 		(VModulatorOld<float *, RcvrType>::receiver->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
 		
-//	for debugging, let 'em know who you are.
 	VActor::setTypeName("FloatArray");
-
-//	initially, be inactive	
 	VActor::setActive(0);
 }
 
@@ -161,7 +147,7 @@ FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
 			numVals, Size);
 		numVals = Size;
 		}
-	if (modTime <= 0. || (pparent && pparent->getAlgOK() && pparent->getPause()))
+	if (modTime <= 0. || (pparent && pparent->getPause()))
 	{
 	// set the new values immediately
 		ZeroFloats(slopes, numVals);
@@ -181,7 +167,7 @@ FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
 			slopes[i] = (newVals[i] - curr[i]) / modSamps;
 			dstVals[i] = newVals[i];
 		}
-		dstSamp = (long)((float)(globs.SampleCount) + modSamps + 0.5);
+		dstSamp = globs.SampleCount + modSamps + 0.5;
 		VActor::setActive( true );
 	}
 }	// end of FloatArray::set()
@@ -199,7 +185,7 @@ FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 			i, Size);
 		return;
 		}
-	if (modTime <= 0. || (pparent && pparent->getAlgOK() && pparent->getPause()))
+	if (modTime <= 0. || (pparent && pparent->getPause()))
 	{
 	// set the new values immediately
 		slopes[i] = 0.;
@@ -224,7 +210,7 @@ FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 		// BUG: other values will now slope at the same rate as this one.
 		// In general, this may cause bugs if you overlap calls to setIth
 		// for several different values.
-		dstSamp = (long)((float)(globs.SampleCount) + modSamps + 0.5);
+		dstSamp = globs.SampleCount + modSamps + 0.5;
 		VActor::setActive( true );
 	}
 }

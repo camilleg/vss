@@ -138,14 +138,10 @@ public:
 //	no one can try to change it. Access only through getAlg(), 
 //	defined below, so that the pointer can be verified.
 private:
-	VAlgorithm * const valg;
+	VAlgorithm* const valg;
 
-//	getAlg() provides access to the valg instance, and can optionally
-//	perform pointer verification (validation, for debugging). Defined
-//	inline below.
 public:
-	inline VAlgorithm* const getAlg();
-	inline int getAlgOK();
+	inline VAlgorithm* getAlg() { return valg; }
 	
 //	VHandlers need to remember who their parents are so they can inform
 //	the parent when they die. The parents (VGeneratorActors) have 
@@ -157,16 +153,16 @@ public:
 	VGeneratorActor * getParent() const { return getByHandle(parentHandle)->as_generator(); }
 
 //	Access members for discrete (not modulated) VAlgorithm parameters
-	int getMute() { return getAlg()->getMute(); }
-	void setMute(int m)	{ getAlg()->setMute(m); }
-	int getPause() { return getAlg()->getPause(); }
-	void setPause(int p)	{ getAlg()->setPause(p); }
+	int getMute() { return valg->getMute(); }
+	void setMute(int m)	{ valg->setMute(m); }
+	int getPause() { return valg->getPause(); }
+	void setPause(int p)	{ valg->setPause(p); }
 
 //	contruction/destruction
 private:
 	VHandler();
 public:
-	VHandler(VAlgorithm *);
+	VHandler(VAlgorithm* const);
 	virtual	~VHandler();
 
 	void setInputGain(float, float time = timeDefault);
@@ -239,7 +235,6 @@ virtual void act();
 //	messages that they do not specifically handle themselves.
 virtual int receiveMessage(const char *);
 
-//	Biographical information:
 protected:
 virtual	ostream &dump(ostream &os, int tabs);
 
@@ -261,45 +256,3 @@ public:
 int FValid();
 static void allAct();
 };
-
-//	Access to the handler's algorithm must go through this function
-//	which can be compiled to provide pointer verification for debugging
-//	purposes. This verification mechanism does _not_ fail gracefully.
-//	When the hanlder's alg is detected to be absent, the handler
-//	should really self destruct But this could cause core dumps depending
-//	on where getAlg() returned (for instance, to the middle of another 
-//	member function of this handler). So instead, all it does is yell.
-//
-//	This member is not virtual, because derived classes should implement
-//	it with a different return type, namely their own algorithm type.
-//	These derived implementations should call VHandler::getAlg() and
-//	cast the returned (verified) pointer to their algorithm type.	
-//
-inline VAlgorithm * const
-VHandler::getAlg()
-{
-	if (valg == NULL)
-		{
-		// Should probably throw an exception here.
-		fprintf(stderr, "vss internal error: NULL VHandler::getAlg() for %s.  Crash imminent.\n", typeName());
-		return NULL;
-		}
-
-#ifdef VERIFY_ALG_POINTERS	
-	if ( ! VAlgorithm::Verify( valg ) )
-	{
-		printf("vss internal error: invalid VAlgorithm* %lx for handler %lx (%s).\n  Crash imminent.\n", (long)valg, (long)this, typeName());
-		bio(cout, 0) << endl;
-		return NULL;
-	}
-#ifdef VERBOSE
-	printf("vss internal remark: VAlgorithm* %lx verified.\n", (long)valg);
-#endif
-#endif
-	return valg;
-}
-
-inline int VHandler::getAlgOK()
-{
-	return valg != NULL;
-}

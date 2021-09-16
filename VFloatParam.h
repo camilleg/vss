@@ -94,19 +94,16 @@ template<class RcvrType>
 float 
 FloatParam<RcvrType>::currentValue(void)
 {
-//	if our time is up, set the slope to zero and return dstVal.
 	if (dstSamp - globs.SampleCount < 0)
 	{ 
+		// Our time is up.
 		slope = 0.;	
 		VActor::setActive(0);
 	    return dstVal;
 	}
-//	check for active first. If active compute a new value, 
-//	else return dstVal
 	return VActor::isActive() ? 
 		dstVal - ((double)(dstSamp - globs.SampleCount) * slope) : 
 		dstVal;
-		
 }
 
 //	Initialize the dstVal, slope, dstSamp values for modulation to 
@@ -115,12 +112,12 @@ template<class RcvrType>
 void 
 FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */)
 {
-	if (modTime <= 0. || (pparent && pparent->getAlgOK() && pparent->getPause()==1))
+	if (modTime <= 0. || (pparent && pparent->getPause()==1))
 	{
 	// set the new value immediately
 		dstVal = newVal;
 		slope = 0.;
-		dstSamp = 0;
+		dstSamp = 0L;
 		VActor::setActive(true); // despite zero slope, force VModulatorOld::act() to call currentValue().
 		return;
 	}
@@ -128,7 +125,7 @@ FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */)
 	// modulate over modTime
 	const float modSamps = modTime * globs.SampleRate;
 	slope = (newVal - currentValue()) / modSamps;
-	dstSamp = (long)((float)(globs.SampleCount) + modSamps + 0.5);
+	dstSamp = globs.SampleCount + modSamps + 0.5;
 
 #if 0
 printf("\tFloatParam modulating from %f to %f over %f samples (%ld, %ld), slope is %f\n", dstVal, newVal, modSamps, globs.SampleCount, dstSamp, slope );

@@ -58,7 +58,6 @@ CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
 # -maccumulate-outgoing-args -malign-double -fomit-frame-pointer
 
 # VSS-specific
-# CcFLAGS += -DVERIFY_ALG_POINTERS
 # CcFLAGS += -DVERBOSE
 LDFLAGS :=
 
