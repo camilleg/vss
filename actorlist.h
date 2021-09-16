@@ -45,7 +45,6 @@ ACTOR_SETUP(processActor, ProcessActor)
 ACTOR_SETUP(reverbActor, ReverbActor)
 ACTOR_SETUP(ringmodActor, RingModActor)
 ACTOR_SETUP(sampActor, SampleActor)
-ACTOR_SETUP(sampleActor, SampleActor)	// backwards compatible
 ACTOR_SETUP(SeqActor, SeqActor)
 ACTOR_SETUP(shimmerActor, ShimmerActor)
 ACTOR_SETUP(smActor, SmActor)
