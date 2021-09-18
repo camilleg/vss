@@ -6,27 +6,10 @@
 
 #undef NT
 
-// PD needs this to compile properly with Irix 6.5 C++ compiler.
-#define _LANGUAGE_C_PLUS_PLUS
-
 #include "fiddle.h"
 
 static t_sigfiddle xStore;
 static t_sigfiddle* x = &xStore;
-
-
-/*;;;; debugging tool for narrowing down segfaults
-static PitchHand* vp = NULL;
-static void doit(float _)
-{
-	if (!vp)
-		return;
-	if (!vp->typeName())
-		printf("vp NULL! %g\n", _);
-	if (!*vp->typeName())
-		printf("vp EMPTY! %g\n", _);
-}
-*/
 
 /*
 Copyright 1997-1999 Miller Puckette, Music Department, UCSD (msp@ucsd.edu).
@@ -1314,17 +1297,16 @@ void PitchAlg::setMGRelease(const char* sz1, const char* sz2, const char* sz3)
 
 void PitchAlg::generateSamples(int howMany)
 {
-	int j;
-	if (!source) // I thought this was caught elsewhere?
+	// Assumes mono input.
+	if (!source)
 		goto LDone;
 
 #ifdef TICKTOCK
 printf("\t\t\t\t\t.... %.3f\n", currentTime()); //;;;;tick
 #endif
 //printf("PitchAlg::generateSamples() %d %d %d\n", isamp, csamp, howMany);
-	// Assumes mono input.
 
-	for (j = 0; j < howMany; j++)
+	for (int j = 0; j < howMany; ++j)
 		{
 		if (isamp >= csamp)
 			{
@@ -1346,7 +1328,7 @@ printf("\t\t\t\t\t.... %.3f\n", currentTime()); //;;;;tick
 
 LDone:
 	// Doesn't emit any sound.
-	for (j = 0; j < howMany; j++)
+	for (int j = 0; j < howMany; ++j)
 		ClearSample(j);
 }
 
@@ -1473,7 +1455,6 @@ int PitchActor::receiveMessage(const char* Message)
 		ifF( z, setRate(z) );
 		return Uncatch();
 		}
-
 	return VGeneratorActor::receiveMessage(Message);
 }
 
@@ -1491,21 +1472,18 @@ ostream& PitchActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
 	indent(os, tabs) << "rate : " << defaultRate << endl;
-
 	return os;
 }
 
 PitchHand::PitchHand(PitchAlg* alg) :
 	VHandler(alg),
-	zRate(1000)
+	zRate(1000.0)
 {
 	setTypeName("PitchHand");
-	//;;;; vp = this;
 }
 
 int PitchHand::receiveMessage(const char* Message)
 {
-//printf("PitchHand::receiveMessage bgn\n");;;;
 	CommandFromMessage(Message);
 
 	if (CommandIs("SetMessageGroupTransient"))
@@ -1550,7 +1528,6 @@ int PitchHand::receiveMessage(const char* Message)
 		return Uncatch();
 		}
 
-//printf("PitchHand::receiveMessage end\n");;;;
 	return VHandler::receiveMessage(Message);
 }
 
@@ -1587,7 +1564,7 @@ void PitchHand::setRate(float z)
 	getAlg()->setRate(zRate);
 }
 
-void PitchHand::actCleanup(void)
+void PitchHand::actCleanup()
 {
 	// If our source got deleted, clean up after it.
 	if (input && !input->FValid())
@@ -1597,12 +1574,5 @@ void PitchHand::actCleanup(void)
 		}
 }
 
-// These are just to fix link errors.
-void clock_delay(t_clock *, double) {}
-void clock_free(t_clock *) {}
-t_clock *clock_new(void *, t_method) { return (t_clock*)NULL; }
-
-float sys_getsr(void)
-	{ return globs.SampleRate; }
-int sys_getblksize(void)
-	{ return 128;;;; }
+float sys_getsr() { return globs.SampleRate; }
+int sys_getblksize() { return 128;;;; }

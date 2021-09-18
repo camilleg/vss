@@ -1,6 +1,5 @@
 #include "amplAnalyzer.h"
 
-// Constructor.
 AmplActor::AmplActor() :
 	VGeneratorActor(),
 	defaultRate(0.)
@@ -11,7 +10,7 @@ AmplActor::AmplActor() :
 void AmplActor::sendDefaults(VHandler* p)
 {
 	VGeneratorActor::sendDefaults(p);
-	AmplHand* h = (AmplHand *)p;
+	AmplHand* h = (AmplHand*)p;
 	h->setRate(defaultRate);
 }
 
@@ -19,8 +18,6 @@ void AmplActor::act()
 {
 	VGeneratorActor::act();
 }
-
-// receiveMessage
 
 int AmplActor::receiveMessage(const char* Message)
 {
@@ -30,7 +27,6 @@ int AmplActor::receiveMessage(const char* Message)
 		ifF( z, setRate(z) );
 		return Uncatch();
 		}
-
 	return VGeneratorActor::receiveMessage(Message);
 }
 
@@ -48,6 +44,5 @@ ostream& AmplActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
 	indent(os, tabs) << "rate : " << defaultRate << endl;
-
 	return os;
 }

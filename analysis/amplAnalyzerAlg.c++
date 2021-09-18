@@ -78,14 +78,13 @@ void AmplAlg::SendAnalysis(void)
 void AmplAlg::generateSamples(int howMany)
 {
 	// Assumes mono input.
+	// Similar to PitchAlg::generateSamples().
 
-	int j;
-
-	if (!fOneShot && !fContinuous)
+	if (!source || (!fOneShot && !fContinuous))
 		goto LDone;
 
 	isamp = 0;
-	for (j = 0; j < howMany; j++)
+	for (int j = 0; j < howMany; ++j)
 		{
 	//	// This test isn't needed, if csamp == howMany.
 	//	if (isamp >= csamp)
@@ -115,9 +114,8 @@ void AmplAlg::generateSamples(int howMany)
 		}
 
 LDone:
-
 	// Doesn't emit any sound.
-	for (j = 0; j < howMany; j++)
+	for (int j = 0; j < howMany; ++j)
 		ClearSample(j);
 }
 
