@@ -1,5 +1,4 @@
-#ifndef _STK_H_
-#define _STK_H_
+#pragma once
 
 #include "VAlgorithm.h"
 #include "VHandler.h"
@@ -21,9 +20,8 @@ static inline int CheckShakerType(int i){ return i >= 0 && i <= NUM_SHAKER; }
 
 class stkAlg : public VAlgorithm
 {
- private:
   int controlNum;
-  Instrmnt * pAlgInstru;
+  Instrmnt* pAlgInstru;
 
  public:
   void generateSamples(int);
@@ -33,27 +31,25 @@ class stkAlg : public VAlgorithm
   void noteOn(float freq, float amp);
   void noteOff(float amp);
 
-  int FValidForOutput() { return (pAlgInstru != NULL); }
+  int FValidForOutput() { return pAlgInstru != nullptr; }
 
-  stkAlg(void);
+  stkAlg();
   ~stkAlg();
 };
 
 class stkHand : public VHandler
 {
- private:
   FloatParam<stkAlg> fValue;
   int instruNum; // indicate what instrument it is 
 
  protected:
-  stkAlg * getAlg(void)  
-    { return (stkAlg *)VHandler::getAlg(); }
+  stkAlg* getAlg() { return (stkAlg*)VHandler::getAlg(); }
 
  public:
-  Instrmnt * pHandInstru;
+  Instrmnt* pHandInstru;
 
-  int receiveMessage(const char * Message);
-  
+  int receiveMessage(const char*);
+
   void setInstru(char * sInstruName);
   void setInstruNum(int iNum);
   void setControl(int iCtrl, float fNewValue, float t=0.);
@@ -61,24 +57,17 @@ class stkHand : public VHandler
   void setNoteOff(float amp=0.);
   void setShakerType(int iType);
 
-  stkHand(stkAlg * alg = new stkAlg);
-  virtual ~stkHand() {}
+  stkHand(stkAlg* alg = new stkAlg);
+  virtual ~stkHand() = default;
 };
- 
+
 class stkActor : public VGeneratorActor
 {
  public:
-  virtual VHandler * newHandler(void)
-    { 
-      return new stkHand(); 
-    }
+  virtual VHandler* newHandler() { return new stkHand(); }
+  virtual void sendDefaults(VHandler*);
+  virtual int receiveMessage(const char *);
 
-  virtual void sendDefaults(VHandler * p);
-  virtual int receiveMessage(const char * Message);
-
-  stkActor(void);
-  virtual ~stkActor() {}
-
+  stkActor();
+  virtual ~stkActor() = default;
 };
-
-#endif

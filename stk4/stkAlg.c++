@@ -1,57 +1,52 @@
 #include "stk.h"
 
-stkAlg::stkAlg(void) :
+stkAlg::stkAlg() :
   VAlgorithm(),
   controlNum(0),
-  pAlgInstru(NULL)
+  pAlgInstru(nullptr)
 {
+  //printf("new stkAlg %p\n", this);;
 }
 
 stkAlg::~stkAlg() 
 { 
-  delete pAlgInstru; 
+  //printf("~stkAlg %p deleting Instrmnt* pAlgInstru %p\n", this, pAlgInstru);;
+  delete pAlgInstru;
 }
 
-void
-stkAlg::generateSamples(int howMany)
+void stkAlg::generateSamples(int howMany)
 {
   for (int j=0; j < howMany; j++)
     {
-      //printf("\t stkAlg::generateSamples calls tick()\n");;;;
       const float temp = pAlgInstru->tick();
       Output(temp, j);
     }
 }
 
-void 
-stkAlg::setInstru(Instrmnt *instru)
+void stkAlg::setInstru(Instrmnt *instru)
 {
+  //printf("stkAlg::setInstru deleting Instrmnt* pAlgInstru %p\n", pAlgInstru);;
   delete pAlgInstru;
-  //printf("armand;;;; stkAlg setInstru %x\n", instru);
   pAlgInstru = instru;
+  //printf("stkAlg::setInstru %p := Instrmnt* pAlgInstru %p\n", this, pAlgInstru);;
 }
 
-void 
-stkAlg::setCtrlNum(int iValue)
+void stkAlg::setCtrlNum(int iValue)
 {
   controlNum = iValue;
 }
 
-void 
-stkAlg::setCtrlValue(float fValue)
+void stkAlg::setCtrlValue(float fValue)
 {
   pAlgInstru->controlChange(controlNum, fValue);
 }
 
-void 
-stkAlg::noteOn(float freq, float amp)
+void stkAlg::noteOn(float freq, float amp)
 {
-  //printf("armand;;;; stkAlg plucked freq=%f ampl=%f\n", freq,amp);
   pAlgInstru->noteOn(freq, amp);
 }
 
-void 
-stkAlg::noteOff(float amp)
+void stkAlg::noteOff(float amp)
 {
   pAlgInstru->noteOff(amp);
 }

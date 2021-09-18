@@ -112,7 +112,6 @@ stkHand::stkHand(stkAlg * alg) :
 int
 stkHand::receiveMessage(const char * Message)
 {
-  //printf("armand;;;; stkHand got:\t\t\t%s\n", Message);
   CommandFromMessage(Message);
 
   if (CommandIs("SetInstrument"))
@@ -518,12 +517,14 @@ stkHand::setInstruNum(int iNum)
 
     case(STK_Plucked): 
       pHandInstru = (Instrmnt *)new Plucked(20.0);
+      //printf("Instrmnt* plucked handler is %p\n", pHandInstru);;
       break;
     case(STK_Bowed):
       pHandInstru = (Instrmnt *)new Bowed(50.0);
       break;   
     case(STK_Mandolin): 
       pHandInstru = (Instrmnt *)new Mandolin(50.0);
+      //printf("Instrmnt* mandolin handler is %p\n", pHandInstru);;
       break;
     case(STK_Brass):
       pHandInstru = (Instrmnt *)new Brass(50.0);
@@ -620,7 +621,6 @@ stkHand::setNoteOn(float freq, float amp)
     }
 
   getAlg()->noteOn(freq, amp);
-  //printf("armand;;;; plucked freq=%f ampl=%f\n", freq,amp);
 }
 
 void
