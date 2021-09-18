@@ -22,6 +22,8 @@ class Instrmnt : public Stk
   //! Class constructor.
   Instrmnt( void ) { lastFrame_.resize( 1, 1, 0.0 ); };
 
+  virtual ~Instrmnt() = default;
+
   //! Start a note with the given frequency and amplitude.
   virtual void noteOn( StkFloat frequency, StkFloat amplitude ) = 0;
 
