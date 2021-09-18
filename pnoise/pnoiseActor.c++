@@ -2,39 +2,25 @@
 
 ACTOR_SETUP(pnoiseActor, PseudoNoiseActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for noise parameters, they will be
-//	sent in sendDefaults().
-//
-pnoiseActor::pnoiseActor(void) : 
+pnoiseActor::pnoiseActor():
 	VGeneratorActor(),
-	defaultCutoff( 1000. ),
-	defaultModCutoff( 1000. ),
-	defaultModIndex( 0. )
+	defaultCutoff(1000.0),
+	defaultModCutoff(1000.0),
+	defaultModIndex(0.0)
 {
 	setTypeName("PseudoNoiseActor");
 }
 
-//===========================================================================
-//		sendDefaults
-//
-void 
-pnoiseActor::sendDefaults(VHandler * p)
+void pnoiseActor::sendDefaults(VHandler* p)
 {
 	VGeneratorActor::sendDefaults(p);
-	noiseHand * h = (noiseHand *)p;
+	pnoiseHand * h = (pnoiseHand *)p;
 	h->setCutoff(defaultCutoff, 0.);
 	h->setModCutoff(defaultModCutoff, 0.);
 	h->setModIndex(defaultModIndex, 0.);
 }
 
-//===========================================================================
-//		receiveMessage
-//
-int
-pnoiseActor::receiveMessage(const char * Message)
+int pnoiseActor::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 
@@ -46,7 +32,7 @@ pnoiseActor::receiveMessage(const char * Message)
 	}
 
 	if (CommandIs("SetCutoff"))
-    	{
+	{
 		ifF(z, setCutoff(z) );
 		return Uncatch();
 	}
@@ -59,20 +45,20 @@ pnoiseActor::receiveMessage(const char * Message)
 	}
 
 	if (CommandIs("SetModCutoff"))
-    	{
+	{
 		ifF(z, setModCutoff(z) );
 		return Uncatch();
 	}
 
 	if (CommandIs("SetAllModIndex"))
-    	{
+	{
 		ifFF(z,z2, setAllModIndex(z, z2) );
 		ifF(z, setAllModIndex(z) );
 		return Uncatch();
 	}
 
 	if (CommandIs("SetModIndex"))
-    	{
+	{
 		ifF(z, setModIndex(z) );
 		return Uncatch();
 	}
@@ -80,114 +66,72 @@ pnoiseActor::receiveMessage(const char * Message)
 	return VGeneratorActor::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setCutoff
-//
-//	Set default cutoff freq for this actor.
-//
-void
-pnoiseActor::setCutoff(float f)
+void pnoiseActor::setCutoff(float f)
 {
-	if (!CheckCutoff(f)) 
-		printf("pnoiseActor got bogus cutoff frequency %f.\n", f );
+	if (!CheckCutoff(f))
+		printf("pnoiseActor got bogus cutoff frequency %f.\n", f);
 	else
 		defaultCutoff = f;
 }
 
-//===========================================================================
-//		setAllCutoff
-//	
-//	Call setCutoff for all of my children.
-//
-void
-pnoiseActor::setAllCutoff(float f, float t)
+void pnoiseActor::setAllCutoff(float f, float t)
 {
-	if (!CheckCutoff(f)) 
+	if (!CheckCutoff(f))
 	{
-		printf("pnoiseActor got bogus cutoff frequency %f.\n", f );
+		printf("pnoiseActor got bogus cutoff frequency %f.\n", f);
 		return;
 	}
-
-	HandlerListIterator< noiseHand > it;
-    	for (it = children.begin(); it != children.end(); it++)
+	HandlerListIterator< pnoiseHand > it;
+	for (it = children.begin(); it != children.end(); it++)
 	{
 		(*it)->setCutoff(f, t);
 	}
-
 	defaultCutoff = f;
 }
 
-//===========================================================================
-//		setModCutoff
-//
-//	Set default mod cutoff freq for this actor.
-//
-void
-pnoiseActor::setModCutoff(float f)
+void pnoiseActor::setModCutoff(float f)
 {
-	if (!CheckCutoff(f)) 
-		printf("pnoiseActor got bogus cutoff frequency %f.\n", f );
+	if (!CheckCutoff(f))
+		printf("pnoiseActor got bogus cutoff frequency %f.\n", f);
 	else
 		defaultModCutoff = f;
 }
 
-//===========================================================================
-//		setAllCutoff
-//	
-//	Call setModCutoff for all of my children.
-//
-void
-pnoiseActor::setAllModCutoff(float f, float t)
+void pnoiseActor::setAllModCutoff(float f, float t)
 {
-	if (!CheckCutoff(f)) 
+	if (!CheckCutoff(f))
 	{
-		printf("pnoiseActor got bogus mod cutoff frequency %f.\n", f );
+		printf("pnoiseActor got bogus mod cutoff frequency %f.\n", f);
 		return;
 	}
-
-	HandlerListIterator< noiseHand > it;
-    	for (it = children.begin(); it != children.end(); it++)
+	HandlerListIterator< pnoiseHand > it;
+	for (it = children.begin(); it != children.end(); it++)
 	{
 		(*it)->setModCutoff(f, t);
 	}
-
 	defaultModCutoff = f;
 }
 
-//===========================================================================
-//		setModIndex
-//
-//	Set default mod index for this actor.
-//
-void
-pnoiseActor::setModIndex(float f)
+void pnoiseActor::setModIndex(float f)
 {
-	if (! CheckMod(f)) 
-		printf("pnoiseActor got bogus mod index %f.\n", f );
+	if (!CheckMod(f))
+		printf("pnoiseActor got bogus mod index %f.\n", f);
 	else
 		defaultModIndex = f;
 }
 
-//===========================================================================
-//		setAllModIndex	
-//
-//	Call setModIndex for all of my children.
-//
-void
-pnoiseActor::setAllModIndex(float f, float t)
+void pnoiseActor::setAllModIndex(float f, float t)
 {
-	if (! CheckMod(f)) 
+	if (!CheckMod(f))
 	{
-		printf("pnoiseActor got bogus mod index %f.\n", f );
+		printf("pnoiseActor got bogus mod index %f.\n", f);
 		return;
 	}
-
-	HandlerListIterator< noiseHand > it;
-    	for (it = children.begin(); it != children.end(); it++)
+	HandlerListIterator< pnoiseHand > it;
+	for (it = children.begin(); it != children.end(); it++)
 	{
 		(*it)->setModIndex(f, t);
 	}
-
 	defaultModIndex = f;
 }
 

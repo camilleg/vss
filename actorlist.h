@@ -1,3 +1,7 @@
+// Only for vssSrv.c++'s newActor().
+//
+#pragma once
+
 #undef ACTOR_SETUP // Override VActor.h's definition with a typeless one.
 #define ACTOR_SETUP(ignored, t) extern "C" VActor* t##_New();
 
@@ -40,7 +44,7 @@ ACTOR_SETUP(OSCActor, OSCActor)
 ACTOR_SETUP(OSCServer, OSCServer)
 ACTOR_SETUP(ParticleActor, ParticleActor)
 ACTOR_SETUP(PentaActor, PentaActor)
-ACTOR_SETUP(noiseActor, PseudoNoiseActor)
+ACTOR_SETUP(pnoiseActor, PseudoNoiseActor)
 ACTOR_SETUP(processActor, ProcessActor)
 ACTOR_SETUP(reverbActor, ReverbActor)
 ACTOR_SETUP(ringmodActor, RingModActor)
@@ -99,7 +103,7 @@ FOO("OSCServer", OSCServer)
 FOO("ParticleActor", ParticleActor)
 FOO("PentaActor", PentaActor)
 FOO("PianoActor", PianoActor)
-FOO("NoiseActor", PseudoNoiseActor)
+FOO("PseudoNoiseActor", PseudoNoiseActor)
 FOO("ProcessActor", ProcessActor)
 FOO("ReverbActor", ReverbActor)
 FOO("RingmodActor", RingModActor)

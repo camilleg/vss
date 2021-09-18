@@ -1,15 +1,6 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "noise.h"
-#include <cmath>
 
-
-//===========================================================================
-//	noiseAlg constructor
-//
-noiseAlg::noiseAlg(void) :
+noiseAlg::noiseAlg():
 	VAlgorithm(),
 	fCutoff(500.),
 	order(1),
@@ -20,18 +11,7 @@ noiseAlg::noiseAlg(void) :
 {
 }
 
-//===========================================================================
-//	noiseAlg destructor
-//
-noiseAlg::~noiseAlg()
-{
-}
-
-//===========================================================================
-//	noiseAlg generateSamples
-//
-void
-noiseAlg::generateSamples(int howMany)
+void noiseAlg::generateSamples(int howMany)
 {
 	for (int j = 0; j < howMany; j++)
 	{
@@ -51,25 +31,17 @@ noiseAlg::generateSamples(int howMany)
 	}
 }
 
-//===========================================================================
-//	noiseAlg setOrder
-//
 //	Set effective filter order. For time-width = decim-period = P:
 //
 //	Filter Order		Eff. impulse response	Eff. freq response
 //	------------------------------------------------------------------
 //	0 (Zero-Order-Hold)	Pulse, rect(t/P)	P*Sinc(P*f)
 //	1 (First-Order-Hold)	Triangle, tri(t/P)	P*Sinc^2(P*f)
-//
-void
-noiseAlg::setOrder(int ord)
+void noiseAlg::setOrder(int ord)
 {
 	order = ord;
 }
 
-//===========================================================================
-//	noiseAlg setCutoff
-//
 //	Set decimation period. The inverse of this period is the frequency where
 //	of the first zero occurs in the sinc or sinc^2 output spectra. The output
 //	noise spectrum is lowpass in nature, with the -3dB point, or cuttoff frequency,
@@ -79,13 +51,10 @@ noiseAlg::setOrder(int ord)
 //	----------------------------------
 //	0		0.44295 * fCutoff
 //	1		0.31890 * fCutoff
-//
-void
-noiseAlg::setCutoff(float fHz)
+void noiseAlg::setCutoff(float fHz)
 {
 	fCutoff = fHz;
 	decimationPeriod = 1.0f / fCutoff;
-	
 	// set hard-bound at SamplePeriod
 	if (decimationPeriod < globs.OneOverSR)
 		decimationPeriod = globs.OneOverSR;

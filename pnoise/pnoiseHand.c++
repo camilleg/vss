@@ -1,19 +1,11 @@
 #include "pnoise.h"
 
-//===========================================================================
-//		construction
-//
-noiseHand::noiseHand(noiseAlg * alg):
-	VHandler( alg )
-{ 
-	setTypeName("noiseHand"); 
+pnoiseHand::pnoiseHand(pnoiseAlg* alg): VHandler(alg)
+{
+	setTypeName("pnoiseHand");
 }
 
-//===========================================================================
-//		receiveMessage
-//
-int	
-noiseHand::receiveMessage(const char * Message)
+int	pnoiseHand::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 	
@@ -41,34 +33,32 @@ noiseHand::receiveMessage(const char * Message)
 	return VHandler::receiveMessage(Message);
 }
 
-void noiseHand::SetAttribute(IParam iParam, float z)
+void pnoiseHand::SetAttribute(IParam iParam, float z)
 {
-	if (iParam.FOnlyI())
-		{
-		switch (iParam.i)
-			{
-		case isetCutoff:
-			if (!CheckCutoff(z))
-				printf("noiseHandler got bogus cutoff frequency %f.\n", z);
-			else
-				getAlg()->setCutoff(fCutoff = z);
-			break;
-		case isetModCutoff:
-			if (!CheckCutoff(z))
-				printf("noiseHandler got bogus mod cutoff frequency %f.\n", z);
-			else
-				getAlg()->setModCutoff(modCutoff = z);
-			break;
-		case isetModIndex:
-			if (!CheckMod(z))
-				printf("noiseHandler got bogus mod index %f.\n", z);
-			else
-				getAlg()->setModIndex(modIndex = z);
-			break;
-		default:
-			printf("vss error: noiseHandler got bogus float-index %d.\n", iParam.i);
-			}
-		}
-	else
-		printf("vss error: noiseHandler got bogus element-of-float-array-index %d.\n", iParam.i);
+	if (!iParam.FOnlyI()) {
+		printf("pnoiseHandler got bogus element-of-float-array-index %d.\n", iParam.i);
+		return;
+	}
+	switch (iParam.i) {
+	case isetCutoff:
+		if (!CheckCutoff(z))
+			printf("pnoiseHandler got bogus cutoff frequency %f.\n", z);
+		else
+			getAlg()->setCutoff(fCutoff = z);
+		break;
+	case isetModCutoff:
+		if (!CheckCutoff(z))
+			printf("pnoiseHandler got bogus mod cutoff frequency %f.\n", z);
+		else
+			getAlg()->setModCutoff(modCutoff = z);
+		break;
+	case isetModIndex:
+		if (!CheckMod(z))
+			printf("pnoiseHandler got bogus mod index %f.\n", z);
+		else
+			getAlg()->setModIndex(modIndex = z);
+		break;
+	default:
+		printf("pnoiseHandler got bogus float-index %d.\n", iParam.i);
+	}
 }
