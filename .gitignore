@@ -4,6 +4,7 @@ vss
 */*.a
 */*.o
 */.depend
+Rules.debug
 stk-4.4.4/Makefile
 stk-4.4.4/config.*
 stk-4.4.4/projects/*/Makefile

@@ -131,6 +131,9 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 	cFLAGS = $(CcFLAGS)
 endif
 
+# Optional file containing debugging options for CcFLAGS, LDFLAGS, etc.
+-include Rules.debug
+
 AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.
 
 DEPENDFLAGS = -MMD -MT $@ -MF $(patsubst %.o,.depend/%.d,$@)
