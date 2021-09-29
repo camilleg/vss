@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "VActor.h"
 #include "VAlgorithm.h"
 
@@ -6,12 +7,10 @@ const float timeDefault = -424242.0;
 
 class IParam
 {
-	enum { jUnused = -2 };
+	enum { jUnused = -2 }; // Chosen so ==() and <() work.
 public:
-	int i; // index into a list of parameter values.
-	int j; // unused, or iz, or cz.  Depends on i's value.
-		   // unused must be jUnused, so the fast operator== works
-		   // even for the case where j is unused.
+	int i; // Index into a list of parameter values.
+	int j; // Either jUnused, or iz, or cz.  Depends on i.
 
 	friend int operator==(const IParam& a, const IParam& b)
 		{ return a.i == b.i && a.j == b.j; }
@@ -23,7 +22,7 @@ public:
 	int& Iz() { return j; }
 	int& Cz() { return j; }
 
-	int FOnlyI() { return j == jUnused; }
+	int FOnlyI() const { return j == jUnused; }
 
 	IParam(int iArg = -1, int jArg = jUnused) : i(iArg), j(jArg) {}
 	~IParam() {}
@@ -83,11 +82,11 @@ public:
 };
 
 #include <map>
-typedef map<IParam, VModulator*> Modmap;
 
 class VModulatorPool
 {
-	Modmap m;
+	using Modmap = map<IParam, std::unique_ptr<VModulator> >; // Pointer, because VMod is pure virtual.
+	Modmap modmap;
 	void insertPrep(const IParam);
 	void SanityCheck(VHandler*);
 public:
@@ -98,9 +97,7 @@ public:
 	void erase();
 
 	VModulatorPool() {}
-public:
 	~VModulatorPool() {}
-		// Modmap cleans up after itself (see Josuttis, p.233).
 };
 
 //	forward declaration for generator actors, which are responsible
@@ -139,7 +136,6 @@ public:
 //	defined below, so that the pointer can be verified.
 private:
 	VAlgorithm* const valg;
-
 public:
 	inline VAlgorithm* getAlg() { return valg; }
 	
@@ -208,9 +204,9 @@ private:
 
 public:
 	// Set a parameter directly (without any modulation):
-	virtual void SetAttribute(IParam iParam, float z);
+	virtual void SetAttribute(IParam, float z);
 		// a float, or one element of an array of floats.
-	virtual void SetAttribute(IParam iParam, float* rgz);
+	virtual void SetAttribute(IParam, float* rgz);
 		// a whole array of floats.
 
 	inline void modulate(int iParam, float curVal, float newVal, float modTime = 0.)
@@ -228,20 +224,20 @@ public:
 //	Handlers that override this member should remember to call the 
 //	parent class' act() member as well, in order to inherit control 
 //	rate behavior from base classes.
-virtual void act();
+	virtual void act();
 
 //	Message-receipt member. Handlers that override this member
 //	should remember to call their parent class' message receiver for
 //	messages that they do not specifically handle themselves.
-virtual int receiveMessage(const char *);
+	virtual int receiveMessage(const char *);
 
 protected:
-virtual	ostream &dump(ostream &os, int tabs);
+	virtual	ostream &dump(ostream &os, int tabs);
 
 //	For identifying special kinds of actors, override as necessary.
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
 public:
-virtual	VHandler * as_handler() { return this; }
+	virtual	VHandler* as_handler() { return this; }
 
 private:
 	enum { cDyingHandlerLim = 1000 };
@@ -253,6 +249,6 @@ private:
 	static VHandler** pDyingHandler2;
 
 public:
-int FValid();
-static void allAct();
+	int FValid();
+	static void allAct();
 };

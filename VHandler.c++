@@ -1,5 +1,7 @@
-#include "VGenActor.h"
 #include "VHandler.h"
+
+#include <vector>
+#include "VGenActor.h"
 
 VHandler* VHandler::rgDyingHandler [cDyingHandlerLim];
 VHandler* VHandler::rgDyingHandler2[cDyingHandlerLim];
@@ -20,19 +22,19 @@ VHandler::VHandler(VAlgorithm* const a) :
 	valg(a),
 	parentHandle(-1.)
 {
-	setTypeName("VHandler");
 	if (!valg)
 		{
 		printf("vss internal error: new Handler got a NULL Algorithm.\n");
 		delete this;
 		}
+	setTypeName("VHandler");
 }
 
 //	Remove this handler from the parent's brood, and destroy 
 //	the algorithm managed by this handler.
 VHandler::~VHandler()
 {
-	pDyingHandler[cDyingHandler++] = this; // So this->FValid() will work correctly.
+	pDyingHandler[cDyingHandler++] = this; // For this->FValid().
 	//printf("\t\t\t\tcDyingHandler++\n");;
 	VGeneratorActor * myParent = getParent();
 	if (myParent != NULL) 
@@ -44,7 +46,7 @@ VHandler::~VHandler()
 // which does CommandIs("SetInput"), setInput(), getAlg()->setSource()
 // or other such thing which makes use of a handler foo,
 // must be preceded by a call to foo->FValid().
-// Otherwise, foo may have been already delete()'d.
+// Otherwise, foo may have been already deleted.
 // This clever function works even after the destructor's been called,
 // but for a limited time only (two calls to doActors()).
 //
@@ -81,7 +83,7 @@ void VHandler::allAct(void)
 }
 
 //	Control-rate behavior.
-void VHandler::act(void)
+void VHandler::act()
 {
 	modpool.act(this);
 	VActor::act();
@@ -304,12 +306,12 @@ VHandler::restrike(const char * inits_msg)
 }
 
 
-void VHandler::SetAttribute(IParam iParam, float z)
+void VHandler::SetAttribute(IParam, float)
 {
 	cerr << "vss warning: SetAttribute() unimplemented in handler " << typeName() << endl;
 }
 
-void VHandler::SetAttribute(IParam iParam, float* rgz)
+void VHandler::SetAttribute(IParam, float*)
 {
 	cerr << "vss warning: SetAttribute() unimplemented in handler " << typeName() << endl;
 }
@@ -651,8 +653,7 @@ void VModulatorPool::insert(int iParam,
 {
 	IParam i(iParam);
 	insertPrep(i);
-	auto p = (VModulator*)new VFloatParam(zCur, zEnd, duration);
-	m.insert(make_pair(i, p));
+	modmap.emplace(i, make_unique<VFloatParam>(zCur, zEnd, duration));
 }
 
 void VModulatorPool::insert(int iParam,
@@ -660,8 +661,7 @@ void VModulatorPool::insert(int iParam,
 {
 	IParam i(iParam, iz);
 	insertPrep(i);
-	auto p = (VModulator*)new VFloatArrayElement(zCur, zEnd, duration);
-	m.insert(make_pair(i, p));
+	modmap.emplace(i, make_unique<VFloatArrayElement>(zCur, zEnd, duration));
 }
 
 void VModulatorPool::insert(int iParam,
@@ -669,48 +669,28 @@ void VModulatorPool::insert(int iParam,
 {
 	IParam i(iParam, cz);
 	insertPrep(i);
-	auto p = (VModulator*)new VFloatArray(cz, rgzCur, rgzEnd, duration);
-	m.insert(make_pair(i, p));
+	modmap.emplace(i, make_unique<VFloatArray>(cz, rgzCur, rgzEnd, duration));
 }
-
-//===========================================================================
-// VModulatorPool stuff.
 
 void VModulatorPool::insertPrep(const IParam iparam)
 {
-	for (Modmap::iterator i = m.begin(); i != m.end(); ++i)
-		{
-		if (i->first == iparam)
-			{
-			delete i->second;
-			m.erase(i);
-			// At most one of these can exist, so we might as well return.
-			return;
-			}
-		}
+	if (modmap.find(iparam) != modmap.end())
+		modmap.erase(iparam);
 }
 
 void VModulatorPool::act(VHandler* phandler)
 {
 	SanityCheck(phandler);
-	Modmap::iterator i;
-	for (i = m.begin(); i != m.end(); )
-		{
+	vector<Modmap::const_iterator> deletia;
+	for (auto i = modmap.cbegin(); i != modmap.end(); ++i) {
 		// i->first is an IParam
 		// i->second is a VModulator*
-
-		if (!i->second->SetAttribute(phandler, i->first))
-			{
+		if (!i->second->SetAttribute(phandler, i->first)) {
 			// It finished modulating, so we can clean it up.
-			// Can't increment i after i's been erase()'d, so do it before.
-			Modmap::iterator j = i;
-			++i;
-			delete j->second;
-			m.erase(j);
-			}
-		else
-			++i;
+			deletia.push_back(i);
 		}
+	}
+	for (auto i: deletia) modmap.erase(i);
 	SanityCheck(phandler);
 }
 
@@ -722,4 +702,3 @@ void VModulatorPool::SanityCheck(VHandler* phandler)
 	if (!phandler)
 		cerr << "vss internal error: VModulatorPool::SanityCheck() null phandler\n";
 }
-
