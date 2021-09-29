@@ -1,20 +1,10 @@
-#ifndef _FM_H_
-#define _FM_H_
-
+#pragma once
 #include "VAlgorithm.h"
-#include "VHandler.h"
 #include "VGenActor.h"
+#include "VHandler.h"
 
-
-//===========================================================================
-//		fmAlg 
-//
-//	class fmAlg is a test algorithm with sample generation
-//	code copied from the old classFMnote.
-//
 class fmAlg : public VAlgorithm
 {
-private:
 //	synthesis parameters
 	float	carFreq;	// carrier frequency, Hz
 	float	modFreq;	// modulator frequency, Hz
@@ -36,16 +26,14 @@ private:
 	float	lastModVal;	// modulator feedback signal: last modulator output value
 
 public:
-//	access members
-	float	getCarrierFreq(void)	{ return carFreq; }
-	float	getModulatorFreq(void)	{ return modFreq; }
-	float	getCMratio(void)	{ return cmRatio; }
-	int	getRatioMode(void)	{ return ratioMode; }
-	float	getModIndex(void)	{ return modIndex; }
-	float	getCarFeedback(void)	{ return carFeedback; }
-	float	getModFeedback(void)	{ return modFeedback; }
+	float	getCarrierFreq()	{ return carFreq; }
+	float	getModulatorFreq()	{ return modFreq; }
+	float	getCMratio()		{ return cmRatio; }
+	int		getRatioMode()		{ return ratioMode; }
+	float	getModIndex()		{ return modIndex; }
+	float	getCarFeedback()	{ return carFeedback; }
+	float	getModFeedback()	{ return modFeedback; }
 
-//	parameter update members
 	void	setCarrierFreq(float);
 	void	setModulatorFreq(float);
 	void	setCMratio(float);
@@ -57,30 +45,21 @@ public:
 //	utility members
  	float 	Lerp(float a, float b, float t) { return a*(1.0f-t) + b*t ; }
  	float 	Lerp(int i, float a, float *tab) { return (1.0f-a)*tab[i] + a*tab[i+1]; }
-inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
-inline 	void 	WrapAcc(float &Phase);
-inline 	void 	WrapTot(float Phase, int &iPhase, float &fPhase);
+	inline void WrapAccSep(float &Phase, int &iPhase, float &fPhase);
+	inline void WrapAcc(float &Phase);
+	inline void WrapTot(float Phase, int &iPhase, float &fPhase);
 
-//	sample generation
 	void	generateSamples(int);
 
 //	static wavetable initialization
-	void	InitFMsintab(void);
+	void	InitFMsintab();
 
-//	construction/destruction
-		fmAlg(void);
-		~fmAlg();
+	fmAlg();
+	~fmAlg();
+};
 
-};	// end of class fmAlg
-
-//===========================================================================
-//		fmHand 
-//
-//	class fmHand is a handler class for fmAlg.
-//
 class fmHand : public VHandler
 {
-private:
 //	modulating parameters of fmAlg
 	float carFreq;
 	float modFreq;
@@ -98,19 +77,16 @@ private:
 		isetModFeedback };
 
 protected:
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to fmAlg.
-	fmAlg * getAlg(void)	{ return (fmAlg *) VHandler::getAlg(); }
+	fmAlg* getAlg()	{ return (fmAlg*)VHandler::getAlg(); }
 
 public:
-//	parameter access
-	float getCarrierFreq(void)	{ return getAlg()->getCarrierFreq(); }
-	float getModulatorFreq(void)	{ return getAlg()->getModulatorFreq(); }
-	float getCMratio(void)	{ return getAlg()->getCMratio(); }
-	float getModIndex(void)	{ return getAlg()->getModIndex(); }
-	float getCarFeedback(void)	{ return getAlg()->getCarFeedback(); }
-	float getModFeedback(void)	{ return getAlg()->getModFeedback(); }
-	int getRatioMode(void)	{ return getAlg()->getRatioMode(); }
+	float getCarrierFreq()	{ return getAlg()->getCarrierFreq(); }
+	float getModulatorFreq()	{ return getAlg()->getModulatorFreq(); }
+	float getCMratio()	{ return getAlg()->getCMratio(); }
+	float getModIndex()	{ return getAlg()->getModIndex(); }
+	float getCarFeedback()	{ return getAlg()->getCarFeedback(); }
+	float getModFeedback()	{ return getAlg()->getModFeedback(); }
+	int getRatioMode()	{ return getAlg()->getRatioMode(); }
 
 //	parameter modulation
 	void SetAttribute(IParam iParam, float z);
@@ -133,40 +109,25 @@ public:
 	void setRatioMode(float z = 1.)
 		{ getAlg()->setRatioMode((int)z); }
 
-
 //	damp amplitude changes
-	float	dampingTime(void)	{ return 0.03; }
+	float	dampingTime()	{ return 0.03; }
 
-//	message handling
-	int receiveMessage(const char * Message);
+	int receiveMessage(const char*);
 
-//	construction
-	fmHand(fmAlg * alg = new fmAlg);
-		
-//	destruction
-	virtual	~fmHand() {}
+	fmHand(fmAlg* alg = new fmAlg);
+	~fmHand() {}
+};
 
-};	// end of class fmHand
-
-//===========================================================================
-//		fmActor
-//
-//	class fmActor is a generator actor class for fmAlg
-//
 class fmActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new fmHand(); }
+	VHandler* newHandler() { return new fmHand(); }
+	fmActor();
+	~fmActor() {}
 
-//	construction/destruction
-public:
-	fmActor(void);
-virtual	~fmActor() {}
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
-virtual	void 	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
-
-//	parameter setting members
 	void	setRatioMode(float f = 1.);
 	void	setAllRatioMode(float f = 1.);
 	void	setCarrierFreq(float f);
@@ -184,25 +145,11 @@ virtual int	receiveMessage(const char * Message);
 	void	setModFeedback(float f);
 	void	setAllModFeedback(float f, float t = 0.);
 
-//	default parameters
 protected:
 	float	defaultRatioMode, defaultCarFreq, defaultModFreq, defaultCMratio;
 	float	defaultModIndex, defaultCarFeedback, defaultModFeedback;
 
-//	biographical info
-virtual ostream &dump(ostream &os, int tabs);
+	ostream &dump(ostream &os, int tabs);
+};
 
-};	// end of class fmActor
-
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
-static	inline	int	CheckFreq(float f) 	{ return f >= 0. && f < 20000.; }
-static	inline	int	CheckCMratio(float f) 	{ return f > 1.0e-6 && f < 1.0e6; }
-static	inline	int	CheckIndex(float f)	{ return f >= 0. && f < 1000.; }
-static	inline	int	CheckFeedback(float f)	{ return f >= -1. && f <= 1.; }
-
-#endif // ndef _FM_H_
+#include "boundscheckers.h"

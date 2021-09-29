@@ -1,23 +1,12 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "fm.h"
 
-//===========================================================================
-//	for wavetable computation
-//
+// Wavetable.
 #include <cmath>
-#define SINTABSZ 256
+const auto SINTABSZ = 256;
 float	FMsintab[SINTABSZ+1];
-int	flagFMsintab = 0;
+bool	flagFMsintab = false;
 
-//===========================================================================
-//	fmAlg constructor
-//
-//	Besides other inits, also initialize the lookup wavetable, if not already
-//
-fmAlg::fmAlg(void) :
+fmAlg::fmAlg() :
 	VAlgorithm(),
 	carFreq(100.),
 	modFreq(100.),
@@ -36,25 +25,19 @@ fmAlg::fmAlg(void) :
 	lastCarVal(0.),
 	lastModVal(0.)
 {
-	if (flagFMsintab == 0) InitFMsintab();
+	if (!flagFMsintab) InitFMsintab();
 }
 
-//===========================================================================
-//	fmAlg destructor
-//
 fmAlg::~fmAlg()
 {
 }
 
-//===========================================================================
-//	fmAlg initialize static wavetable
-//
-void
-fmAlg::InitFMsintab(void)
+// Initialize static wavetable.
+void fmAlg::InitFMsintab()
 {
-	for (int i = 0; i <= SINTABSZ; i++)
-		FMsintab[i] = sinf(i * 2.0f * (float)(M_PI / SINTABSZ));
-	flagFMsintab = 1;
+	for (int i = 0; i <= SINTABSZ; ++i)
+		FMsintab[i] = sinf(i * 2.0 * M_PI / SINTABSZ);
+	flagFMsintab = true;
 }
 
 //===========================================================================
@@ -71,12 +54,12 @@ fmAlg::InitFMsintab(void)
 inline void 
 fmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 {
-	iPhase = (int)Phase;		// extract integer floor of Phase
-	Phase -= (float)iPhase;		// strip off int part, leave fractional part
+	iPhase = Phase;			// extract integer floor of Phase
+	Phase -= iPhase;		// strip off int part, leave fractional part
 
 	fPhase = Phase;			// store fractional part
-	iPhase &= (SINTABSZ-1);		// wrap and store integer part
-	Phase += (float)iPhase;		// reconstruct and store the whole wrapped phase
+	iPhase &= SINTABSZ-1;	// wrap and store integer part
+	Phase += iPhase;		// reconstruct and store the whole wrapped phase
 }
 
 //===========================================================================
@@ -88,11 +71,10 @@ fmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 inline void 
 fmAlg::WrapAcc(float &Phase)
 {
-	int iPhase = (int)Phase;	// extract integer floor of Phase
-
-	Phase -= (float)iPhase;		// strip off int part, leave fractional part
-	iPhase &= (SINTABSZ-1);		// wrap integer part
-	Phase += (float)iPhase;		// reconstruct the whole wrapped phase
+	int iPhase = Phase;		// integer floor
+	Phase -= iPhase;		// strip off int part, leave fractional part
+	iPhase &= SINTABSZ-1;	// wrap integer part
+	Phase += iPhase;		// reconstruct the whole wrapped phase
 } 
 
 //===========================================================================
@@ -110,18 +92,13 @@ fmAlg::WrapAcc(float &Phase)
 inline void 
 fmAlg::WrapTot(float Phase, int &iPhase, float &fPhase)
 {
-	// extract unidirectional integer floor of Phase
-	iPhase = (Phase < 0.0f) ? ((int)Phase - 1) : (int)Phase;
-
-	fPhase = Phase - (float)iPhase;		// strip off int part, get fractional part
-	iPhase &= (SINTABSZ-1);			// wrap integer part
+	// unidirectional integer floor
+	iPhase = Phase < 0.0 ? Phase-1 : Phase;
+	fPhase = Phase - iPhase;		// strip off int part, get fractional part
+	iPhase &= SINTABSZ-1;			// wrap integer part
 } 
 
-//===========================================================================
-//	fmAlg generateSamples
-//
-void
-fmAlg::generateSamples(int howMany)
+void fmAlg::generateSamples(int howMany)
 {
 	float totPhase;	// total phase summer (TPS), in units of samples
 	int	iTotPhase;	// integer part of TPS
@@ -184,20 +161,15 @@ fmAlg::generateSamples(int howMany)
 //	Utilities for scaling frequency and phase offsets
 //
 //	scale natural frequency in Hz to units of "samples"
-static inline 	float 	freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ ; } 
+static inline float freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; } 
 
 //	scale modulation phase offset to units of "samples"
-static inline 	float 	modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0f * M_PI) ; } 
+static inline float modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0*M_PI); } 
 
-//===========================================================================
-//	fmAlg setCarrierFreq
-//
-void
-fmAlg::setCarrierFreq(float car)
+void fmAlg::setCarrierFreq(float car)
 {
 	carFreq = car;
 	carDPhase = freqToDPhase(carFreq);
-
 //	ratio-frequency mode: modFreq tracks changes in carFreq
 	if (ratioMode == 1) {
 		modFreq = carFreq / cmRatio;
@@ -205,66 +177,38 @@ fmAlg::setCarrierFreq(float car)
 	}
 }
 
-//===========================================================================
-//	fmAlg setModulatorFreq
-//
-void
-fmAlg::setModulatorFreq(float mod)
+void fmAlg::setModulatorFreq(float mod)
 {
 	modFreq = mod;
 	modDPhase = freqToDPhase(modFreq);
 }
 
-//===========================================================================
-//	fmAlg setCMratio
-//
-void
-fmAlg::setCMratio(float newCM)
+void fmAlg::setCMratio(float newCM)
 {
 	cmRatio = newCM;
-
 	modFreq = carFreq / cmRatio;
 	modDPhase = freqToDPhase(modFreq);
 }
 
-//===========================================================================
-//	fmAlg setRatioMode
-//
-void
-fmAlg::setRatioMode(int newMode)
+void fmAlg::setRatioMode(int newMode)
 {
 	ratioMode = newMode;
 }
 
-//===========================================================================
-//	fmAlg setModIndex
-//
-void
-fmAlg::setModIndex(float newI)
+void fmAlg::setModIndex(float newI)
 {
 	modIndex = newI;
 	modIndOPhs = modIToOPhase(modIndex);
-//	fprintf(stderr, "fmAlg got new modIndex %f\n", modIndex);
 }
 
-//===========================================================================
-//	fmAlg setCarFeedback
-//
-void
-fmAlg::setCarFeedback(float newCFB)
+void fmAlg::setCarFeedback(float newCFB)
 {
 	carFeedback = newCFB;
 	carFbOPhs = modIToOPhase(carFeedback);
-//	fprintf(stderr, "fmAlg got new carFeedback %f\n", carFeedback);
 }
 
-//===========================================================================
-//	fmAlg setModFeedback
-//
-void
-fmAlg::setModFeedback(float newMFB)
+void fmAlg::setModFeedback(float newMFB)
 {
 	modFeedback = newMFB;
 	modFbOPhs = modIToOPhase(modFeedback);
-//	fprintf(stderr, "fmAlg got new modFeedback %f\n", modFeedback);
 }

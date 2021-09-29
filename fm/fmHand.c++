@@ -1,19 +1,11 @@
 #include "fm.h"
 
-//===========================================================================
-//		construction
-//
-fmHand::fmHand(fmAlg * alg):
-	VHandler( alg )
+fmHand::fmHand(fmAlg* alg): VHandler(alg)
 {
 	setTypeName("fmHand"); 
 }
 
-//===========================================================================
-//		receiveMessage
-//
-int	
-fmHand::receiveMessage(const char * Message)
+int fmHand::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 
@@ -83,8 +75,6 @@ fmHand::receiveMessage(const char * Message)
 	return VHandler::receiveMessage(Message);
 }
 
-
-
 void fmHand::SetAttribute(IParam iParam, float z)
 {
 	if (iParam.FOnlyI())
@@ -99,7 +89,7 @@ void fmHand::SetAttribute(IParam iParam, float z)
 			break;
 		case isetModulatorFreq:
 			if (!CheckFreq(z))
-				printf("fmHandler got bogus carrier freq %f.\n", z);
+				printf("fmHandler got bogus modulator freq %f.\n", z);
 			else
 				getAlg()->setModulatorFreq(modFreq = z);
 			break;

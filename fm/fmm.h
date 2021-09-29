@@ -1,14 +1,13 @@
-#ifndef _FMM_H_
-#define _FMM_H_
+#pragma once
 
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 
+#include "boundscheckers.h"
+static inline int CheckFilterGain(float f) { return f >= 0. && f <= 10.; }
 
-//===========================================================================
-//		fmmAlg 
-//
+// For fmmAlg.
 class fmOperator
 {
 public:
@@ -31,10 +30,8 @@ public:
 	float	lastCarVal;	// carrier feedback signal: last carrier output value
 	float	lastModVal;	// modulator feedback signal: last modulator output value
 
-//	access members
-	float getCarrierFreq(void)			{ return carFreq; }
+	float getCarrierFreq() { return carFreq; }
 
-//	parameter update members
 	void setCarrierFreq(float);
 	void setModulatorFreq(float);
 	void setCMratio(float);
@@ -65,7 +62,6 @@ public:
 
 class fmmAlg : public VAlgorithm
 {
-private:
 //	synthesis parameters
 	fmOperator op1;
 	fmOperator op2;
@@ -79,9 +75,6 @@ private:
 	filter hipass;
 
 public:
-
-//	parameter update members
-
 	void set1CarrierFreq(float z);
 	void set1ModulatorFreq(float z)		{ op1.setModulatorFreq(z); }
 	void set1CMratio(float z)			{ op1.setCMratio(z); }
@@ -106,32 +99,23 @@ public:
 //	utility members
  	float 	Lerp(float a, float b, float t) { return a*(1.0f-t) + b*t ; }
  	float 	Lerp(int i, float a, float *tab) { return (1.0f-a)*tab[i] + a*tab[i+1]; }
-inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
-inline 	void 	WrapAcc(float &Phase);
-inline 	void 	WrapTot(float Phase, int &iPhase, float &fPhase);
+  inline void WrapAccSep(float &Phase, int &iPhase, float &fPhase);
+  inline void WrapAcc(float &Phase);
+  inline void WrapTot(float Phase, int &iPhase, float &fPhase);
 
-//	sample generation
-	void	generateSamples(int);
+	void generateSamples(int);
 
 //	static wavetable initialization
 	void	InitFMMsintab(void);
 
-//	construction/destruction
-		fmmAlg(void);
-		~fmmAlg() {}
+	fmmAlg();
+	~fmmAlg() {}
 
-};	// end of class fmmAlg
+};
 
-//===========================================================================
-//		fmmHand 
-//
-//	class fmmHand is a handler class for fmmAlg.
-//
 class fmmHand : public VHandler
 {
-private:
 //	modulating parameters of fmmAlg
-
 	float carFreq1;
 	float modFreq1;
 	float cmRatio1;
@@ -171,9 +155,7 @@ private:
 		};
 
 protected:
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to fmmAlg.
-	fmmAlg * getAlg(void)	{ return (fmmAlg *) VHandler::getAlg(); }
+	fmmAlg* getAlg() { return (fmmAlg*)VHandler::getAlg(); }
 
 public:
 //	parameter modulation
@@ -228,35 +210,21 @@ public:
 //	damp amplitude changes
 	float dampingTime(void)	{ return 0.03; }
 
-//	message handling
 	int receiveMessage(const char * Message);
 
-//	construction
-	fmmHand(fmmAlg * alg = new fmmAlg);
-		
-//	destruction
-	virtual	~fmmHand() {}
-};	// end of class fmmHand
+	fmmHand(fmmAlg* alg = new fmmAlg);
+	~fmmHand() {}
+};
 
-//===========================================================================
-//		fmmActor
-//
-//	class fmmActor is a generator actor class for fmmAlg
-//
 class fmmActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new fmmHand(); }
+	VHandler* newHandler() { return new fmmHand(); }
+	fmmActor();
+	~fmmActor() {}
 
-//	construction/destruction
-public:
-	fmmActor(void);
-virtual	~fmmActor() {}
-
-virtual	void 	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
-
-//	parameter setting members
+	void sendDefaults(VHandler*);
+	int	receiveMessage(const char*);
 
 	void set1RatioMode(float f = 1.);
 	void set1AllRatioMode(float f = 1.);
@@ -301,7 +269,6 @@ virtual int	receiveMessage(const char * Message);
 	void setAllHighpassGain(float f, float t = 0.);
 	void setHighpassGain(float f);
 
-//	default parameters
 protected:
 	float default1RatioMode, default1CarFreq, default1ModFreq, default1CMratio;
 	float default1ModIndex, default1CarFeedback, default1ModFeedback;
@@ -310,25 +277,7 @@ protected:
 	float default2ModIndex, default2CarFeedback, default2ModFeedback;
 	float defaultLowpassGain, defaultHighpassGain;
 
-//	biographical info
-virtual ostream &dump(ostream &os, int tabs);
-
-};	// end of class fmmActor
-
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
-#ifndef _FM_H_
-static	inline	int	CheckFreq(float f) 	{ return f >= 0. && f < 20000.; }
-static	inline	int	CheckCMratio(float f) 	{ return f > 1.0e-6 && f < 1.0e6; }
-static	inline	int	CheckIndex(float f)	{ return f >= 0. && f < 1000.; }
-static	inline	int	CheckFeedback(float f)	{ return f >= -1. && f <= 1.; }
-static	inline	int	CheckFilterGain(float f) { return f >= 0. && f <= 10.; }
-#endif
+	ostream &dump(ostream &os, int tabs);
+};
 
 float FMM_NiceRatio(float z);
-
-#endif // ndef _FMM_H_
