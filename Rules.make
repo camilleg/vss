@@ -1,26 +1,26 @@
-# Rules to make */*.a and ./vss.
+# Rules to make */*.a.
+# Included by */Makefile.
+ifndef TOPDIR
+  TOPDIR := $(shell cd ..; pwd)
+endif
+include ../Rules.common
 
 all: $(DSO)
 
-clean_dso:
-	-rm -f $(DSO) $(OBJS)
-
-.SUFFIXES: .c .c++ .C .o .a .l .y
-.PHONY: clean all
-
-clean:
-	-rm -rf $(DSO) $(OBJS) .depend
-
-# non-windows ar might also want $(LDFLAGS) $(LIBS)
 $(DSO): $(OBJS)
 	$(AR) r $@ $(OBJS)
 	-@chmod a+r $@
-#ifeq "$(PLATFORMBASE)" "VSS_IRIX"
-#	strip -fs $@
-#endif
+
+clean_dso:
+	-rm -f $(DSO) $(OBJS)
+clean: clean_dso
+	-rm -rf .depend
 
 # noninteractive just-make-a-beep test
 sane:
 	@$(AUDTEST) sanity.aud
 
 -include $(patsubst %.o,.depend/%.d,$(OBJS))
+
+.SUFFIXES: .c .c++ .C .o .a .l .y
+.PHONY: all clean clean_dso sane

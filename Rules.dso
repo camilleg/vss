@@ -1,6 +1,0 @@
-# Included by */Makefile.
-ifndef TOPDIR
-  TOPDIR := $(shell cd ..; pwd)
-endif
-
-include ../Rules.common

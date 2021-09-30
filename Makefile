@@ -146,8 +146,8 @@ ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 endif
 
 clean:
-	-rm -f stk-4.4.4/src/{Debug,Release}/*
-	-(cd stk-4.4.4 && make distclean)
+	-@rm -f stk-4.4.4/src/{Debug,Release}/*
+	-@(cd stk-4.4.4; if [ -f Makefile ]; then ( make distclean | grep -v 'directory' | grep -v /bin/rm | grep -v ' make ' || echo -n ); fi; )
 	-rm -rf $(TARGET) *.o */*.o */*.a .depend */.depend core core.* vss.exe.stackdump
 
 -include $(patsubst %.o,.depend/%.d,$(OBJSRV))
