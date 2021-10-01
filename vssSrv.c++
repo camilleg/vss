@@ -655,6 +655,9 @@ extern "C" int actorMessageHandler(const char* Message)
 		cerr << "vss error: " << anActor->typeName() << ": Unknown command \"" << Message << "\"\n";
 		return 1;
 		}
+
+	if (anActor->delete_me() /* set by VActor::receiveMessage */)
+		delete anActor;
 	return 1;
 }
 
