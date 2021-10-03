@@ -114,11 +114,6 @@ class VGeneratorActor;
 //	associated handler defined.
 class VHandler : public VActor
 {
-//	private parameters. All parameters should be private, and accessed
-//	by access member functions. Parameters that vary continuously
-//	should be represented by FloatParam or FloatArray members so that
-//	they can inherit control-rate modulation functionality.
-private:
 	float	zAmp;
 	float	zInputAmp;
 	int		fLinearEnv;
@@ -130,36 +125,29 @@ public:
 	void setInput(void);
 	void setDebug(int);
 
-//	Derived classes will need to access the VAlgorithm instance
-//	corresponding to this handler. Make this pointer const so that
-//	no one can try to change it. Access only through getAlg(), 
-//	defined below, so that the pointer can be verified.
 private:
-	VAlgorithm* const valg;
+	std::unique_ptr<VAlgorithm> const valg;
 public:
-	inline VAlgorithm* getAlg() { return valg; }
+	VAlgorithm* getAlg() { return valg.get(); }
 	
-//	VHandlers need to remember who their parents are so they can inform
-//	the parent when they die. The parents (VGeneratorActors) have 
-//	a list of children (VHandlers) that needs to be kept up to date.
+	// Remember my VGeneratorActor parent, to tell it when I die.
+	// A parent maintains a list of its children.
 private:
 	float 	parentHandle;
 public:
 	void	setParent(float h) { parentHandle = h; } 
-	VGeneratorActor * getParent() const { return getByHandle(parentHandle)->as_generator(); }
+	VGeneratorActor* getParent() const;
 
-//	Access members for discrete (not modulated) VAlgorithm parameters
+	// VAlgorithm parameters that aren't modulated over time.
 	int getMute() { return valg->getMute(); }
 	void setMute(int m)	{ valg->setMute(m); }
 	int getPause() { return valg->getPause(); }
 	void setPause(int p)	{ valg->setPause(p); }
 
-//	contruction/destruction
-private:
-	VHandler();
-public:
 	VHandler(VAlgorithm* const);
 	virtual	~VHandler();
+	VHandler() = delete;
+	VHandler& operator=(const VHandler&) = delete;
 
 	void setInputGain(float, float time = timeDefault);
 	void setInputAmp(float, float time = timeDefault);

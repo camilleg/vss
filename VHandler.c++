@@ -10,36 +10,26 @@ int VHandler::cDyingHandler2 = 0;
 VHandler** VHandler::pDyingHandler  = rgDyingHandler;
 VHandler** VHandler::pDyingHandler2 = rgDyingHandler2;
 
-//	The default constructor for derived handler classes may specify
-//	a default algorithm to be sent to the VHandler constructor as follows:
-//		myHandlerType(myAlgType* a = new myAlgType) : VHandler(a) {}
-//
 VHandler::VHandler(VAlgorithm* const a) :
 	zAmp(1.),
 	zInputAmp(1.),
 	fLinearEnv(0),
 	input(NULL),
 	valg(a),
-	parentHandle(-1.)
+	parentHandle(hNil)
 {
 	if (!valg)
-		{
 		printf("vss internal error: new Handler got a NULL Algorithm.\n");
-		delete this;
-		}
 	setTypeName("VHandler");
 }
 
-//	Remove this handler from the parent's brood, and destroy 
-//	the algorithm managed by this handler.
+// Remove myself from my parent's brood.
 VHandler::~VHandler()
 {
 	pDyingHandler[cDyingHandler++] = this; // For this->FValid().
-	//printf("\t\t\t\tcDyingHandler++\n");;
-	VGeneratorActor * myParent = getParent();
-	if (myParent != NULL) 
-		myParent->removeChild(this);
-	delete getAlg();
+	const auto p = getParent();
+	if (p)
+		p->removeChild(this);
 }
 
 // Any entry point of a handler (act(), receiveMessage(), etc.)
@@ -61,6 +51,19 @@ int VHandler::FValid(void)
 			return 0;			// I've been deleted!
 	// Phew, I still exist.
 	return 1;
+}
+
+VGeneratorActor* VHandler::getParent() const {
+	if (parentHandle == hNil) {
+		printf("vss internal error: Handler has null parent.\n");
+		return nullptr;
+	}
+	const auto p = getByHandle(parentHandle);
+	if (!p) {
+		printf("vss internal error: Handler has missing parent.\n");
+		return nullptr;
+	}
+	return p->as_generator();
 }
 
 void VHandler::allAct(void)
@@ -273,7 +276,7 @@ void VHandler::setInput(float hSrc)
 		setInput();
 		return;
 		}
-	getAlg()->setSource( (VAlgorithm*)input->getAlg() );
+	getAlg()->setSource(input->getAlg());
 }
 
 void VHandler::setInput(void)
@@ -289,14 +292,14 @@ void VHandler::setInput(void)
 void
 VHandler::restrike(const char * inits_msg)
 {
-	VGeneratorActor * myParent = getParent();
-	if (myParent == NULL)
+	const auto p = getParent();
+	if (!p)
 	{
-		printf("vss warning: VHandler can't find its parent, so it can't restrike.\n");
+		printf("vss warning: Handler has no parent, so it can't restrike.\n");
 		return;
 	}
-	myParent->sendDefaults(this);
-	myParent->parseInitializers(inits_msg, this);
+	p->sendDefaults(this);
+	p->parseInitializers(inits_msg, this);
 }
 
 
