@@ -1,14 +1,11 @@
 #include "mixer.h"
 
-//===========================================================================
-//		construction
-//
-mixerHand::mixerHand( mixerAlg * alg ):
+mixerHand::mixerHand(mixerAlg* alg):
 	VHandler( alg ),
 	allFaderAmp(alg, &mixerAlg::setAllFaderAmp ),
 	allMatrixAmp(alg, &mixerAlg::setMatrixAmp ),
 	myChannelNum(0),
-	matrix(0)
+	matrix(false)
 { 
 	allFaderAmp.init(this);
 	for (int i=0; i<MaxNumInput; i++)
@@ -16,11 +13,7 @@ mixerHand::mixerHand( mixerAlg * alg ):
 	setTypeName("mixerHand"); 
 }
 
-//===========================================================================
-//		receiveMessage
-//
-int	
-mixerHand::receiveMessage(const char * Message)
+int	mixerHand::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 	
@@ -124,7 +117,7 @@ mixerHand::receiveMessage(const char * Message)
 	{
         if (getAlg()->getMatrix())
 		{
-			printf("SetPan isn't supported in matrix mode of MixerActor.");
+			printf("mixerHand's matrix mode ignores SetPan.\n");
 			return Uncatch();
 		}
 	}
@@ -133,7 +126,7 @@ mixerHand::receiveMessage(const char * Message)
 	{
         if (getAlg()->getMatrix())
 		{
-			printf("SetElev isn't supported in matrix mode of MixerActor.");
+			printf("mixerHand's matrix mode ignores SetElev.\n");
 			return Uncatch();
 		}
 	}
@@ -141,249 +134,191 @@ mixerHand::receiveMessage(const char * Message)
 	return VHandler::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setChannelNum: Specify which mixer channel to be dealt with
-//
-void
-mixerHand::setChannelNum(int d)
+// Specify which mixer channel to deal with.
+void mixerHand::setChannelNum(int d)
 {
-	if (!CheckChannelNum(d))
-	{
-		printf("mixerHand got bogus channel number %d. ", d);
-		printf("Valid range is [1,%d].\n", MaxNumInput);
+	if (!CheckChannelNum(d)) {
+		printf("mixerHand got channel number %d out of range [1,%d].\n", d, MaxNumInput);
 		return;
 	}
-
-	d--;
-	getAlg()->setChannelNum(d);
+	getAlg()->setChannelNum(--d);
 	myChannelNum = d;
 }
 
-//===========================================================================
-//		setOneInput: Specify one source for mixer
-//
-void
-mixerHand::setOneInput(float hSrc)
+// Specify one source.
+void mixerHand::setOneInput(float hSrc)
 {
-	VHandler * h = getByHandle( hSrc )->as_handler();
-	if (h == NULL)
-		{
-		printf("\tActor %f is not a Handler and cannot be used as input!\n", hSrc);
+	const auto h = getByHandle(hSrc)->as_handler();
+	if (!h) {
+		printf("mixerHand can't input from non-handler actor %f.\n", hSrc);
 		return;
-		}
-
+	}
 	// must be a VAlgorithm not a VAlgorithmMultichannel!
 	getAlg()->setOneInput( (VAlgorithm*)h->getAlg() );
 	myHandlers[myChannelNum] = h;
 }
-
-void
-mixerHand::setOneInput(void)
+void mixerHand::setOneInput()
 {
-	getAlg()->setOneInput( NULL );
-	myHandlers[myChannelNum] = NULL;
+	getAlg()->setOneInput(nullptr);
+	myHandlers[myChannelNum] = nullptr;
 }
 
-//===========================================================================
-//		setOneFaderGain
-//
-void
-mixerHand::setOneFaderGain(int d, float z, float t)
+void mixerHand::setOneFaderGain(int d, float z, float t)
 {
-//printf("%d %f %f\n",d,z,t);
-	if (!CheckFaderGain(z))
+	if (!CheckFaderGain(z)) {
 		printf("mixerHand got bogus log fader value %f.\n", z);
-	else if (!CheckChannelNum(d))
-		printf("mixerHand got bogus channel number %d.\n", d);
-	else
-	{
-		if (d==-1) d=getAlg()->getCurrentChannel();
-		else d--;
-		getAlg()->setChannelNum(d);
-		myChannelNum = d;
-		z = pow(10., z/20.);
-		allFaderAmp.setIth(d,z,t);
+		return;
 	}
+	if (!CheckChannelNum(d)) {
+		printf("mixerHand got bogus channel number %d.\n", d);
+		return;
+	}
+	if (d == -1)
+		d = getAlg()->getCurrentChannel();
+	else
+		--d;
+	getAlg()->setChannelNum(d);
+	myChannelNum = d;
+	allFaderAmp.setIth(d, pow(10., z/20.), t);
 }
 
-//===========================================================================
-//		setOneFaderAmp
-//
-void
-mixerHand::setOneFaderAmp(int d, float z, float t)
+void mixerHand::setOneFaderAmp(int d, float z, float t)
 {
-	if (!CheckFaderAmp(z))
+	if (!CheckFaderAmp(z)) {
 		printf("mixerHand got bogus linear fader value %f.\n", z);
-	else if (!CheckChannelNum(d))
-		printf("mixerHand got bogus channel number %d.\n", d);
-	else
-	{
-		if (d==-1) d=getAlg()->getCurrentChannel();
-		else d--;
-		getAlg()->setChannelNum(d);
-		myChannelNum = d;
-		allFaderAmp.setIth(d,z,t);
+		return;
 	}
+	if (!CheckChannelNum(d)) {
+		printf("mixerHand got bogus channel number %d.\n", d);
+		return;
+	}
+	if (d == -1)
+		d = getAlg()->getCurrentChannel();
+	else
+		--d;
+	getAlg()->setChannelNum(d);
+	myChannelNum = d;
+	allFaderAmp.setIth(d,z,t);
 }
 
-//===========================================================================
-//		setOneChannelGain
-//
-void
-mixerHand::setOneChannelGain(int d, float hSrc, float z, float t)
+void mixerHand::setOneChannelGain(int d, float hSrc, float z, float t)
 {
-	if (!CheckFaderGain(z))
+	if (!CheckFaderGain(z)) {
 		printf("mixerHand got bogus log fader value %f.\n", z);
-	else if (!CheckChannelNum(d))
-		printf("mixerHand got bogus channel number %d.\n", d);
-	else
-	{
-		VHandler * h = getByHandle( hSrc )->as_handler();
-		if (h == NULL)
-		{
-			printf("\tActor %f is not a Handler and cannot be used as input!\n", hSrc);
-			return;
-		}
-
-		d--;
-		getAlg()->setChannelNum(d);
-		// must be a VAlgorithm not a VAlgorithmMultichannel!
-		getAlg()->setOneInput( (VAlgorithm*)h->getAlg() );
-		myChannelNum = d;
-		myHandlers[myChannelNum] = h;
-
-		z = pow(10., z/20.);
-		allFaderAmp.setIth(d,z,t);
+		return;
 	}
-}
-//===========================================================================
-//		setOneChannelAmp
-//
-void
-mixerHand::setOneChannelAmp(int d, float hSrc, float z, float t)
-{
-	if (!CheckFaderAmp(z))
-		printf("mixerHand got bogus linear fader value %f.\n", z);
-	else if (!CheckChannelNum(d))
+	if (!CheckChannelNum(d)) {
 		printf("mixerHand got bogus channel number %d.\n", d);
-	else
-	{
-		VHandler * h = getByHandle( hSrc )->as_handler();
-		if (h == NULL)
-		{
-			printf("\tActor %f is not a Handler and cannot be used as input!\n", hSrc);
-			return;
-		}
-
-		d--;
-		getAlg()->setChannelNum(d);
-		// must be a VAlgorithm not a VAlgorithmMultichannel!
-		getAlg()->setOneInput( (VAlgorithm*)h->getAlg() );
-		myChannelNum = d;
-		myHandlers[myChannelNum] = h;
-
-		allFaderAmp.setIth(d,z,t);
-	}
-}
-
-//===========================================================================
-//		setNumInputs: Specify the number of inputs
-//
-void
-mixerHand::setNumInputs(int d)
-{
-	if (!CheckChannelNum(d))
-		printf("mixerHand got bogus number of inputs%d.\n", d);
-	else
-		getAlg()->setNumInputs(d);
-}
-
-//===========================================================================
-//		setAllInputs: Specify all input sources
-//
-void mixerHand::setAllInputs(int cz, float* hSrc)
-{
-	if (!CheckChannelNum(cz))
-	{
-		printf("mixerHand got bogus number of sources.\n");
 		return;
 	}
 
+	const auto h = getByHandle(hSrc)->as_handler();
+	if (!h) {
+		printf("mixerHand can't input from non-handler actor %f.\n", hSrc);
+		return;
+	}
+	getAlg()->setChannelNum(--d);
+	// must be a VAlgorithm not a VAlgorithmMultichannel!
+	getAlg()->setOneInput((VAlgorithm*)h->getAlg());
+	myChannelNum = d;
+	myHandlers[myChannelNum] = h;
+	z = pow(10., z/20.);
+	allFaderAmp.setIth(d,z,t);
+}
+
+void mixerHand::setOneChannelAmp(int d, float hSrc, float z, float t)
+{
+	if (!CheckFaderAmp(z)) {
+		printf("mixerHand got bogus linear fader value %f.\n", z);
+		return;
+	}
+	if (!CheckChannelNum(d)) {
+		printf("mixerHand got bogus channel number %d.\n", d);
+		return;
+	}
+	const auto h = getByHandle(hSrc)->as_handler();
+	if (!h) {
+		printf("mixerHand can't input from non-handler actor %f.\n", hSrc);
+		return;
+	}
+	getAlg()->setChannelNum(--d);
+	// must be a VAlgorithm not a VAlgorithmMultichannel!
+	getAlg()->setOneInput( (VAlgorithm*)h->getAlg() );
+	myChannelNum = d;
+	myHandlers[myChannelNum] = h;
+	allFaderAmp.setIth(d,z,t);
+}
+
+void mixerHand::setNumInputs(int d)
+{
+	if (!CheckChannelNum(d)) {
+		printf("mixerHand ignoring bogus # of inputs %d.\n", d);
+		return;
+	}
+	getAlg()->setNumInputs(d);
+}
+
+// Specify all input sources.
+void mixerHand::setAllInputs(int cz, float* hSrc) {
+	if (!CheckChannelNum(cz)) {
+		printf("mixerHand got bogus number of sources.\n");
+		return;
+	}
 	getAlg()->setNumInputs(cz);
-	VHandler * h;
-	for (int i=0; i<cz; i++)
-	{
-		if ( hSrc[i] == -1 ) continue;
+	for (int i=0; i<cz; i++) {
+		if (hSrc[i] == hNil)
+			continue;
 		getAlg()->setChannelNum(i);
-		h = getByHandle( hSrc[i] )->as_handler();
-		if (h != NULL)
-			getAlg()->setOneInput( (VAlgorithm*)h->getAlg() );
+		const auto h = getByHandle(hSrc[i])->as_handler();
+		if (h)
+			printf("mixerHand can't input from non-handler actor %f.\n", hSrc[i]);
 		else
-			printf("\tActor %f is not a Handler and cannot be used as input!\n",
-				hSrc[i]);
+			getAlg()->setOneInput((VAlgorithm*)h->getAlg());
 	}
 }
 
-void mixerHand::actCleanup(void)
-{
-	// Remove any pointers to handlers which have recently been delete()'d.
-	int cz = getAlg()->getNumInputs();
-	for (int i=0; i<cz; i++)
-		{
-		VHandler* h = myHandlers[i];
-		if (h && !h->FValid())
-			{
-			myHandlers[i] = NULL;
-			getAlg()->setChannelNum(i);
-			getAlg()->setOneInput(NULL);
-			}
-		}
-}
-
-void
-mixerHand::setAllInputs(void)
-{
-	for (int i=0; i<MaxNumInput; i++)
-	{
+void mixerHand::setAllInputs() {
+	for (int i=0; i<MaxNumInput; i++) {
 		myHandlers[i] = NULL;
 		getAlg()->setChannelNum(i);
 		getAlg()->setOneInput( NULL );
 	}
 }
 
-//===========================================================================
-//		setAllFaderGain: Specify all log fader values
-//
+void mixerHand::actCleanup() {
+	// Remove pointers to handlers which have recently been deleted.
+	const int cz = getAlg()->getNumInputs();
+	for (int i=0; i<cz; i++) {
+		const auto h = myHandlers[i];
+		if (h && !h->FValid()) {
+			myHandlers[i] = NULL;
+			getAlg()->setChannelNum(i);
+			getAlg()->setOneInput(NULL);
+		}
+	}
+}
+
+// Specify log fader values.
 void mixerHand::setAllFaderGain(int cz, float* rgz, float t)
 {
-	if (!CheckChannelNum(cz))
-	{
+	if (!CheckChannelNum(cz)) {
 		printf("mixerHand got bogus number of fader values.\n");
 		return;
 	}
-
 	getAlg()->setNumInputs(cz);
-	for (int i=0; i<cz; i++)
-	{
-		if (!CheckFaderGain(rgz[i]))
-		{
-			printf("mixerHand got bogus log fader value %f. ",rgz[i]);
-			printf("Valid range is (-Inf, 6].\n");
+	for (int i=0; i<cz; i++) {
+		if (!CheckFaderGain(rgz[i])) {
+			printf("mixerHand ignoring fader value %f out of range (-Inf, 6].\n", rgz[i]);
 			return;
 		}
-		else
-		{
-			if (rgz[i]==1000.) rgz[i]=60.;	// linear = 1000
-		 	rgz[i] = pow(10.,rgz[i]/20.);	// log to linear
-		}
+		if (rgz[i]==1000.0) // linear = 1000
+			rgz[i]=60.0;
+		rgz[i] = pow(10.0, rgz[i]/20.0); // log to linear
 	}
-
 	allFaderAmp.set(rgz,cz,t);
 }
 
-//===========================================================================
-//		setAllFaderAmp: Specify all linear fader values
-//
+// Specify all linear fader values
 void mixerHand::setAllFaderAmp(int cz, float* rgz, float t)
 {
 	if (!CheckChannelNum(cz))
@@ -391,28 +326,19 @@ void mixerHand::setAllFaderAmp(int cz, float* rgz, float t)
 		printf("mixerHand got bogus number of fader values.\n");
 		return;
 	}
-
 	getAlg()->setNumInputs(cz);
-	for (int i=0; i<cz; i++)
-		if (!CheckFaderAmp(rgz[i]))
-		{
-			printf("mixerHand got bogus linear fader value %f. ",rgz[i]);
-			printf("Valid range is [-2, 2].\n");
+	for (int i=0; i<cz; i++) {
+		if (!CheckFaderAmp(rgz[i])) {
+			printf("mixerHand ignoring linear fader value %f out of range [-2,2].\n", rgz[i]);
 			return;
 		}
-
+	}
 	allFaderAmp.set(rgz,cz,t);
 }
 
-//===========================================================================
-//		setMatrixAmp: Specify matrix fader values
-//
 void mixerHand::setMatrixMode(int z)
 {
-	if (z) 
-		getAlg()->setMatrixMode(1);
-	else
-		getAlg()->setMatrixMode(0);
+	getAlg()->setMatrixMode(z ? 1 : 0);
 }
 
 void mixerHand::setMatrixAmp(int dir, int chan, int num, float * rgz, float t)
@@ -426,7 +352,7 @@ void mixerHand::setMatrixAmp(int dir, int chan, int num, float * rgz, float t)
 	for (int i=0; i<num; i++)
 		if (!CheckFaderAmp(rgz[i]))
 		{
-			printf("mixerHand got bogus linear fader value %f.",rgz[i]);
+			printf("mixerHand got bogus linear fader value %f.\n",rgz[i]);
 			return;
 		}
 
@@ -453,14 +379,5 @@ void mixerHand::setMatrixAmp(int dir, int chan, int num, float * rgz, float t)
 		for (int i=0; i<num; i++)
 			faderm[i*MaxNumInput+chan-1] = rgz[i];
 	}
-
-/*	for (i=0; i<MaxNumInput; i++)
-	{ for (int j=0; j<MaxNumInput; j++)
-		printf("%8.3f ",faderm[i*MaxNumInput+j]);
-	  printf("\n");
-	}
-	printf("I got %f time here.\n",t);
-*/
 	allMatrixAmp.set(faderm, MaxNumInput2, t);
 }
-

@@ -1,13 +1,10 @@
 #include "mixer.h"
 
-//===========================================================================
-//	mixerAlg constructor
-//
-mixerAlg::mixerAlg(void) :
+mixerAlg::mixerAlg():
 	VAlgorithm(),
 	channelNum(0),
 	numInputs(MaxNumInput),
-	matrix(0)
+	matrix(false)
 {
 	Nchan(globs.nchansVSS);
 	for (int i=0; i<MaxNumInput; i++)
@@ -17,17 +14,12 @@ mixerAlg::mixerAlg(void) :
 	}
 }
 
-//===========================================================================
-//	mixerAlg destructor
-//
 mixerAlg::~mixerAlg()
 {
 }
 
-//===========================================================================
-//  mixerAlg set matrix amplitudes
-//
-void mixerAlg::setMatrixMode(int z)
+// Set matrix amplitudes.
+void mixerAlg::setMatrixMode(bool z)
 {
 	matrix = z;
 	if (matrix)
@@ -41,42 +33,32 @@ void mixerAlg::setMatrixMode(int z)
 
 void mixerAlg::setMatrixAmp(float * lin)
 {
-	int temp;
 	for (int i=0; i<MaxNumInput; i++)
 	for (int j=0; j<MaxNumInput; j++)
 	{
-		temp = i*MaxNumInput+j;
+		const auto temp = i*MaxNumInput+j;
 		if (lin[temp]!=1000)
 			faderm[i][j]=lin[temp];
 	}
 }
 
-//===========================================================================
-//	mixerAlg generateSamples
-//
-void
-mixerAlg::generateSamples(int howMany)
+void mixerAlg::generateSamples(int howMany)
 {
-	int nchans = globs.nchansVSS;
-	float out[MaxNumChannels];
+	const auto nchans = globs.nchansVSS;
 	for (int s=0; s<howMany; s++) 
 	{
-		for (int c=0; c<nchans; c++) out[c]=0.;
-	 	if (!matrix)
-		{
-			for (int i=0; i<MaxNumInput; i++)
-				if (source[i]!=NULL)
-					for (int c=0; c<nchans; c++)
-						out[c] += source[i]->Input(s,c) * fader[i];
-			OutputNchan(out,s);
-		}
-		else
-		{
+		float out[MaxNumChannels] = {0};
+		if (matrix) {
 			for (int i=0; i<numInputs; i++)
-				if (source[i]!=NULL)
+				if (source[i])
 					for (int j=0; j<nchans; j++)
 						out[j] += source[i]->Input(s,0) * faderm[i][j];
-			OutputNchan(out,s);
+		} else {
+			for (int i=0; i<MaxNumInput; i++)
+				if (source[i])
+					for (int c=0; c<nchans; c++)
+						out[c] += source[i]->Input(s,c) * fader[i];
 		}
+		OutputNchan(out,s);
 	}
 }
