@@ -80,10 +80,7 @@ int granHand::receiveMessage(const char * Message)
 
 void granHand::setDirectory(char * dir)
 {
-	if (dir[0] != 0)
-		strcpy(directoryName, dir);
-	else
-		strcpy(directoryName, ".");
+	strcpy(directoryName, *dir ? dir : ".");
 }
 
 //	also set the sample step, because the algorithm resets it
@@ -91,18 +88,15 @@ void granHand::setDirectory(char * dir)
 void
 granHand::setFile(char * fileName)
 {
-	granActor * myParent = (granActor *)getParent();
-	if (myParent == NULL)
+	auto myParent = (granActor*)getParent();
+	if (!myParent)
 	{
-		fprintf(stderr, "vss error: granHand::setFile found itself with NULL parent!!\n");
-		VActor::curtainCall(cout);;;;
+		fprintf(stderr, "vss error: granHand::setFile has no parent.\n");
 		return;
 	}
-
-	sfile * newFile = myParent->loadFile(directoryName, fileName);
-	if (newFile == NULL)
+	const auto newFile = myParent->loadFile(directoryName, fileName);
+	if (!newFile)
 		return;
-		
 	getAlg()->setFile(newFile);
 	getAlg()->setSampleStep( sampleStep );
 	setRebound(myParent->Rebound());
@@ -110,7 +104,7 @@ granHand::setFile(char * fileName)
 
 	// I'd do this in the constructor, but we need a file first.
 	setStart(myParent->Start());
-	const float sec = myParent->Dur();
+	const auto sec = myParent->Dur();
 	setDur(sec > 0.0 ? sec : 0.01);
 
 	setSlope(myParent->Slope());
@@ -118,19 +112,19 @@ granHand::setFile(char * fileName)
 
 void granHand::setSampleStep(float z)
 {
-	if (!CheckSampleStep(z))
-		fprintf(stderr, "granHand got bogus playback rate %f.\n", z);
-	else
-		sampleStep = z;
+	if (!CheckSampleStep(z)) {
+		fprintf(stderr, "vss: granHand ignoring out-of-range playback rate %f.\n", z);
+		return;
+	}
+	sampleStep = z;
 }
 
-void granHand::setRanges(void)
+void granHand::setRanges()
 {
-	granActor * myParent = (granActor *)getParent();
-	if (myParent == NULL)
+	auto myParent = (granActor*)getParent();
+	if (!myParent)
 	{
-		fprintf(stderr, "vss error: granHand::setRanges found itself with NULL parent!!\n");
-		VActor::curtainCall(cout);;;;
+		fprintf(stderr, "vss error: granHand::setRanges has no parent.\n");
 		return;
 	}
 
@@ -164,44 +158,44 @@ void granHand::setStart( float time )
 
 void granHand::setDur( float dur )
 {
-	if (mySlope > 20)
+	if (dur <= 0.0)
+	{
+		fprintf(stderr, "vss: granHand ignoring nonpositive duration %g.\n", dur);
+		return;
+	}
+	if (mySlope > 20.0)
 		{
 #ifdef TOO_NOISY_FOR_PRODUCTION_RUNS
-		fprintf(stderr, "vss emergency Ground Truth procedure: reducing slope from %g to 0\n", mySlope);
+		fprintf(stderr, "vss: granHand zeroing overlong slope %g\n", mySlope);
 #endif
-		mySlope = 0;
-		VHandler::RampUpAmps(0);
-		getAlg()->setSlope(0);
+		mySlope = 0.0;
+		VHandler::RampUpAmps(0.0);
+		getAlg()->setSlope(0.0);
 		}
 
-	if (mySlope > dur/2)
+	if (mySlope > dur/2.0)
 		{
 		// This grain wouldn't get up to max amplitude, because of the envelope.
 #ifdef TOO_NOISY_FOR_PRODUCTION_RUNS
 		fprintf(stderr,
-			"vss warning: granHand::setDur duration %g < twice slope length %g.\n         Grain will be extended to %g.\n",
-			dur, mySlope, mySlope*2);
+			"vss: granHand::setDur duration %g < twice slope length %g.\n         Grain will be extended to %g.\n",
+			dur, mySlope, mySlope*2.0);
 #endif
-		dur = mySlope*2;
+		// dur is >0, so mySlope must be too.  So dur will still be >0 after this change.
+		dur = mySlope*2.0;
 		}
-	if (dur <= 0.0)
-	{
-		fprintf(stderr, "vss: granHand::setDur %g must be positive.\n", dur);
-		return;
-	}
 	myDur = dur;
 	getAlg()->setDur( myDur );
 }
 
 void granHand::setSlope( float slope )
 {
-	if (slope > myDur/2)
+	if (slope > myDur/2.0)
 		{
-		// Clamp slope to be less than duration.
 #ifdef TOO_NOISY_FOR_PRODUCTION_RUNS
-		fprintf(stderr, "vss warning: granHand::setSlope clamped from %g to half-duration %g\n", slope, myDur/2);
+		fprintf(stderr, "vss: granHand::setSlope reduced from %g to half-duration %g\n", slope, myDur/2.0);
 #endif
-		slope = myDur/2;
+		slope = myDur/2.0;
 		}
 	mySlope = slope;
 	VHandler::RampUpAmps(slope); // this does the ramp-up.

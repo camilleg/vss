@@ -6,38 +6,28 @@ extern void err(const char*) {}
 extern void warn(const char*) {}
 extern int scan_inf ( void );
 
-
-//===========================================================================
-//		sfile constructor
-//
 sfile::sfile(char * dir, char * file) :
 	sampleData( NULL ),
 	userCount( 0 )
 {
- printf("constructing sfile %s/%s\n", dir, file);
-
 	strcpy(fileName, file);
 	strcpy(dirName, dir);
 	
-//	construct the full file name with path
 	char fNameWithPath[1000];
 	if ( fileName[0] != '/' )
 		sprintf(fNameWithPath, "%s/%s", dirName, fileName);
 	else
 		sprintf(fNameWithPath, "%s", fileName);
-		
-//	try to open the new file
 	if (!(inf = fopen(fNameWithPath, "rb")))
 		{
-		printf("vss error: failed to open file \"%s\".\n", fNameWithPath);
+		printf("vss error: sfile failed to read file \"%s\".\n", fNameWithPath);
 		return;
 		}
 
-//	get some info about the file
 	fWAV = scan_inf();
 	int sampSize = fileSampSize = nh.wdsi;
 	fileNumChans = nh.chan;
-	fileSRate = (float)nh.rate;
+	fileSRate = nh.rate;
 	fileNumFrames = nh.fram;
 
 #if 1
@@ -87,10 +77,6 @@ sfile::sfile(char * dir, char * file) :
 		}
 }
 
-
-//===========================================================================
-//		sfile destructor
-//
 sfile::~sfile()
 {
 	if (sampleData)

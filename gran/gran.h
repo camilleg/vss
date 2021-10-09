@@ -35,10 +35,9 @@ private:
 	void *	sampleData;
 	int		fileNumChans;
 
-//	pointer to member function for indexing sampleData
+//	pointer to member get8bitSamp or get16bitSamp.
 	float	(granAlg::*getSampFn)(ulong, int);
 
-//	access members
 public:
 	char *	getFileName(void)	{ return (file!=NULL) ? file->name() : NULL; }
 	char * 	getDirectory(void)	{ return (file!=NULL) ? file->directory() : NULL; }
@@ -47,7 +46,6 @@ public:
 	float	getPosition(void)	{ return (file!=NULL) ? (double) index / file->sampleRate() : 0.; }
 	float	getSRratio(void)	{ return (file!=NULL) ? file->sampleRate() * globs.OneOverSR : 0.; }
 
-//	parameter update members
 	void	setStart( float );
 	void	setDur( float );
 	void	setSlope( float );
@@ -61,25 +59,21 @@ public:
 
 virtual	float 	dampingTime(void)	{ return 0.03; }
 	
-//	sampleData access
 private:
 	float	get8bitSamp( ulong, int );
 	float	get16bitSamp( ulong, int );
 	float	getSamp( ulong, int = 1 );
 
-//	sample generation
-private:
 	// Has samples, and isn't past the end of its samples.
 	int FValidForOutput() { return file != NULL && index <= endAt; }
+
+	bool noFile() const;
 	void generateSamples(int);
 
 public:
-//	construction/destruction
-		granAlg(void);
-		~granAlg();
-
-
-};	// end of class granAlg
+	granAlg();
+	~granAlg();
+};
 
 //===========================================================================
 //		granHand 
