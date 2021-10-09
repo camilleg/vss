@@ -71,16 +71,16 @@ extern "C" int SscanfFloats(int cz, float* rgz, const char* sz)
 	char ch;
 	int cch;
 	
-	// parse leading '['
+	// Parse leading '['.
 	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != '[')
 	{
-		fprintf(stderr, "\n\nSscanfFloats failed to match opening '['\n\n");; // ]
+		fprintf(stderr, "vss: ignoring message whose arguments lacks \"[x0 x1 ...]\": \"%s\"\n", sz);
 		return -1;
 	}
 	const char* sz0 = sz;
 	sz += cch;
 
-	// parse cz floats
+	// Parse cz floats.
 	int i;
 	for (i=0; i<cz; i++)
 	{
@@ -118,17 +118,15 @@ LContinue:
 		break;
 	}
 
-	// At this point, we should hit the ']' after the last float.
-	// If there's more floats before the ']', ignore them.
-	// If there's other stuff before the ']', complain loudly.
-	// We complain and don't ignore extra "*4" guys.
+	// We should hit the ']' after the last float.
+	// Ignore any more floats before the ']'.
+	// Complain about anything else before the ']'.
+	// Complain and don't ignore extra "*4" guys.
 
 	// Parse more floats
 	float dummy;
 	while ( 1 == sscanf(sz, "%f %n", &dummy, &cch) )
-	{
 		sz += cch;
-	}
 
 	// Now we better have the ']'.
 	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != ']')
@@ -146,22 +144,21 @@ LContinue:
 
 //	if (i==0)
 //		fprintf(stderr, "\t\t(fyi, SscanfFloats parsed '[]')\n");
-//	fprintf(stderr, "\t\tSscanfFloats parsed %d floats.\n\n", i);
-
 	return i;
 }
 
+// Used only by thresh/switchActor.c++ ifIntArray.  Retire?
 extern "C" int SscanfInts(int cw, int* rgw, const char* sz)
 {
 	char ch;
 	int cch;
 
-	// parse leading '['
+	// Parse leading '['.
 	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != '[')
 		return 0;
 	sz += cch;
 
-	// parse cz floats
+	// Parse cw ints.
 	int i;
 	for (i=0; i<cw; i++)
 	{
@@ -170,11 +167,11 @@ extern "C" int SscanfInts(int cw, int* rgw, const char* sz)
 		sz += cch;
 	}
 
-	// At this point, we should hit the ']' after the last float.
-	// If there's more floats before the ']', ignore them.
-	// If there's other stuff before the ']', complain loudly.
+	// We should hit the ']' after the last int.
+	// Ignore any more ints before the ']'.
+	// Complain about anything else before the ']'.
 
-	// Parse more floats
+	// Parse more ints.
 	int dummy;
 	while ( 1 == sscanf(sz, "%d %n", &dummy, &cch) )
 		sz += cch;
@@ -185,10 +182,5 @@ extern "C" int SscanfInts(int cw, int* rgw, const char* sz)
 		fprintf(stderr, "SscanfInts: garbage before the ].\n");
 		return 0;
 	}
-
-	// If you want to do SscanfFloatsAndOtherStuff() based on 
-	// this function SscanfFloats, put more parsing stuff on sz here.
-
 	return i;
-
 }

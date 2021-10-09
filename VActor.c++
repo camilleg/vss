@@ -58,19 +58,17 @@ VActor::curtainCall(ostream &os)
 	os << "-----------------------------------------" << endl;
 }
 
-void 
-VActor::flushActorList(void)        
+void VActor::flushActorList()
 { 
-	// "delete a.second" may ITSELF grow deletia, if a.second has members that are themselves actors,
-	// like ThresholdActor has MessageGroups.
-	// So ProcessDeletia() after every single delete, i.e., every single ~Vactor().
-	while (true) {
-		ProcessDeletia();
-		if (Actors.empty())
-			break;
+	// "delete a->second" may ITSELF grow deletia, if a.second has members that are
+	// themselves actors, like ThresholdActor has MessageGroups.
+	// So, ProcessDeletia() after every single delete, i.e., every single ~Vactor().
+	ProcessDeletia();
+	while (!Actors.empty()) {
 		const auto a = Actors.begin();
 		delete a->second;
 		Actors.erase(a);
+		ProcessDeletia();
 	}
 	NextHandle = 0;
 }
@@ -84,7 +82,7 @@ VActor::allAct()
 		flushActorList();
 		return;
 		}
-	//;;;; CamilleG: the InputActor should act() first, to reduce latency.
+	//;;;; CamilleG: the InputActor should act() first, then ProcessorActors, to reduce latency.
 	for (const auto a: Actors) {
 		const auto p = a.second;
 		assert(p);
@@ -156,5 +154,6 @@ VActor::receiveMessage(const char* Message)
 		return Uncatch();
 	}
 
+	cerr << "vss: " << typeName() << " ignored unknown command \"" << Message << "\"\n";
 	return Uncatch();
 }

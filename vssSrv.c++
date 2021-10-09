@@ -87,9 +87,10 @@ void PingServer(struct sockaddr_in *cl_addr)
 {
 	mm mmT;
 	mmT.fRetval = 0;
-	char *addr = inet_ntoa(cl_addr->sin_addr);
-	fprintf(stderr, "vss remark: ping from %s\n",
-		strcmp(addr, "127.0.0.1") ? addr : "local client");
+#if 0
+	const auto addr = inet_ntoa(cl_addr->sin_addr);
+	cerr << "vss: ping from " << (strcmp(addr, "127.0.0.1") ? addr : "local client") << "\n";
+#endif
 	sprintf(mmT.rgch, "AckNoteMsg %f", hNil);
 	MsgsendObj(udpDescObj, cl_addr, &mmT);
 }
@@ -129,7 +130,7 @@ static void* SynthThread(void *)
 {
 	// In IRIX don't bother with schedctl(), setpriority() suffices.
 	if (setpriority(PRIO_PROCESS, 0, -10 /* -20 to 0 */) == 0)
-		fprintf(stderr, "vss remark: set priority to -10\n");
+		cerr << "vss: set priority to -10\n";
 	schedulerMain(globs, &sample);
 	return NULL;
 }
@@ -301,22 +302,18 @@ extern "C" void ReturnFloatMsgToClient(float z, const char* msg)
 		MsgsendObj(udpDescObj, vcl_addr, &mmT);
 		}
 	else
-		fprintf(stderr, "vss error: bogus argument to ReturnFloatMsgToClient: %s\n", msg);
+		cerr << "vss: ignored ReturnFloatMsgToClient with unexpected args: " << msg << "\n";
 }
 
 extern "C" void ReturnSzMsgToClient(const char* sz, const char* msg)
 {
 	mm mmT;
-	mmT.fRetval = 0; // Be hygienic, don't leave this uninitialized
+	mmT.fRetval = 0;
 	sprintf(mmT.rgch, "%s %s", msg, sz);
 	MsgsendObj(udpDescObj, vcl_addr, &mmT);
 }
 
-//===========================================================================
-//		doActors
-//
-//	Called by scheduler. Very exciting.
-//
+// Called by scheduler.
 extern void doActors(void)
 {
 	VHandler::allAct();
@@ -410,25 +407,25 @@ VActor* newActor(const char* szName)
 		if (!strcmp(szName, m[i].name)) {
 			const auto p = m[i].pfn();
 			if (!p)
-				fprintf(stderr, "vss error: failed to create a \"%s\" actor.\n", szName);
+				cerr << "vss: failed to create a \"" << szName << "\" actor.\n";
 			return p;
 		}
 	}
-	fprintf(stderr, "vss error: can't create unrecognized \"%s\" actor.\n", szName);
+	cerr << "vss: unrecognized actor \"" << szName << "\"\n";
 	return NULL;
 }
 
 static void InternalCreateActor(const char* s)
 {
-	VActor* anActor = newActor(s);
+	auto anActor = newActor(s);
 	if (!anActor)
 		{
 		ReturnFloatToClient(hNil);
 		return;
 		}
-	float aHandle = anActor->handle();
+	auto aHandle = anActor->handle();
 	if (aHandle == hNil)
-		fprintf(stderr, "vss error: got a nil handle to a new \"%s\" actor.\n", s);
+		cerr << "vss error: nil handle to new actor " << s << "\n";
 	ReturnFloatToClient(aHandle);
 }
 
@@ -436,13 +433,12 @@ static void InternalEnableOfile(int d, const char* s, int cbBuf=0)
 {
 	if (d && !*s)
 		{
-		fprintf(stderr, "vss error: need a filename with EnableOfile.\n");
+		cerr << "vss: ignored EnableOfile without filename.\n";
 		return;
 		}
 
 	globs.ofile_enabled = d;
-	fprintf(stderr, "vss remark: file output %s.\n",
-		globs.ofile_enabled ? "enabled" : "disabled");
+	cerr << "vss remark: file output " << (globs.ofile_enabled ? "enabled" : "disabled") << "\n";
 
 	if (globs.ofile_enabled)
 		OpenOfile(s, cbBuf);
@@ -453,7 +449,6 @@ static void InternalEnableOfile(int d, const char* s, int cbBuf=0)
 static void InternalSetPrintCommands(int d)
 {
 	printCommands = d;
-//	cerr << "printCommands = " << printCommands << endl;
 }
 
 static void Internal_SetGear(const char* sz)
@@ -479,7 +474,6 @@ static int fKeepRunning = 1;
 //	Handle messages that are not actor-specific.
 //
 extern void DumpServerStats(void);
-//ulong vssRandSeed;			// not currently used anywhere
 
 #define SPECIAL_TEST_FOR_RAT
 #ifdef SPECIAL_TEST_FOR_RAT
@@ -559,12 +553,6 @@ int actorMessageHandlerCore(const char* Message)
 		return Uncatch();
 		}
 
-//	if (CommandIs("SeedRandom"))
-//		{
-//		ifD(d, vssRandSeed = (ulong)d );
-//		return Uncatch();
-//		}
-
 #ifdef SPECIAL_TEST_FOR_RAT
 
 	static float cheatarray[100];
@@ -612,26 +600,26 @@ extern "C" int actorMessageHandler(const char* Message)
 		return 0;
 
 	if (printCommands >= 2 && !vfAlreadyLogged)
-		fprintf(stderr, "%s (internal)\n", Message);
+		cerr << Message << "(internal)\n";
 	vfAlreadyLogged = 0; // This was the 2nd time.  Allow later msgs to be printf'ed now.
 
 	switch(caught)
 		{
 	case 0:
-		fprintf(stderr, "vss error: garbled args in message: <%s>\n", Message);
+		cerr << "vss: ignored message with garbled args: \"" << Message << "\"\n";
 		return 1;
 	case 1:
 		return 1;
 	case 2:
 		break;
 	default:
-		printf("vss error: actorMessageHandler internal error\n");
+		cerr << "vss: actorMessageHandler internal error\n";
 		return 1;
 		}
 
 	if (!*Message)
 		{
-		// CommandFromMessage() already printed an error message.
+		// CommandFromMessage() complained already.
 		return 1;
 		}
 
@@ -639,20 +627,20 @@ extern "C" int actorMessageHandler(const char* Message)
 	float aHandle;
 	if (1 != sscanf(Message, "%*s %f", &aHandle))
 		{
-		cerr << "vss error: no actor handle in message \"" << Message << "\"\n";
+		cerr << "vss: ignored message lacking actor handle \"" << Message << "\"\n";
 		return 1;
 		}
 
 	VActor* anActor = VActor::getByHandle(aHandle);
 	if(!anActor)
 		{
-		cerr << "vss error: Unknown actor handle " << aHandle << " in message \"" << Message << "\"\n";
+		cerr << "vss: ignored message with unknown actor handle " << aHandle << ": \"" << Message << "\"\n";
 		return 1;
 		}
 
 	if (!anActor->receiveMessage(Message))
 		{
-		cerr << "vss error: " << anActor->typeName() << ": Unknown command \"" << Message << "\"\n";
+		// VActor::receiveMessage complained already.
 		return 1;
 		}
 
@@ -674,13 +662,11 @@ extern void OpenOfile(const char * fileName, int cbBuf)
 		*globs.ofile = '\0';
 		return;
 		}
-	fprintf(stderr, "vss remark: writing to %s.\n", fileName);
+	cerr << "vss: writing to " << fileName << "\n";
 	strcpy(globs.ofile, fileName);
 
 	if (cbBuf > 0)
-		fprintf(stderr, "vss remark: Buffering %d seconds (%d MB) of output.\n",
-			(int)(cbBuf / globs.SampleRate / globs.nchansVSS),
-			cbBuf / 1000000);
+		cerr << "vss: buffering " << int(cbBuf/globs.SampleRate/globs.nchansVSS) << " seconds of output.\n";
 	globs.vcbBufOfile = cbBuf;
 	globs.vibBufOfile = 0;
 	globs.rgbBufOfile = new char[cbBuf];
@@ -692,14 +678,13 @@ extern void CloseOfile(const char * fileName)
 		fileName = globs.ofile;
 	else if (strcmp(fileName, globs.ofile))
 		{
-		fprintf(stderr, "vss error: cannot close output file %s. Current output file is %s.\n", 
-				fileName, globs.ofile);
+		cerr << "vss: failed to close output file " << fileName << ". Current output file is " << globs.ofile << ".\n";
 		return;
 		}
 
 	if (globs.fdOfile >= 0)
 		{
-		fprintf(stderr, "vss remark: wrote to %s.\n", globs.ofile);
+		cerr << "vss: wrote to " << globs.ofile << ".\n";
 		if (globs.vcbBufOfile>0 && globs.vibBufOfile>0)
 			{
 			// flush and free memory buffer.  Ignore return value, because we're closing things down anyways.
@@ -721,7 +706,7 @@ extern void CloseOfile(const char * fileName)
 				globs.nchansVSS, (int)globs.SampleRate, globs.ofile, globs.ofile);
 			(void)!system(szCmd);
 			unlink(globs.ofile);
-			fprintf(stderr, "vss remark: output is in %s.aiff.\n", globs.ofile);
+			cerr << "vss: created " << globs.ofile << ".aiff.\n";
 			}
 #endif
 
