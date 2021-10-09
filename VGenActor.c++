@@ -1,15 +1,7 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-
 #include "VGenActor.h"
 #include "VHandler.h"
 #include "VAlgorithm.h" // just for ScalarFromdB()
-#include <ctype.h> // for isalpha()
 
-//===========================================================================
-//      constructor
-//
 VGeneratorActor::VGeneratorActor(void):
 	VActor(),
 	zAmpl(1.),
@@ -24,9 +16,6 @@ VGeneratorActor::VGeneratorActor(void):
 {
 }
 
-//===========================================================================
-//      destructor
-//
 VGeneratorActor::~VGeneratorActor()
 {
   	fDying = true; // Prevent removeChild from updating children, which would invalidate our HandlerListIterator (2011).
@@ -36,14 +25,10 @@ VGeneratorActor::~VGeneratorActor()
 		}
 }
 
-//===========================================================================
-//      addChild
-//
 //	When a child is created a a result of a BeginSound message being received, 
 //	newHandler() is called, and if it returns successfully, the new child 
 //	(handler) is added to this generator actor's list of progeny using 
 //	addChild().
-//
 void
 VGeneratorActor::addChild(VHandler * newGuy)
 {
@@ -53,12 +38,8 @@ VGeneratorActor::addChild(VHandler * newGuy)
 	newGuy->setParent( handle() );
 }
 
-//===========================================================================
-//		removeChild
-//
 //  When a handler is deleted, it informs the parent generator actor so 
 //  that the latter's children list can be kept up to date.
-//
 void
 VGeneratorActor::removeChild(VHandler * h)
 {
@@ -73,14 +54,10 @@ VGeneratorActor::removeChild(VHandler * h)
 		children.erase( it );
 }
 
-//===========================================================================
-//		sendDefaults
-//
 //	Derived classes that have parameters of their own should override
 //	this member to send the default values to a handler instance.
 //	DON'T FORGET TO CALL THE PARENT'S SENDDEFAULTS() SO THAT INHERITED
 //	DEFAULTS ARE ALSO SENT.
-//
 void
 VGeneratorActor::sendDefaults(VHandler * h)
 {
@@ -115,20 +92,13 @@ VGeneratorActor::sendDefaults(VHandler * h)
 
 }
 
-//===========================================================================
-//		receiveMessage
-//
 //	Derived classes should override this member if they receive messages.
 //	DON'T FORGET TO CALL THE PARENT'S RECEIVEMESSAGE() FOR MESSAGES YOU 
 //	DON'T HANDLE.
-//
-
 int
 VGeneratorActor::receiveMessage(const char * Message)
 {
 	CommandFromMessage(Message);
-
-//	handler creation
 
 	if (CommandIs("BeginNote"))
 	{
@@ -147,15 +117,9 @@ VGeneratorActor::receiveMessage(const char * Message)
 	if (CommandIs("BeginSound") || CommandIs("BeginSoundPaused"))
 	{
 LBeginNote:
-		VHandler * phandler = newHandler();
-		if (phandler == NULL)
-		{
-			printf("vss internal error: generator actor couldn't create a new handler.\n");
-			return Catch();
-		}
-
-		addChild( phandler );
-		sendDefaults( phandler );
+		auto phandler = newHandler(); // fooHand's ctor cannot return nullptr.
+		addChild(phandler);
+		sendDefaults(phandler);
 
 		//	save this because CommandIs() doesn't seem
 		//	to work after parseInitializers().
@@ -330,16 +294,10 @@ LSetAmp:
 	}
 
 	return VActor::receiveMessage(Message);
+}
 
-}	// end of receiveMessage
-
-//===========================================================================
-//		parseInitializers
-//
-//	Called when a BeginSound is received with a list of initializers.
-//
-void
-VGeneratorActor::parseInitializers(const char * inits_msg, VHandler * phandler)
+// Called when BeginSound is followed by a list of initializers.
+void VGeneratorActor::parseInitializers(const char* inits_msg, VHandler* phandler)
 {
 	// parse this: list of { sz z, or sz sz }
 	// z is [*]tNUMBER -- use sscanf(%f)
@@ -349,7 +307,6 @@ VGeneratorActor::parseInitializers(const char * inits_msg, VHandler * phandler)
 	const char* pch = inits_msg;
 	int cch = 0;
 	int ichMax = strlen(pch);
-	//printf("parseInitializers() gets <%s>, %d chars\n", inits_msg, ichMax);;
 	char sz0[100];
 	char sz1[500];
 	char sz2[50];
@@ -392,18 +349,11 @@ VGeneratorActor::parseInitializers(const char * inits_msg, VHandler * phandler)
 		strcat(sz1, " 0"); // Do it immediately not in dampingTime() seconds.
 #endif
 
-		// got a pair, so send it to receiver
-		// fprintf(stderr, "got a pair <%s> <%s>\n", sz0, sz1);
-
 		sprintf(szCommand, "%s %f %s", sz0, phandler->handle(), sz1);
 		phandler->receiveMessage(szCommand);
 	}
-}	// end of parseInitializers
+}
 
-
-//===========================================================================
-//		setXXX
-//
 void VGeneratorActor::setInputAmp(float a)
 {
 	zInputAmpl = a;
@@ -464,14 +414,10 @@ void VGeneratorActor::setLinear(int fLin)
 	fLinearEnv = fLin;
 }
 
-//===========================================================================
-//		setAllXXX
-//
 #define LoopHandlers(statement) \
 	HandlerListIterator< VHandler > it; \
 	for (it = children.begin(); it != children.end(); it++) \
 		(*it)->statement
-
 
 void VGeneratorActor::setAllInputAmp(float a, float t)
 {
@@ -539,16 +485,9 @@ void VGeneratorActor::setAllXYZ(float x, float y, float z, float t)
 	setXYZ(x,y,z);
 }
 
-//===========================================================================
-//		dump
-//
-//	Print biographical info on os.
-//
-ostream & 
-VGeneratorActor::dump(ostream &os, int tabs)
+ostream & VGeneratorActor::dump(ostream &os, int tabs)
 {
 	VActor::dump(os, tabs);
-
 	indent(os, tabs) << "     Amp: " << zAmpl << endl;
 //	indent(os, tabs) << "ScaleAmp: " << zScaleAmp << endl;
 	return os;
