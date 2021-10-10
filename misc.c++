@@ -8,65 +8,58 @@
 #include <unistd.h>
 
 #include "platform.h"
-using namespace std;
+using std::cerr;
 
 // Create a socket for sending msgs back to clients.
 
 extern OBJ BgnMsgsend(const char *szHostname, int channel)
 {
-	struct sockaddr_in  cl_addr;
-	int  sockfd;
-	desc *o = (desc *)malloc(sizeof(desc));
+	desc* o = (desc*)malloc(sizeof(desc));
 	if (!o)
 		return nullptr;
 
 	o->channel = channel;
-	memset((char *)&o->addr, 0, sizeof(o->addr));
+	memset(&o->addr, 0, sizeof o->addr);
 	o->addr.sin_family = AF_INET;
 	o->addr.sin_addr.s_addr = inet_addr(szHostname);
 	o->addr.sin_port = htons(channel);
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0)
-		{
-		memset((char *)&cl_addr, 0, sizeof(cl_addr));
+	auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd >= 0) {
+		struct sockaddr_in cl_addr;
+		memset(&cl_addr, 0, sizeof cl_addr);
 		cl_addr.sin_family = AF_INET;
 		cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		cl_addr.sin_port = htons(0);
-		if (bind(sockfd, (struct sockaddr *)&cl_addr,
-			sizeof(cl_addr)) < 0)
-			{
+		if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
 			perror("can't bind");
 			close(sockfd);
 			sockfd = -1;
-			}
 		}
-	else
+	} else {
 		printf("unable to make socket\n");
+	}
 	
 	o->sockfd = sockfd;
-	o->len = sizeof(o->addr);
+	o->len = sizeof o->addr;
 	fcntl(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
 #if defined(SET_SOCK_SND_BUF_SIZE)
 	setsockopt(sockfd, F_SETFL, FNDELAY);
 #endif
 #ifdef NOISY
-	printf("opened send socket fd %d on channel %d\n",
-		o->sockfd, o->channel);
+	printf("opened send socket fd %d on channel %d\n", o->sockfd, o->channel);
 #endif
-	return (OBJ)o;
+	return o;
 }
 
-/***************************************/
 #if defined(VSS_LINUX) || defined(VSS_CYGWIN32_NT40)
 #define SPOOGE (const struct sockaddr*)
 #else
 #define SPOOGE
 #endif
-
-static inline int sendudp(const struct sockaddr_in *sp, int sockfd, long count, void *b)
+static bool sendudp(const struct sockaddr_in *sp, int sockfd, long count, void *b)
 {
-	if(sendto(sockfd, b, int(count), 0, SPOOGE sp, sizeof(*sp)) != count)
-		return 0;
-
+	if (sendto(sockfd, b, count, 0, SPOOGE sp, sizeof *sp) != count)
+		return false;
 #ifdef NOISY
 	printf("sendto \"%s\", fd=%d, cb=%d,\t\t",
 		((mm*)b)->rgch, sockfd, count);
@@ -75,37 +68,28 @@ static inline int sendudp(const struct sockaddr_in *sp, int sockfd, long count, 
 		(int)sp->sin_port,
 		(int)sp->sin_addr.s_addr);
 #endif
-
-	return 1;
+	return true;
 }
-
 #undef SPOOGE
-
-/***************************************/
 
 extern void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, void* pv)
 {
 	if (!obj)
 		return;
-
-	mm* pmm = (mm *)pv;
-	desc* o = (desc *)obj;
-	if (paddr == NULL)
+	mm* pmm = (mm*)pv;
+	desc* o = (desc*)obj;
+	if (!paddr)
 		paddr = &o->addr;
-	if(!sendudp(paddr, o->sockfd, (long)strlen(pmm->rgch)+1+1, pmm))
+	if(!sendudp(paddr, o->sockfd, strlen(pmm->rgch)+1+1, pmm))
 		// extra +1 for fRetval field.
 		printf("send failed\n");
 }
-
-/*	parse argument list for standard parameters */
 
 #ifdef VSS_WINDOWS
 extern int vfMMIO;
 #endif
 extern int vfSoftClip;
 extern int vfLimitClip;
-extern int vfGraphSpectrum;
-extern int vfGraphOutput;
 extern void SetSoundIn(int fSoundIn);
 
 void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
@@ -201,16 +185,6 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     	{
     		argc--; argv++;++nargs;
 			vfSoftClip = true;
-    	}
-	    else	if(strcmp(*argv, "-graphoutput")==0)
-    	{
-    		argc--; argv++;++nargs;
-			vfGraphOutput = true;
-    	}
-	    else	if(strcmp(*argv, "-graphspectrum")==0)
-    	{
-    		argc--; argv++;++nargs;
-			vfGraphSpectrum = true;
     	}
 	    else	if(strcmp(*argv, "-lowlatency")==0)
     	{
