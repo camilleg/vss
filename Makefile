@@ -133,12 +133,11 @@ now=\"$(shell date +"%Y-%m-%d\ %H:%M")\"
 # 'T' deliberately omitted
 
 # Explicity make inside each subdir, to get its ./.depend.
-# ( ... || echo -n ) forces the return code to be zero, that of the no-op echo.
 # gmake passes down "-j" implicitly via $(MAKEFLAGS), but not "-j <number>".
 # ($(MAKE) ... & ) builds subdirs in parallel, to better exploit all cores,
 # but then the linker runs before */*.a has been built.
 $(TARGET): vssBuild.c++ $(OBJSRV) $(SUBDIRS) stk4/stk.a
-	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || echo -n ); done
+	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || true ); done
 	$(CC) -o $@ $(CFLAGS) -D__TIMESTAMP_ISO8601__=$(now) vssBuild.c++ $(OBJSRV) $(SUBLIBS) $(VSSLIBS) $(LDFLAGS)
 	-@chmod a+rx $@
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
@@ -147,7 +146,7 @@ endif
 
 clean:
 	-@rm -f stk-4.4.4/src/{Debug,Release}/*
-	-@(cd stk-4.4.4; if [ -f Makefile ]; then ( make distclean | grep -v 'directory' | grep -v /bin/rm | grep -v ' make ' || echo -n ); fi; )
+	-@(cd stk-4.4.4; if [ -f Makefile ]; then ( make distclean | grep -v 'directory' | grep -v /bin/rm | grep -v ' make ' || true ); fi; )
 	-rm -rf $(TARGET) *.o */*.o */*.a .depend */.depend core core.* vss.exe.stackdump
 
 -include $(patsubst %.o,.depend/%.d,$(OBJSRV))
