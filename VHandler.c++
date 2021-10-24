@@ -40,7 +40,7 @@ VHandler::~VHandler()
 // This clever function works even after the destructor's been called,
 // but for a limited time only (two calls to doActors()).
 //
-int VHandler::FValid(void)
+int VHandler::FValid()
 {
 	int i;
 	for (i=0; i<cDyingHandler; i++)
@@ -66,7 +66,7 @@ VGeneratorActor* VHandler::getParent() const {
 	return p->as_generator();
 }
 
-void VHandler::allAct(void)
+void VHandler::allAct()
 {
 	// Swap buffers for the FValid() test.
 	if (pDyingHandler == rgDyingHandler)
@@ -308,7 +308,7 @@ void VHandler::SetAttribute(IParam, float)
 	cerr << "vss warning: SetAttribute() unimplemented in handler " << typeName() << endl;
 }
 
-void VHandler::SetAttribute(IParam, float*)
+void VHandler::SetAttribute(IParam, const float*)
 {
 	cerr << "vss warning: SetAttribute() unimplemented in handler " << typeName() << endl;
 }
@@ -527,7 +527,7 @@ VFloatParam::VFloatParam(float oldVal, float newVal, float modTime) :
 	dstSamp = globs.SampleCount + modSamps;
 }
 
-float VFloatParam::currentValue(void)
+float VFloatParam::currentValue()
 {
 	if (dstSamp <= globs.SampleCount)
 		{
@@ -538,7 +538,7 @@ float VFloatParam::currentValue(void)
 	return dstVal - ((double)(dstSamp - globs.SampleCount) * slope);
 }
 
-float VFloatArrayElement::currentValue(void)
+float VFloatArrayElement::currentValue()
 {
 	if (dstSamp <= globs.SampleCount)
 		{
@@ -594,7 +594,7 @@ VFloatArray::~VFloatArray()
 	delete [] slopes;
 }
 
-float* VFloatArray::currentValue(void)
+float* VFloatArray::currentValue()
 {
 	// If our time is up, set the slope to zero and return dstVals.
 	if (dstSamp <= globs.SampleCount)
@@ -645,30 +645,50 @@ int VFloatArray::SetAttribute(VHandler* phandler, IParam iParam)
 	return !fDone;
 }
 
-void VModulatorPool::insert(int iParam,
+void VModulatorPool::insert(VHandler& handler, int iParam,
 	float duration, float zCur, float zEnd)
 {
 	IParam i(iParam);
 	insertPrep(i);
-	modmap.emplace(i, make_unique<VFloatParam>(zCur, zEnd, duration));
+	// This comparison could just be "if duration == 0."
+	// It should be if dur < "one interval of 'control rate behavior'", how often allAct() is called.
+	// But VActor.h says that "doesn't occur at any guaranteed rate."
+	// allAct() is called by doActors(), called in platform.c++
+	// by either a callback, or LiveTick/BatchTick from schedulerMain's fast inner loop
+	// where Scount() aka snd_pcm_avail_update or MaxSampsPerBuffer
+	// reports how many samples to compute.
+	// But doSynth() ignores its Scount() arg, instead using MaxSampsPerBuffer!
+	// todo: cache this multiply in VSSglobals, in a getter, when that class is revamped.
+	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
+		handler.SetAttribute(i, zEnd);
+	else
+		modmap.emplace(i, make_unique<VFloatParam>(zCur, zEnd, duration));
 }
 
-void VModulatorPool::insert(int iParam,
+void VModulatorPool::insert(VHandler& handler, int iParam,
 	float duration, int iz, float zCur, float zEnd)
 {
 	IParam i(iParam, iz);
 	insertPrep(i);
-	modmap.emplace(i, make_unique<VFloatArrayElement>(zCur, zEnd, duration));
+	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
+		handler.SetAttribute(i, zEnd);
+	else
+		modmap.emplace(i, make_unique<VFloatArrayElement>(zCur, zEnd, duration));
 }
 
-void VModulatorPool::insert(int iParam,
+void VModulatorPool::insert(VHandler& handler, int iParam,
 	float duration, int cz, const float* rgzCur, const float* rgzEnd)
 {
 	IParam i(iParam, cz);
 	insertPrep(i);
-	modmap.emplace(i, make_unique<VFloatArray>(cz, rgzCur, rgzEnd, duration));
+	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
+		handler.SetAttribute(i, rgzEnd);
+	else
+		modmap.emplace(i, make_unique<VFloatArray>(cz, rgzCur, rgzEnd, duration));
 }
 
+// If iparam already has a modulator,
+// delete that in preparation for giving it a new one.
 void VModulatorPool::insertPrep(const IParam iparam)
 {
 	if (modmap.find(iparam) != modmap.end())

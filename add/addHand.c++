@@ -126,7 +126,7 @@ void addHand::SetAttribute(IParam iParam, float z)
 		}
 }
 
-void addHand::SetAttribute(IParam iParam, float* rgz)
+void addHand::SetAttribute(IParam iParam, const float* rgz)
 {
 	int cz = iParam.Cz();
 	switch (iParam.i)

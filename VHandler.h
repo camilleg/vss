@@ -91,9 +91,9 @@ class VModulatorPool
 	void SanityCheck(VHandler*);
 public:
 	void act(VHandler*); // may call m.erase()
-	void insert(int, float, float, float);
-	void insert(int, float, int, float, float);
-	void insert(int, float, int, const float*, const float*);
+	void insert(VHandler&, int, float, float, float);
+	void insert(VHandler&, int, float, int, float, float);
+	void insert(VHandler&, int, float, int, const float*, const float*);
 	void erase();
 
 	VModulatorPool() {}
@@ -194,17 +194,17 @@ public:
 	// Set a parameter directly (without any modulation):
 	virtual void SetAttribute(IParam, float z);
 		// a float, or one element of an array of floats.
-	virtual void SetAttribute(IParam, float* rgz);
+	virtual void SetAttribute(IParam, const float* rgz);
 		// a whole array of floats.
 
 	inline void modulate(int iParam, float curVal, float newVal, float modTime = 0.)
-		{ modpool.insert(iParam, modTime, curVal, newVal); }
+		{ modpool.insert(*this, iParam, modTime, curVal, newVal); }
 
 	inline void modulate(int iParam, int iArray, float curVal, float newVal, float modTime = 0.)
-		{ modpool.insert(iParam, modTime, iArray, curVal, newVal); }
+		{ modpool.insert(*this, iParam, modTime, iArray, curVal, newVal); }
 
 	inline void modulate(int iParam, int cz, float* curVal, float* newVal, float modTime = 0.)
-		{ modpool.insert(iParam, modTime, cz, curVal, newVal); }
+		{ modpool.insert(*this, iParam, modTime, cz, curVal, newVal); }
 
 //	VActor behavior:
 public:
