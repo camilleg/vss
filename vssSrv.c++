@@ -33,7 +33,7 @@
 
 #include <climits>
 
-static OBJ udpDescObj = NULL;	// used to send udp messages
+static OBJ udpDescObj = nullptr;
 
 VSSglobals globs;
 
@@ -82,7 +82,7 @@ static int sample(int length,  float* out, int nchans)
 	return 1;
 }
 
-// Server calls this in response to a "Ping" request from client, to reply.
+// Reply to a client's ping.
 void PingServer(struct sockaddr_in *cl_addr)
 {
 	mm mmT;
@@ -179,7 +179,8 @@ extern "C" int VSS_main(int argc,char *argv[])
 	ParseArgs(argc, argv, &globs.udp_port, &globs.liveaudio,
 		&globs.SampleRate, &globs.nchansVSS, &globs.nchansIn, &globs.nchansOut, &globs.hog, &globs.lwm, &globs.hwm, globs.ofile);
 	globs.OneOverSR = 1.0 / globs.SampleRate;
-	if ((udpDescObj = BgnMsgsend(globs.hostname, globs.udp_port)) == 0)
+	udpDescObj = BgnMsgsend(globs.hostname, globs.udp_port);
+	if (!udpDescObj)
 		return -1;
 
 	fprintf(stderr, 
@@ -221,47 +222,34 @@ extern void DumpServerStats(void)
 }
 
 
-//	If 1, print out all messages as they are received.
+// If >=1, print each message as it is received.
 int printCommands = 0;
 
-//===========================================================================
-//		returning handles to clients
-//
-
-//	Handle to return to client. Initialize to hNil.
+// Handle to return to client.
 static float vzReturnToClient = hNil;
-extern float ClientReturnVal(void)
+extern float ClientReturnVal()
 {
 	return vzReturnToClient;
 }
 
-//	Data to return to client.
+// Data to return to client.
 static char vszReturnToClient[cchmm] = {0};
-extern const char* ClientReturnValString(void)
+extern const char* ClientReturnValString()
 {
-	if ( vszReturnToClient[0] != '\0' )
+	if (vszReturnToClient[0] != '\0')
 		return vszReturnToClient;
-	else {
-		//	if there's no other string, 
-		//	write the return float on a string
-		//	and return that.
-		//	-kel 12 Oct 99
-		static char s[64];
-		sprintf(s, "%g", vzReturnToClient);
-		return s;
-	}
+	// There was no string, so instead return the float.  -kel 12 Oct 99
+	static char s[64];
+	sprintf(s, "%g", vzReturnToClient);
+	return s;
 }
 
-static struct sockaddr_in *vcl_addr; // set in actorMessage()
-
-// vcl_addr is set maybe quite a while before somebody like
-// TRACKAMPLRMS_Actor::receiveMessage uses it by calling this function.
-// It shouldn't be clobbered in the meantime, though.
+static struct sockaddr_in* vcl_addr;
 
 extern "C" void ReturnFloatMsgToClient(float z, const char* msg)
 {
 	mm mmT;
-	mmT.fRetval = 0; // Be hygienic, don't leave this uninitialized
+	mmT.fRetval = 0;
 
 	if (!strcmp(msg, "AckMidiInputMsg"))
 		{
@@ -338,14 +326,12 @@ extern void deleteActors(void)
 //	actorMessageMM() returns 1 almost always, zero means that we received a
 //	message that should cause vss to exit. Return whatever actorMessageHandler()
 //	returns.
-//
 
+// Called only by AmplAlg::generateSamples.
 extern "C" void ReturnStringToClient(const char* sz)
 {
-	//printf("ReturnStringToClient: <%s> (%d)\n", sz, strlen(sz));;
 	strncpy(vszReturnToClient, sz, cchmm-1);
 	vszReturnToClient[cchmm-1] = '\0';
-	//printf("ReturnStringToClient: %d chars\n", strlen(vszReturnToClient));;
 	ReturnSzMsgToClient(vszReturnToClient, "DataReply");
 }
 
@@ -365,34 +351,35 @@ extern "C" float* PvzMessageGroupRecentHandle(void)
 	return &vzMessageGroupRecentHandle;
 }
 
-static int vfAlreadyLogged = 0;
+static bool vfAlreadyLogged = false;
 
-//;; Is this reentrant?  (is it ok if pmm is on the stack or otherwise dynamic?)
-extern "C" int actorMessageMM(const void* pv, struct sockaddr_in *cl_addr)
+// Called by LiveTick or BatchTick.
+extern "C" int actorMessageMM(const void* pv, struct sockaddr_in* cl_addr)
 {
-	mm* pmm = (mm*)pv;
-	char* message = pmm->rgch;
+	const mm* pmm = (const mm*)pv;
+	const auto message = pmm->rgch;
+	const auto fReturnToClient = pmm->fRetval != 0;
+	// Save this for ReturnFloatMsgToClient, and rarely ReturnSzMsgToClient and PingServer.
+	// todo: replace this global with an arg to those and to actorMessageHandler, actorMessageHandlerCore.
 	vcl_addr = cl_addr;
-	int vfReturnToClient = pmm->fRetval ? 1 : 0;
 
-	// First whitespace-delimited token in message is the command
-
+	// Don't postpone the \n to append "= vzReturnToClient", because
+	// diagnostics from actorMessageHandler() would then start mid-line.
 	if (printCommands >= 1)
-		fprintf(stderr, "%s\n", message);
+		cerr << message << "\n";
 
-	vfAlreadyLogged = 1;
-	int liveOn = actorMessageHandler(message);
-	vfAlreadyLogged = 0;
-	if (vfReturnToClient)
-		{
+	vfAlreadyLogged = true;
+	const auto liveOn = actorMessageHandler(message);
+	vfAlreadyLogged = false;
+
+	if (fReturnToClient) {
+		// hNil may mean an AUDupdate() "SendData mgFoo [...]" that wants a "*?".
 		if (vzReturnToClient == hNil)
-			{
-			// Maybe this is an AUDupdate() "SendData mgFoo [...]"
-			// which wants to get "*?" back.
 			vzReturnToClient = vzMessageGroupRecentHandle;
-			}
 		ReturnFloatMsgToClient(vzReturnToClient, "AckNoteMsg");
-		}
+		if (printCommands >= 1)
+			cerr << "  = " << vzReturnToClient << "\n";
+	}
 	return liveOn;
 }
 
@@ -584,24 +571,19 @@ int actorMessageHandlerCore(const char* Message)
 	return 2;
 }
 
-//	vzReturnToClient is a float that can be returned to the client, if the
-//	client requests it. It should be set to hNil before the message is 
-//	processed, rather than just leaving whatever whatever was left over from 
-//	the previous message, so that there will be no confusion about which message 
-//	produced the return value. 
-//
-//	Returns 0 iff the message told vss to quit.
+// Returns 0 iff Message tells vss to quit.
 extern "C" int actorMessageHandler(const char* Message)
 {
 	vzReturnToClient = hNil;
 	fKeepRunning = 1;
-	int caught = actorMessageHandlerCore(Message);
+	const auto caught = actorMessageHandlerCore(Message);
+	// May have set vzReturnToClient or fKeepRunning.
 	if (!fKeepRunning)
 		return 0;
 
 	if (printCommands >= 2 && !vfAlreadyLogged)
-		cerr << Message << "(internal)\n";
-	vfAlreadyLogged = 0; // This was the 2nd time.  Allow later msgs to be printf'ed now.
+		cerr << Message << " (internal)\n";
+	vfAlreadyLogged = false; // This was the 2nd time.  Permit later msgs to be printed.
 
 	switch(caught)
 		{
