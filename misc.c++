@@ -1,7 +1,3 @@
-#ifndef VSS_WINDOWS
-#include <malloc.h>
-#endif
-
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
@@ -23,31 +19,25 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 	o->addr.sin_family = AF_INET;
 	o->addr.sin_addr.s_addr = inet_addr(szHostname);
 	o->addr.sin_port = htons(channel);
-	auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sockfd >= 0) {
-		struct sockaddr_in cl_addr;
-		memset(&cl_addr, 0, sizeof cl_addr);
-		cl_addr.sin_family = AF_INET;
-		cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		cl_addr.sin_port = htons(0);
-		if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
-			perror("can't bind");
-			close(sockfd);
-			sockfd = -1;
-		}
-	} else {
-		printf("unable to make socket\n");
+	const auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+		printf("failed to make socket\n");
+		return nullptr;
 	}
-	
+
+	struct sockaddr_in cl_addr;
+	memset(&cl_addr, 0, sizeof cl_addr);
+	cl_addr.sin_family = AF_INET;
+	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	cl_addr.sin_port = htons(0);
+	if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
+		perror("failed to bind");
+		close(sockfd);
+		return nullptr;
+	}
 	o->sockfd = sockfd;
 	o->len = sizeof o->addr;
-	fcntl(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
-#if defined(SET_SOCK_SND_BUF_SIZE)
-	setsockopt(sockfd, F_SETFL, FNDELAY);
-#endif
-#ifdef NOISY
-	printf("opened send socket fd %d on channel %d\n", o->sockfd, o->channel);
-#endif
+	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking.
 	return o;
 }
 
@@ -74,6 +64,7 @@ static bool sendudp(const struct sockaddr_in *sp, int sockfd, long count, void *
 
 extern void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, void* pv)
 {
+	// obj is always udpDescObj, what BgnMsgsend returned.
 	if (!obj)
 		return;
 	mm* pmm = (mm*)pv;
@@ -341,7 +332,7 @@ LDoneChans:;
 				cerr <<"vss warning: limiting output to " << MaxNumChannels << " channels from "
 					 <<*nchansVSS
 					 <<"\n\n";
-    			*nchansVSS = *nchansOut = 8;
+				*nchansVSS = *nchansOut = MaxNumChannels;
 				globs.fRemappedOutput = 0;
 				// Otherwise Synth() causes a buffer overflow.
 				}
@@ -361,7 +352,7 @@ LDoneChans:;
     	}
     }
 
-	if (*liveaudio == 0 && VssInputBuffer() != NULL)
+	if (*liveaudio == 0 && VssInputBuffer() != nullptr)
 		{
 		cerr <<"vss warning: audio input doesn't work with -silent.\n";
 		SetSoundIn(0);
