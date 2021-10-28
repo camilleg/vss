@@ -80,7 +80,6 @@ SUBDIRS := \
   stereo \
   stk4 \
   tb303 \
-  test \
   thresh \
 
 SUBLIBS := \
@@ -122,7 +121,6 @@ SUBLIBS := \
   stereo/stereo.a \
   stk4/stk.a \
   tb303/tb303.a \
-  test/test.a \
   thresh/thresh.a
 
 stk4/stk.a:
