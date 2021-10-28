@@ -91,8 +91,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 #endif
     *nchansIn = 0;
 	int nargs = 0;
-    argc--;
-    argv++;++nargs;
+    argc--; argv++;++nargs;
     while(argc>0)
     {
     	if(strcmp(*argv, "-srate")==0)
@@ -103,16 +102,12 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     			*sample_rate = atof(*argv);
 				if (*sample_rate < 8000.)
 				{
-					cerr << "vss warning: limiting sampling rate to 8000 from "
-						<<*sample_rate
-						<<"\n\n";
+					cerr << "vss: boosting sampling rate to 8000 from " << *sample_rate << "\n";
     				*sample_rate = 8000.;
 				}
 				if (*sample_rate > 48000.)
 				{
-					cerr << "vss warning: limiting sampling rate to 48000 from "
-						<<*sample_rate
-						<<"\n\n";
+					cerr << "vss: limiting sampling rate to 48000 from " << *sample_rate << "\n";
     				*sample_rate = 48000.;
 				}
  	     		argc--; argv++;++nargs;
@@ -157,20 +152,15 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 			if(argc>0)
 				{
 				globs.udp_port = atoi(*argv);
-				if (globs.udp_port < 1000)
+				if (globs.udp_port < 1000 || globs.udp_port > 65535)
 					{
-					cerr <<"vss error: port number must be at least 1000.  Using default 7999 instead.\n";
-					globs.udp_port = 7999;
-					}
-				if (globs.udp_port > 65535)
-					{
-					cerr <<"vss error: port number must be at most 65535.  Using default 7999 instead.\n";
+					cerr << "vss: port number " << globs.udp_port << " out of range [1000, 65535].  Using default 7999.\n";
 					globs.udp_port = 7999;
 					}
 				argc--; argv++;++nargs;
 				}
 			else
-				cerr << "vss warning: ignoring missing args for -port flag.\n";
+				cerr << "vss: ignoring -port with missing number.\n";
     	}
 	    else	if(strcmp(*argv, "-soft")==0)
     	{
@@ -198,13 +188,11 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 					globs.hwm = hwm;
 					}
 				else
-					cerr << "vss warning: ignoring invalid args "
-						<< argv[-2] << " and "
-						<< argv[-1] << " for -latency [lwm] [hwm] flag.\n";
+					cerr << "vss: ignoring -latency with invalid args " << argv[-2] << " and " << argv[-1] << ".\n";
 				}
 			else
 				{
-				cerr << "vss warning: ignoring missing args for -latency [lwm] [hwm] flag.\n";
+				cerr << "vss: ignoring -latency with missing numbers.\n";
 				if (argc>0)
 					{
 					argc--; argv++;++nargs;
@@ -220,7 +208,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 				if (msec > 0.)
 					globs.msecAntidropout = msec;
 				else
-					cerr << "vss warning: ignoring nonpositive duration arg for -antidropout.\n";
+					cerr << "vss: ignoring -antidropout with nonpositive duration.\n";
  	     		argc--; argv++;++nargs;
   			}
     	}
@@ -230,7 +218,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 			SetSoundIn(true);
 			if (argc>0)
 				{
-				int w = atoi(*argv);
+				const auto w = atoi(*argv);
 				if (w > 0)
 					{
 					// it really was "-input 4", not "-input -graphoutput" (for example).
@@ -268,30 +256,22 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 						if (1 != sscanf(pch, "%d%n", &w, &cch))
 							{
 LChansError:
-							cerr <<"vss warning: syntax error \"-chans "
-								 <<argv[0]
-								 <<"\": reverting to 1-channel output\n";
+							cerr << "vss: unexpected \"-chans " << argv[0] << "\": playing 1 channel.\n";
 							*nchansVSS = *nchansOut = 1;
 							goto LDoneChans;
 							}
 						if (w<0 || w>= *nchansVSS)
 							{
-							cerr <<"vss warning: channel number "
-								 <<w
-								 <<"out of range (0 to "
-								 <<*nchansVSS - 1
-								 <<"), using 0 instead.\n";
+							cerr << "vss: channel " << w << "out of range [0, " << *nchansVSS - 1 << "].  Using 0.\n";
 							w = 0;
 							}
 						globs.rgwRemappedOutput[i] = w;
 						pch += cch+1; // just skip the comma, don't parse it.
 						}
 					if (pch[-1] == ',')
-						cerr <<"vss warning: ignoring extra channel numbers \""
-							 <<pch-1
-							 <<"\"\n";
+						cerr << "vss: ignoring extra channel numbers \"" << pch-1 << "\"\n";
 					globs.fRemappedOutput = 1;
-					printf("vss remark: outputing channels ( ");
+					printf("vss: outputing channels ( ");
 					for (i=0; i<*nchansOut; i++)
 						printf("%d ", globs.rgwRemappedOutput[i]);
 					printf(") of %d into %d channels.\n", *nchansVSS, *nchansOut);
@@ -309,9 +289,7 @@ LDoneChans:;
 			// globs.fdOfile via AIFF supports 1 to 8 channels, even non-power-of-two.
     		if (*nchansVSS < 1)
 				{
-    			cerr <<"vss warning: outputing to 1 channel instead of "
-					 <<*nchansVSS
-					 <<"\n\n";
+				cerr << "vss: outputing to 1 channel instead of " << *nchansVSS << "\n";
     			*nchansVSS = *nchansOut = 1;
 				globs.fRemappedOutput = 0;
 				}
@@ -319,9 +297,7 @@ LDoneChans:;
     		else if (*nchansVSS > 2 && !vfMMIO)
 				{
 				vfNeededMMIO = 1;
-    			cerr <<"vss warning: outputing to 2 channels (DirectSound's limit) instead of "
-					 <<*nchansVSS
-					 <<"\n\n";
+				cerr << "vss warning: outputing to 2 channels (DirectSound's limit) instead of " << *nchansVSS << ".\n";
     			*nchansVSS = *nchansOut = 2;
 				globs.fRemappedOutput = 0;
 				}
@@ -329,9 +305,7 @@ LDoneChans:;
 
 			if (*nchansVSS > MaxNumChannels)
 				{
-				cerr <<"vss warning: limiting output to " << MaxNumChannels << " channels from "
-					 <<*nchansVSS
-					 <<"\n\n";
+				cerr << "vss: playing only " << MaxNumChannels << " channels instead of " << *nchansVSS << ".\n";
 				*nchansVSS = *nchansOut = MaxNumChannels;
 				globs.fRemappedOutput = 0;
 				// Otherwise Synth() causes a buffer overflow.
@@ -340,7 +314,7 @@ LDoneChans:;
     	else
     	{
 			if (*argv)
-				cerr <<"vss error: unknown flag \"" <<*argv <<"\"\n";
+				cerr << "vss: ignoring unexpected flag \"" << *argv << "\"\n";
     		cerr <<"Usage: vss \
 \n\t-chans n \n\t-srate n \n\t-silent \n\t-ofile filename\n\t-input \n\t-port n \
 \n\n\t-hog [012] \n\t-lowlatency \n\t-latency lwm hwm \n\t-antidropout msec \
@@ -352,9 +326,9 @@ LDoneChans:;
     	}
     }
 
-	if (*liveaudio == 0 && VssInputBuffer() != nullptr)
+	if (VssInputBuffer() && *liveaudio == 0)
 		{
-		cerr <<"vss warning: audio input doesn't work with -silent.\n";
+		cerr << "vss: ignoring audio input because -silent.\n";
 		SetSoundIn(0);
 		}
 }
