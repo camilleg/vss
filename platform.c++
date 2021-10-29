@@ -1,18 +1,14 @@
 // platform-specific code
 
 #ifdef VSS_WINDOWS
-
 #include "windows.h"
 #include "winplatform.h"
-
 #endif
 
 #include <iostream>
-
 #include <cerrno>
 #include <climits>
 #include <cmath>
-
 #include <netdb.h>
 #include <netinet/in.h>
 
@@ -24,13 +20,11 @@
 #endif
 
 #include <pwd.h>
-
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -47,7 +41,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-//	IRIX media headers:
 #ifdef VSS_IRIX
 extern "C" {
 #include <dmedia/audio.h>
@@ -56,8 +49,7 @@ extern "C" {
 #include <sys/lock.h>
 #include <sys/prctl.h>
 #include <sys/schedctl.h>
-
-#if defined(VSS_IRIX_62) || defined(VSS_IRIX_53)
+#if defined VSS_IRIX_62 || defined VSS_IRIX_53
 #define alGetFD(_) ALgetfd(_)
 #define alNewConfig() ALnewconfig()
 #define alSetWidth(_,__) ALsetwidth(_,__)
@@ -72,237 +64,153 @@ extern "C" {
 #define alWriteFrames(_,__,___) ALwritesamps(_,__,___*nchans) // in Synth()
 #define alSetFillPoint(_,__) ALsetfillpoint(_,__*nchans) // in Synth()
 #endif
-
-#endif
+#endif // VSS_IRIX
 
 #include "platform.h"
 #include "vssglobals.h"
 #include "VAlgorithm.h" // only for dBFromScalar()
 
-// VSS_LINUX_21ALSA is for ALSA 0.5.3+.
-
 #ifdef VSS_LINUX
-#if defined(VSS_LINUX_UBUNTU)
+#ifdef VSS_LINUX_UBUNTU
   #define VSS_LINUX_2012
-#elif defined(VSS_LINUX_20ALSA) || defined(VSS_LINUX_21ALSA)
+#elif defined VSS_LINUX_20ALSA || defined VSS_LINUX_21ALSA
+  // VSS_LINUX_21ALSA is for ALSA 0.5.3+.
   #define VSS_LINUX_ALSA
 #else
   #define VSS_LINUX_OSS
 #endif
-#endif
+#endif // VSS_LINUX
 
 #ifdef VSS_LINUX_UBUNTU
-#include <alsa/asoundlib.h> // apt-get install libasound2-dev
-snd_pcm_t *pcm_handle_read = NULL;
-snd_pcm_t *pcm_handle_write = NULL;
-snd_pcm_format_t pformat, rformat;
-const snd_pcm_format_t format = SND_PCM_FORMAT_S16; /* sample format */
-unsigned int buffer_time = 30000; /* ring buffer length in us */
-unsigned int period_time = 5000; /* period time in us (as low as 500 might work fine) */
-const int resample = 1; /* enable alsa-lib resampling */
+#include <alsa/asoundlib.h> // apt install libasound2-dev
+snd_pcm_t* pcm_handle_read = nullptr;
+snd_pcm_t* pcm_handle_write = nullptr;
+
+// Set by set_hwparams(). Used by set_swparams().
 snd_pcm_sframes_t buffer_size;
 snd_pcm_sframes_t period_size;
-snd_output_t *alsa_output = NULL;
 
-#if 0
-const double freq = 440; /* sinusoidal wave frequency in Hz */
-void generate_sine(const snd_pcm_channel_area_t *areas, snd_pcm_uframes_t offset, int count, double *_phase, const unsigned int channels)
+int xrun_recovery(snd_pcm_t* handle, int err)
 {
-    const static double max_phase = 2. * M_PI;
-    double phase = *_phase;
-    const unsigned int rate = globs.SampleRate;
-    static double step = 0.03; // max_phase*freq/(double)rate;
-    unsigned char *samples[channels];
-    int steps[channels];
-    int format_bits = snd_pcm_format_width(format);
-    const unsigned int maxval = (1 << (format_bits - 1)) - 1;
-    const int bps = format_bits / 8; /* bytes per sample */
-    const int big_endian = snd_pcm_format_big_endian(format) == 1;
-    const int to_unsigned = snd_pcm_format_unsigned(format) == 1;
-    /* verify and prepare the contents of areas */
-    unsigned int chn;
-    for (chn = 0; chn < channels; chn++) {
-        if ((areas[chn].first % 8) != 0) {
-            printf("areas[%i].first == %i, aborting...\n", chn, areas[chn].first);
-            exit(EXIT_FAILURE);
-        }
-        samples[chn] = /*(signed short *)*/(((unsigned char *)areas[chn].addr) + (areas[chn].first / 8));
-        if ((areas[chn].step % 16) != 0) {
-            printf("areas[%i].step == %i, aborting...\n", chn, areas[chn].step);
-            exit(EXIT_FAILURE);
-        }
-        steps[chn] = areas[chn].step / 8;
-        samples[chn] += offset * steps[chn];
-    }
-    /* fill the channel areas */
-    while (count-- > 0) {
-	const short res = sin(phase) * maxval;
-	assert(!to_unsigned && !big_endian && bps == 2); // signed 16-bit
-        for (chn = 0; chn < channels; chn++) {
-	    *(short *)samples[chn] = res;
-            samples[chn] += steps[chn];
-        }
-        phase += step;
-	step *= 1.000001;
-        if (phase >= max_phase)
-            phase -= max_phase;
-    }
-    *_phase = phase;
-}
-#endif
-static int xrun_recovery(snd_pcm_t *handle, int err)
-{
-    if (err == -EPIPE) { /* under-run */
+    if (err == -EPIPE) {
+LPrepare:
         err = snd_pcm_prepare(handle);
         if (err < 0)
-            printf("Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
+            printf("Failed to recover from underrun: %s\n", snd_strerror(err));
         return 0;
     }
     if (err == -ESTRPIPE) {
+		// Busywait until the suspend flag is released.
         while ((err = snd_pcm_resume(handle)) == -EAGAIN)
-            sleep(1); /* wait until the suspend flag is released */
-        if (err < 0) {
-            err = snd_pcm_prepare(handle);
-            if (err < 0)
-                printf("Can't recovery from suspend, prepare failed: %s\n", snd_strerror(err));
-        }
+            usleep(100000);
+        if (err < 0)
+            goto LPrepare;
         return 0;
     }
     return err;
 }
-#if 0
-static int write_loop(snd_pcm_t *handle, signed short *samples, snd_pcm_channel_area_t *areas)
+
+static int set_hwparams(snd_pcm_t* handle, snd_pcm_hw_params_t* params, int nchans)
 {
-    double phase = 0;
-    while (true) {
-        generate_sine(areas, 0, period_size, &phase, NchansOut());
-	signed short *ptr = samples;
-        int cptr = period_size;
-        while (cptr > 0) {
-            const int err = snd_pcm_writei(handle, ptr, cptr);
-            if (err == -EAGAIN)
-                continue;
-            if (err < 0) {
-                if (xrun_recovery(handle, err) < 0) {
-                    printf("Write error: %s\n", snd_strerror(err));
-                    exit(EXIT_FAILURE);
-                }
-                break; /* skip one period */
-            }
-            ptr += err * NchansOut();
-            cptr -= err;
-        }
-    }
-}
-#endif
-static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_access_t access)
-{
-    /* choose all parameters */
-    int err = snd_pcm_hw_params_any(handle, params);
+    auto err = snd_pcm_hw_params_any(handle, params);
     if (err < 0) {
-        printf("Broken configuration for playback: no configurations available: %s\n", snd_strerror(err));
+        printf("No configurations for playback: %s\n", snd_strerror(err));
         return err;
     }
-    /* set hardware resampling */
-    err = snd_pcm_hw_params_set_rate_resample(handle, params, resample);
+    err = snd_pcm_hw_params_set_rate_resample(handle, params, 1);
     if (err < 0) {
-        printf("Resampling setup failed for playback: %s\n", snd_strerror(err));
+        printf("Hardware resampling failed for playback: %s\n", snd_strerror(err));
         return err;
     }
-    /* set the interleaved read/write format */
-    err = snd_pcm_hw_params_set_access(handle, params, access);
+    // set the interleaved read/write format
+    err = snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
     if (err < 0) {
-        printf("Access type not available for playback: %s\n", snd_strerror(err));
+        printf("Access type unavailable for playback: %s\n", snd_strerror(err));
         return err;
     }
-    /* set the sample format */
-    err = snd_pcm_hw_params_set_format(handle, params, format);
+    err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16_LE);
     if (err < 0) {
         printf("Sample format not available for playback: %s\n", snd_strerror(err));
         return err;
     }
-    /* set the count of channels */
-    err = snd_pcm_hw_params_set_channels(handle, params, NchansOut());
+    err = snd_pcm_hw_params_set_channels(handle, params, nchans);
     if (err < 0) {
-        printf("Channels count (%i) not available for playbacks: %s\n", NchansOut(), snd_strerror(err));
+        printf("Failed to play %i channels: %s\n", nchans, snd_strerror(err));
         return err;
     }
-    /* set the stream rate */
     const unsigned int rate = globs.SampleRate;
     unsigned int rrate = rate;
     err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
     if (err < 0) {
-        printf("Rate %iHz not available for playback: %s\n", rate, snd_strerror(err));
+        printf("Failed to play at %i Hz: %s\n", rate, snd_strerror(err));
         return err;
     }
     if (rrate != rate) {
-        printf("Rate doesn't match (requested %iHz, get %iHz)\n", rate, rrate);
+        printf("Requested rate %i Hz != actual rate %i Hz\n", rate, rrate);
         return -EINVAL;
     }
-    /* set the buffer time */
-    int dir = 1;
-    err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time, &dir);
+    auto dir = 1;
+	auto usec_buffer = 10000u;
+    err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &usec_buffer, &dir);
     if (err < 0) {
-        printf("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
+        printf("Failed to play with ring buffer of %i usec: %s\n", usec_buffer, snd_strerror(err));
         return err;
     }
     snd_pcm_uframes_t size;
     err = snd_pcm_hw_params_get_buffer_size(params, &size);
     if (err < 0) {
-        printf("Unable to get buffer size for playback: %s\n", snd_strerror(err));
+        printf("Failed to get playback buffer size: %s\n", snd_strerror(err));
         return err;
     }
     buffer_size = size;
-    /* set the period time */
-    err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time, &dir);
+	auto usec_period = 3000u; // As low as 500 might work, or even 32.
+    err = snd_pcm_hw_params_set_period_time_near(handle, params, &usec_period, &dir);
     if (err < 0) {
-        printf("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
+        printf("Failed to play at period of %i usec: %s\n", usec_period, snd_strerror(err));
         return err;
     }
     err = snd_pcm_hw_params_get_period_size(params, &size, &dir);
     if (err < 0) {
-        printf("Unable to get period size for playback: %s\n", snd_strerror(err));
+        printf("Failed to get playback period size: %s\n", snd_strerror(err));
         return err;
     }
     period_size = size;
-    // printf("\n\nfyi SR %d, %ld samples per 'period' (buf) = %f msec.\n\n", rate, period_size, float(period_size)/float(rate) * 1000.0);
-    /* write the parameters to device */
     err = snd_pcm_hw_params(handle, params);
     if (err < 0) {
-        printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
+        printf("Failed to set playback hw params: %s\n", snd_strerror(err));
         return err;
     }
+    //printf("\nSR = %d Hz.\n%d channels.\nLatency = %.1f ms.\n\n", rate, nchans, float(period_size)/rate * 1000.0);
     return 0;
 }
 static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 {
     int err = snd_pcm_sw_params_current(handle, swparams);
     if (err < 0) {
-        printf("Unable to determine current swparams for playback: %s\n", snd_strerror(err));
+        printf("Failed to get playback swparams: %s\n", snd_strerror(err));
         return err;
     }
     /* start the transfer when the buffer is almost full: */
     /* (buffer_size / avail_min) * avail_min */
     err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size);
     if (err < 0) {
-        printf("Unable to set start threshold mode for playback: %s\n", snd_strerror(err));
+        printf("Failed to set playback start threshold: %s\n", snd_strerror(err));
         return err;
     }
-
     /* allow the transfer when at least period_size samples can be processed */
     err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
     if (err < 0) {
-        printf("Unable to set avail min for playback: %s\n", snd_strerror(err));
+        printf("Failed to set playback available min: %s\n", snd_strerror(err));
         return err;
     }
     err = snd_pcm_sw_params(handle, swparams);
     if (err < 0) {
-        printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
+        printf("Failed to set playback sw params: %s\n", snd_strerror(err));
         return err;
     }
     return 0;
 }
-#endif // UBUNTU
+#endif // VSS_LINUX_UBUNTU
 
 #ifdef VSS_LINUX_ALSA
 #ifdef VSS_LINUX_20ALSA
@@ -326,45 +234,46 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 snd_pcm_format_t pformat, rformat;
 #endif
 
-#if defined(VSS_LINUX)
+#ifdef VSS_LINUX
+
 #include <linux/soundcard.h>
 #include <csignal>
-
-int fdDAC = -1; // hardware output (and input, actually)
-
-//	yucky globals, IRIX-specific:
-#elif defined(VSS_IRIX)
-static ALport alp;
-static ALport alpin;
-static ALconfig alc;
-static unsigned long qsize;
-static int latency;
+#ifndef VSS_LINUX_UBUNTU
+	int fdDAC = -1; // hardware output (and input, actually)
 #endif
 
-#ifdef VSS_WINDOWS
-#include "fmod.h"
-#include "fmod_errors.h"
-static int (*pfn)() = NULL;
-#define TESTIT \
-	if (!pfn) \
-		{ \
-		printf("failed to find function in fmod.dll\n"); \
-		FreeLibrary(fmod_dll); \
-		exit(1); \
-		}
-static int (*_FSOUND_Stream_GetTime_hack)(FSOUND_STREAM*) = NULL;
-static FSOUND_STREAM *fsound_stream = NULL;
-static HMODULE fmod_dll = NULL;
-static int vfCalledback = 0;
-static int vfLiveTickPaused = 1; // first streamcallback happens before first LiveTick.
-static int vfLiveTickShouldReturnZero = 0;
-extern short* vrgsCallback;
-short* vrgsCallback = NULL;
-int vcbCallback = 0;
+#elif defined VSS_IRIX
 
-extern int vfMMIO;
-int vfMMIO = 0;
-#endif
+	// Yucky globals.
+	static ALport alp;
+	static ALport alpin;
+	static ALconfig alc;
+	static unsigned long qsize;
+	static int latency;
+
+#elif defined VSS_WINDOWS
+
+	#include "fmod.h"
+	#include "fmod_errors.h"
+	static int (*pfn)() = NULL;
+	#define TESTIT \
+		if (!pfn) { \
+			printf("failed to find function in fmod.dll\n"); \
+			FreeLibrary(fmod_dll); \
+			exit(1); }
+	static int (*_FSOUND_Stream_GetTime_hack)(FSOUND_STREAM*) = NULL;
+	static FSOUND_STREAM *fsound_stream = NULL;
+	static HMODULE fmod_dll = NULL;
+	static int vfCalledback = 0;
+	static int vfLiveTickPaused = 1; // first streamcallback happens before first LiveTick.
+	static int vfLiveTickShouldReturnZero = 0;
+	extern short* vrgsCallback;
+	short* vrgsCallback = NULL;
+	int vcbCallback = 0;
+	extern int vfMMIO;
+	int vfMMIO = 0;
+
+#endif // VSS_WINDOWS
 
 extern int liveaudio;
 extern int vfDie; // set to 1 when app is dying
@@ -372,8 +281,6 @@ int vfDie = 0;
 
 int vfSoftClip = FALSE;
 int vfLimitClip = FALSE;
-int vfGraphSpectrum = FALSE;
-int vfGraphOutput = FALSE;
 int vwAntidropout = 1; // # of extra 128-byte buffers of resistance to dropouts
 static const int vwAntidropoutMax = 64; // at 44kHz, that's 185 msec latency.
 
@@ -389,11 +296,11 @@ static float outvecp[NSAMPS] = {0};
 static float inpvecp[NSAMPS] = {0};
 static short ibuf   [NSAMPS] = {0};
 
-static int nchansIn;
+static int nchansIn = 0;
 static int fSoundIn = 0;
 extern void SetSoundIn(int fSoundInArg)
 	{ fSoundIn = fSoundInArg; }
-extern "C" const float* VssInputBuffer(void)
+extern "C" const float* VssInputBuffer()
 	{ return fSoundIn ? inpvecp : NULL; }
 extern int vfWaitForReinit;
 int vfWaitForReinit = 0;
@@ -406,7 +313,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 	vfWaitForReinit = 1;
 	usleep(250000); // make sure that LiveTick() noticed that we set vfWaitForReinit, and is now waiting.
 
-	//;; test and report if nchans or nchansInArg is other than 1, 2, or 4 or 8.
 	if(nchans<1)
 		nchans=1;
 	else if(nchans>MaxNumChannels)
@@ -424,7 +330,13 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 //	liveaudio is a badly-named flag indicating that
 //	samples are being scheduled and sent to a CODEC
 //	in real time, rather than being dumped to a file.
-	if (liveaudio)
+	if (!liveaudio)
+		{
+		// ParseArgs() already checked this.
+		globs.nchansIn = nchansIn = nchansInArg = 0;
+		SetSoundIn(0);
+		}
+	else
 		{
 #ifdef VSS_IRIX
 		alc = alNewConfig();
@@ -434,16 +346,14 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 		alSetQueueSize (alc, (int)qsize);
 		if (alSetChannels(alc, (long)nchans) < 0)
 			{
-			fprintf(stderr, "vss warning: couldn't output %d channels, using 1 instead.\n",
-				nchans);
+			cerr << "vss: couldn't play " << nchans << " channels, using 1 instead.\n";
 			nchans = 1;
 			}
 		alp = alOpenPort("obuf", "w", alc);
 		if (!alp)
 			{
 #ifdef VSS_IRIX_63PLUS
-			cerr <<"vss error: failed to output audio: "
-				 <<alGetErrorString(oserror());
+			cerr << "vss: failed to output audio: " << alGetErrorString(oserror());
 #endif
 			return -1;  /* no audio hardware */
 			}
@@ -452,8 +362,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			{
 			if (alSetChannels(alc, (long)nchansInArg) < 0)
 				{
-				cerr <<"vss warning: couldn't input "
-					<<nchansInArg <<" channels, using 1 instead.\n";
+				cerr << "vss: couldn't input " << nchansInArg << " channels, using 1 instead.\n";
 				nchansInArg = 1;
 				alSetChannels(alc, (long)nchansInArg);
 				}
@@ -461,15 +370,14 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			if (!alpin)
 				{
 #ifdef VSS_IRIX_63PLUS
-				cerr <<"vss error: failed to input audio: "
-					 <<alGetErrorString(oserror());
+				cerr << "vss: failed to input audio: " << alGetErrorString(oserror());
 #endif
 				nchansInArg = 0;
 				}
 			globs.nchansIn = nchansIn = nchansInArg;
 			}
 
-#if defined(VSS_IRIX_62) || defined(VSS_IRIX_53)
+#if defined VSS_IRIX_62 || defined VSS_IRIX_53
 		long pvbuf[6];
 		long pvlen;
 		pvbuf[0] = AL_OUTPUT_RATE;
@@ -498,8 +406,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			pvlen += 2;
 			}
 		ALsetparams(AL_DEFAULT_DEVICE, pvbuf, pvlen);
-#else
-
+#else // VSS_IRIX_63 or VSS_IRIX_65
 		ALpv pvbuf[3];
 		long npvs = 0;
 		pvbuf[npvs].param = AL_RATE;
@@ -514,9 +421,9 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 
 		if (alSetParams(AL_DEFAULT_OUTPUT, pvbuf, npvs) < 0)
 			{
-			cerr << "vss error: alSetParams failed: " << alGetErrorString(oserror()) <<"\n";
+			cerr << "vss: alSetParams failed: " << alGetErrorString(oserror()) << "\n";
 			if (pvbuf[1].sizeOut < 0)
-				cerr << "vss error: output sample rate " <<srate <<" was invalid.\n";
+				cerr << "vss: invalid output sample rate " << srate << ".\n";
 			}
 
 		npvs = 0;
@@ -528,16 +435,16 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 
 			if (alSetParams(AL_DEFAULT_INPUT, pvbuf, npvs) < 0)
 				{
-				cerr << "vss error: alSetParams failed: " << alGetErrorString(oserror()) <<"\n";
+				cerr << "vss: alSetParams failed: " << alGetErrorString(oserror()) << "\n";
 				if (pvbuf[1].sizeOut < 0)
-					cerr << "vss error: input sample rate " <<srate <<" was invalid.\n";
+					cerr << "vss: invalid input sample rate " << srate << ".\n";
 				}
 			}
 
-#endif
-#endif
-#ifdef VSS_LINUX_OSS
+#endif // VSS_IRIX_63 or VSS_IRIX_65
+#endif // VSS_IRIX
 
+#ifdef VSS_LINUX_OSS
 		// If fdDAC >= 0, we already opened it -- this is a reset button or something.
 		if (fdDAC < 0)
 			fdDAC = open("/dev/dsp", fSoundIn ? O_RDWR : O_WRONLY);
@@ -637,68 +544,56 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			globs.SampleRate = SR;
 			globs.OneOverSR = 1.0 / globs.SampleRate;
 			}
-#endif
+#endif // VSS_LINUX_OSS
+
 #ifdef VSS_LINUX_UBUNTU
-		snd_pcm_hw_params_t *hwparams; snd_pcm_hw_params_alloca(&hwparams);
-		snd_pcm_sw_params_t *swparams; snd_pcm_sw_params_alloca(&swparams);
-		int err = snd_output_stdio_attach(&alsa_output, stdout, 0);
-		if (err < 0)
+		int err;
+		if ((err = snd_pcm_open(&pcm_handle_write, "default" /* or e.g. "hw:0,0" */, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
 		      {
-		      fprintf(stderr, "vss error: no alsa: %s\n", snd_strerror(err));
+			  // ALSA prints a dozen errors first, even without snd_output_stdio_attach().
+		      fprintf(stderr, "vss: no audio out: %s\n", snd_strerror(err));
 		      liveaudio = 0;
 		      goto LContinue;
 		      }
-		if ((err = snd_pcm_open(&pcm_handle_write, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+		snd_pcm_hw_params_t* hwparams;
+		snd_pcm_hw_params_alloca(&hwparams);
+		if ((err = set_hwparams(pcm_handle_write, hwparams, NchansOut())) < 0)
 		      {
-		      fprintf(stderr, "vss error: no audio out: %s\n", snd_strerror(err));
+		      // set_hwparams already complained.
 		      liveaudio = 0;
 		      goto LContinue;
 		      }
-		if ((err = set_hwparams(pcm_handle_write, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
-		      {
-		      fprintf(stderr, "vss error: failed to set hwparams: %s\n", snd_strerror(err));
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
+		snd_pcm_sw_params_t* swparams;
+		snd_pcm_sw_params_alloca(&swparams);
 		if ((err = set_swparams(pcm_handle_write, swparams)) < 0)
 		      {
-		      fprintf(stderr, "vss error: failed to set swparams: %s\n", snd_strerror(err));
+		      fprintf(stderr, "vss failed to set swparams: %s\n", snd_strerror(err));
 		      liveaudio = 0;
 		      goto LContinue;
 		      }
-#if 0
-		const unsigned int channels = NchansOut();
-		signed short *samples = (short int*)malloc((period_size * channels * snd_pcm_format_physical_width(format)) / 8);
-		if (!samples)
-		      {
-		      fprintf(stderr, "vss error: OOM\n");
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
-		snd_pcm_channel_area_t *areas = (snd_pcm_channel_area_t*)calloc(channels, sizeof(snd_pcm_channel_area_t));
-		if (!areas)
-		      {
-		      fprintf(stderr, "vss error: OOM\n");
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
-		unsigned int chn;
-		for (chn = 0; chn < channels; chn++) {
-		  areas[chn].addr = samples;
-		  areas[chn].first = chn * snd_pcm_format_physical_width(format);
-		  areas[chn].step = channels * snd_pcm_format_physical_width(format);
+		if (fSoundIn) {
+			if ((err = snd_pcm_open(&pcm_handle_read, "default", SND_PCM_STREAM_CAPTURE, 0)) < 0) {
+				fprintf(stderr, "vss: no audio in: %s\n", snd_strerror(err));
+				liveaudio = 0;
+				goto LContinue;
+			}
+			if ((err = set_hwparams(pcm_handle_read, hwparams, nchansInArg)) < 0) {
+				// set_hwparams already complained.
+				fSoundIn = false;
+		    }
+			if ((err = set_swparams(pcm_handle_read, swparams)) < 0) {
+				fprintf(stderr, "vss failed to set input swparams: %s\n", snd_strerror(err));
+				fSoundIn = false;
+		    }
+			globs.nchansIn = nchansIn = nchansInArg;
 		}
-
-		err = write_loop(pcm_handle_write, samples, areas);
-		free(areas);		//;;;; now this is unused
-		free(samples);
-		snd_pcm_close(pcm_handle_write);
-		snd_pcm_sw_params_free(swparams);
+#if 0
+		// These segfault.  Maybe only after snd_pcm_close(), in CloseSynth()?
 		snd_pcm_hw_params_free(hwparams);
-		printf("terminating early while writing this code in 2012\n");;;;
-		exit(0);
+		snd_pcm_sw_params_free(swparams);
 #endif
-#endif
+#endif // VSS_LINUX_UBUNTU
+
 #ifdef VSS_LINUX_ALSA
 		int err;
 
@@ -720,7 +615,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			goto LContinue;
 			}
 		}
-
 
 			{
 			if (fSoundIn)
@@ -791,7 +685,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			liveaudio = 0;
 			goto LContinue;
 			}
-#else
+#else // VSS_LINUX_21ALSA
 		snd_pcm_channel_params_t params;
 		memset(&params, 0, sizeof(params));
 		params.channel = SND_PCM_CHANNEL_PLAYBACK;
@@ -813,11 +707,13 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			goto LContinue;
 			}
 		printf("playing %i Hz, %i channels\n", pformat.rate, pformat.voices);
-#endif
+#endif // VSS_LINUX_21ALSA
 
 		if (fSoundIn)
 			{
 			globs.nchansIn = nchansIn = nchansInArg;
+			if (nchansIn == 0)
+				fprintf(stderr, "vss warning: input has 0 channels.\n");
 #ifdef VSS_LINUX_20ALSA
 			memset( &rformat, 0, sizeof( rformat ) );
 			rformat.format = SND_PCM_SFMT_S16_LE;
@@ -836,7 +732,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			rparams.fragments_min = 8; //;; was 1, then was 2.
 			if (snd_pcm_record_params(pcm_handle_read, &rparams ) < 0 )
 				fprintf(stderr, "vss error: unable to set record params\n");
-#else
+#else // VSS_LINUX_21ALSA
 			snd_pcm_channel_params_t params;
 			memset(&params, 0, sizeof(params));
 			params.channel = SND_PCM_CHANNEL_CAPTURE;
@@ -859,14 +755,14 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 				}
 			printf("recording %i Hz, %i channels\n", rformat.rate, rformat.voices);       
 
-#endif
+#endif // VSS_LINUX_21ALSA
 			}
 #ifdef VSS_LINUX_20ALSA
 		fdDAC = snd_pcm_file_descriptor(pcm_handle_write);
 #else
 		fdDAC = snd_pcm_file_descriptor(pcm_handle_write, SND_PCM_CHANNEL_PLAYBACK);
 #endif
-#endif
+#endif // VSS_LINUX_ALSA
 
 #ifdef VSS_WINDOWS
 		if (vfMMIO)
@@ -875,7 +771,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 				goto LFailed;
 
 			// Using MMIO audio i/o.
-			cerr <<"vss remark: MMIO initialized.\n";
 			goto LContinue;
 			}
 
@@ -885,14 +780,13 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			fmod_dll = LoadLibrary("fmod.dll");
 		if (!fmod_dll)
 			{
-			printf("vss error: failed to load FMOD.DLL.\n");
+			printf("vss: failed to load FMOD.DLL.\n");
 			goto LFailed;
 			}
 
 		if (nchans > 2)
 			{
-			printf("vss warning: DirectSound outputs at most 2 channels.  Using 2 instead of %d.\n",
-				nchans);
+			printf("vss: DirectSound outputs at most 2 channels.  Using 2 instead of %d.\n", nchans);
 			nchans = 2;
 			}
 		{
@@ -902,7 +796,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 		float version = _FSOUND_GetVersion();
 		if (version != FMOD_VERSION)
 			{
-			printf("vss error: FMOD.DLL is version %.02f, but should be %.02f.\n", version, FMOD_VERSION);
+			printf("vss: FMOD.DLL is version %.02f, but should be %.02f.\n", version, FMOD_VERSION);
 			FreeLibrary(fmod_dll);
 			goto LFailed;
 			}
@@ -933,7 +827,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 
 		_FSOUND_SetOutput(FSOUND_OUTPUT_DSOUND);
 		_FSOUND_SetDriver(0);  // Select sound card (0 = default)
-		//cerr <<"vss remark: default sound card selected.\n";;;;
 		_FSOUND_SetBufferSize(100 /* msec */ );
 		if (!_FSOUND_Init((int)srate, 2/*RTFM*/, 0))
 			goto LFailed2;
@@ -952,25 +845,16 @@ LFailed2:
 			FreeLibrary(fmod_dll);
 			goto LFailed;
 			}
-		cerr <<"vss remark: DirectSound initialized.\n";
 		goto LContinue;
 		}
 
 LFailed:
 		if (vfMMIO)
-			cerr <<"vss error: failed to initialize MMIO audio i/o.  Can't output audio.\n";
+			cerr <<"vss failed to initialize MMIO.  Can't output audio.\n";
 		else
-			cerr <<"vss error: failed to initialize FMOD/DirectSound.  Can't output audio.\n";
+			cerr <<"vss failed to initialize FMOD/DirectSound.  Can't output audio.\n";
 		liveaudio = 0;
-#endif
-
-		}
-	else
-		{
-		if (fSoundIn || nchansInArg > 1)
-			cerr <<"vss warning: audio input doesn't work with -silent.\n";
-		globs.nchansIn = nchansIn = nchansInArg = 0;
-		SetSoundIn(0);
+#endif // VSS_WINDOWS
 		}
 
 LContinue:
@@ -998,9 +882,10 @@ LContinue:
 	}
 
 	vfWaitForReinit = 0; // enable LiveTick()
+
 #ifdef VSS_LINUX
 #ifdef VSS_LINUX_UBUNTU
-	return liveaudio ? 0/*unused globs.dacfd*/ : -1;
+	return liveaudio ? 0 : -1;
 #else
 	if (!liveaudio)
 		{
@@ -1010,16 +895,14 @@ LContinue:
 		}
 	return fdDAC;
 #endif
-#endif
-#ifdef VSS_IRIX
+#elif defined VSS_IRIX
 	return liveaudio ? alGetFD(alp) : -1;
-#endif
-#ifdef VSS_WINDOWS
-		return liveaudio ? 0/*unused globs.dacfd in VSS_WINDOWS*/ : -1;
+#elif defined VSS_WINDOWS
+		return liveaudio ? 0 : -1;
 #endif
 }
 
-extern void VSS_ResyncHardware(void)
+void VSS_ResyncHardware()
 {
 #ifdef VSS_LINUX_UBUNTU
 	if (pcm_handle_read)
@@ -1033,13 +916,13 @@ extern void VSS_ResyncHardware(void)
 		snd_pcm_flush_record(pcm_handle_read);
 	if (pcm_handle_write)
 		snd_pcm_drain_playback(pcm_handle_write);
-#else
+#else // VSS_LINUX_21ALSA
 	if (pcm_handle_read)
 		snd_pcm_capture_flush(pcm_handle_read);
 	if (pcm_handle_write)
 		snd_pcm_playback_drain(pcm_handle_write);
-#endif
-#endif
+#endif // VSS_LINUX_21ALSA
+#endif // VSS_LINUX_ALSA
 }
 
 // How many samples can we compute without getting too far ahead?
@@ -1047,15 +930,12 @@ int Scount(void)
 {
 #ifdef VSS_IRIX
 	return alGetFilled(alp);
-#endif
-#if defined(VSS_LINUX_ALSA)
+#elif defined VSS_LINUX_ALSA
 	return MaxSampsPerBuffer; // lie, always return MaxSampsPerBuffer, just to get it running!
-#endif
-#if defined(VSS_LINUX_UBUNTU)
-	// get # frames ready to play (fill level, how far from underrun): snd_pcm_avail(), or cheap approximate snd_pcm_avail_update().
+#elif defined VSS_LINUX_UBUNTU
+	// # frames ready to capture or play (how far from xrun): snd_pcm_avail(), or cheap approximate snd_pcm_avail_update().
 	return pcm_handle_write ? snd_pcm_avail_update(pcm_handle_write) : 0;
-#endif
-#ifdef VSS_LINUX_OSS
+#elif defined VSS_LINUX_OSS
 	audio_buf_info x;
 	if (ioctl(fdDAC, SNDCTL_DSP_GETOSPACE, &x))
 		perror("vss warning: ioctl failed");
@@ -1068,11 +948,10 @@ int Scount(void)
 	// the number of samples we can write without blocking.
 
 	return CFRAGMENT * 256 / sizeof(short) - x.bytes / sizeof(short);
-#endif
-#ifdef VSS_WINDOWS
+#elif defined VSS_WINDOWS
 	return MaxSampsPerBuffer; // wild guess
 #endif
-	}
+}
 
 static float global_ampl = 1.0;
 
@@ -1093,18 +972,24 @@ void Closesynth()
 		{
 #ifdef VSS_IRIX
 		alClosePort(alp);
-#endif
-#ifdef VSS_LINUX_ALSA
+#elif defined VSS_LINUX_UBUNTU
+		if (pcm_handle_write) {
+			snd_pcm_drain(pcm_handle_write);
+			snd_pcm_close(pcm_handle_write);
+		}
+		if (pcm_handle_read) {
+			snd_pcm_drain(pcm_handle_read);
+			snd_pcm_close(pcm_handle_read);
+		}
+#elif defined VSS_LINUX_ALSA
 		if (pcm_handle_write)
 			snd_pcm_close(pcm_handle_write);
 		if (pcm_handle_read)
 			snd_pcm_close(pcm_handle_read);
-#endif
-#ifdef VSS_LINUX_OSS
+#elif defined VSS_LINUX_OSS
 		close(fdDAC);
 		fdDAC = -1;
-#endif
-#ifdef VSS_WINDOWS
+#elif defined VSS_WINDOWS
 		if (vfCalledback)
 			{
 			//printf("Closesynth called during callback. dehr?!  It's waiting.\n");
@@ -1147,7 +1032,7 @@ void Closesynth()
 			else
 				cerr << "vss internal error: Closesynth() called twice.\n";
 			}
-#endif
+#endif // VSS_WINDOWS
 		}
 	if (globs.fdOfile >= 0)
 		CloseOfile(globs.ofile);
@@ -1163,10 +1048,8 @@ static inline void MaybeResetsynth()
 {
 	if (!fWantToResetsynth)
 		return;
-	//printf("MaybeResetsynth calling Closesynth!\n");;;;
     Closesynth();
 	fWantToResetsynth = 0;
-	//printf("MaybeResetsynth calling Initsynth!\n");;;;
 	globs.dacfd = Initsynth(globs.udp_port,
 		globs.SampleRate, globs.nchansVSS, globs.nchansIn,
 		globs.liveaudio, globs.lwm, globs.hwm);
@@ -1178,29 +1061,31 @@ static int (*vsfunc)(int n, float* outvecp, int nchans) = NULL;
 int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
               int n, int nchans)
 {
-	// printf("\t\t\tSynth() b6: %d samps, %d chans\n", n, nchans);;;;
 #ifndef VSS_WINDOWS
 	MaybeResetsynth();
 #endif
-
 	float k = global_ampl;
 	int i,j;
-
-	/* Zero the output buffer, just in case. */
-	memset((char*)outvecp, 0, n * nchans * sizeof(float));
-
-#undef PARANOID
-#ifdef PARANOID
-	// Zero the input buffer too.
-	memset(ibuf, 0, n * nchansIn * sizeof(short));
-#endif
-
-	if(liveaudio && fSoundIn)
+	if (liveaudio && fSoundIn)
 		{
 #ifdef VSS_LINUX_ALSA
 		(void)snd_pcm_read(pcm_handle_read, ibuf, n * nchansIn * sizeof(short));
+#elif defined VSS_LINUX_UBUNTU
+		const int rc = snd_pcm_readi(pcm_handle_read, ibuf, n);
+		if (rc == -EPIPE) {
+			fprintf(stderr, "vss: input overrun.\n");
+			snd_pcm_prepare(pcm_handle_read);
+		} else if (rc < 0) {
+			fprintf(stderr, "vss: input error: %s\n", snd_strerror(rc));
+		} else if (rc != n) {
+			fprintf(stderr, "vss: input read only %d frames, not %d\n", rc, n);
+		}
+#if 0
+		// Cheap VU meter for input.
+		auto p = 0; for (i=0; i<n*nchansIn; ++i) p = std::max(p, abs(ibuf[i]));
+		if (p != 0) printf("peak = %4d\n", p);
 #endif
-#ifdef VSS_LINUX_OSS
+#elif defined VSS_LINUX_OSS
 		// EFFECTIVELY nchansIn == nchans in ALSA and OSS,
 		// even if nchansIn is actually 1.
 		// So if nchans==2, fake nchansIn to be 1 by summing the two
@@ -1211,35 +1096,32 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 			{
 			//printf(";; don't do stereo input!\n");;;;
 			// This does the right thing, but we get ~1/3 second lag!
-			(void)read(fdDAC, ibuf, n * 2 * sizeof(short));
+			(void)read(fdDAC, ibuf, n * nchansIn * sizeof(short));
 			for (i=0; i<n; ++i)
 				//ibuf[i] = ibuf[i*2];
 				ibuf[i] = (ibuf[i*2] + ibuf[i*2+1]) / 2;
 			}
 		else
 			fprintf(stderr, "input for > 2 channels NYI.\n");
-		// read(fdDAC, ibuf, n * nchansIn * sizeof(short));
-		// identical. crashed with alsa014, didn't try alsa030.
-#endif
-#ifdef VSS_IRIX
+#elif defined VSS_IRIX
 		alReadFrames(alpin, ibuf, n);
 #endif
 
 #define REMOVE_DC
-#ifdef REMOVE_DC
-// Remove DC offset from input, assuming that input was silent (on average,
-// at least!) when VSS started.
-		static int wDCOffset = 1<<20;
-		if (wDCOffset == 1<<20)
-			{
-			wDCOffset = 0;
-			for (i=0; i<n; ++i)
-				for (j=0; j<nchansIn; ++j)
-					wDCOffset += ibuf[i*nchansIn + j];
-			wDCOffset /= -n*nchansIn;
-			}
+#ifndef REMOVE_DC
+		constexpr auto wDCOffset = 0;
 #else
-#define wDCOffset 0
+		// Remove DC offset from input, assuming that input
+		// was roughly silent when VSS started.
+		static auto wDCOffset = 1<<20;
+		if (wDCOffset == 1<<20) {
+			wDCOffset = 0;
+			if (nchansIn > 0) {
+				for (i=0; i<n*nchansIn; ++i)
+					wDCOffset += ibuf[i];
+				wDCOffset /= -n*nchansIn;
+			} // Else, input failed to init.
+		}
 #endif
 
 		for (i=0; i<n; ++i)
@@ -1256,6 +1138,10 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		printf("vss internal error: Synth(NULL) (%p).\n", vsfunc);
 		return FALSE;
 		}
+
+	// Zero the output buffer.
+	memset(outvecp, 0, n * nchans * sizeof(float));
+
 	if (!(*sfunc)(n, outvecp, nchans))
 		return FALSE;
 
@@ -1302,7 +1188,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		float dBMax = dBFromScalar(ampMax * k * ScalarFromdB(zLimitdB) / 32768.);
 	//	printf("ampMax = %.2f   dBMax = %.2f\n", ampMax, dBMax);;
 		if (dBMax > -2.)
-			fprintf(stderr, "vss warning: avoiding hard clipping on output.\n");
+			fprintf(stderr, "vss: avoiding hard clipping on output.\n");
 
 		float dBNew = 0.;
 		if (dBMax > 0.)
@@ -1323,10 +1209,10 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		if (!fShouted)
 			{
 			if (zLimitdB < -3.)
-				fprintf(stderr, "vss warning: limiting output by %.1f dB\n",
+				fprintf(stderr, "vss: limiting output by %.1f dB\n",
 					-zLimitdB);
 			if (zLimitdB > 3.)
-				fprintf(stderr, "vss remark: boosting output by %.1f dB\n",
+				fprintf(stderr, "vss: boosting output by %.1f dB\n",
 					zLimitdB);
 			// report this not more than once every 10 seconds
 			fShouted = (int)(10.0 * globs.SampleRate/MaxSampsPerBuffer);
@@ -1354,7 +1240,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 				{
 				if (!fShoutedSoft && !fShouted)
 					{
-					fprintf(stderr, "vss remark: soft clipping.\n");
+					fprintf(stderr, "vss: soft clipping.\n");
 					// report this not more than once every 10 seconds
 					fShoutedSoft = (int)(10.0 * globs.SampleRate/MaxSampsPerBuffer);
 					}
@@ -1363,7 +1249,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 					wAmpl = wSoftclipLim;
 					if (!fShouted)
 						{
-						fprintf(stderr, "vss warning: hard clipping (%.2f\n", fabs(outvecp[i]) * k / 32768);
+						fprintf(stderr, "vss: hard clipping (%.2f\n", fabs(outvecp[i]) * k / 32768);
 						// report this not more than once every 2 seconds
 						fShouted = (int)(2.0 * globs.SampleRate/MaxSampsPerBuffer);
 						fShoutedSoft = (int)(10.0 * globs.SampleRate/MaxSampsPerBuffer);
@@ -1391,8 +1277,7 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 					// Sometimes the first occurrence is a bogus NaN value.
 					fFirstShout = 0;
 				else
-					fprintf(stderr, "vss warning: hard clipping on output (%.2f)\n",
-						fabs(wAmpl)/32768.);
+					fprintf(stderr, "vss: hard clipping (%.2f)\n", fabs(wAmpl)/32768.);
 				// report this not more than once every 2 seconds
 				fShouted = (int)(2.0 * globs.SampleRate/MaxSampsPerBuffer);
 				}
@@ -1404,11 +1289,12 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		int samps = ssp - sampbuff;
 		if (liveaudio)
 			{
-#if defined(VSS_LINUX_ALSA)
+#ifdef VSS_LINUX_ALSA
 			(void)snd_pcm_write(pcm_handle_write, sampbuff, samps*sizeof(short));
-#elif defined(VSS_LINUX_OSS)
+#elif defined VSS_LINUX_OSS
 			write(fdDAC, sampbuff, samps*sizeof(short));
-#elif defined(VSS_LINUX_OSS)
+#elif defined VSS_LINUX_OSS
+			// Not reachable!
 			const int cb = samps*sizeof(short);
 			// assert(vwAntidropout >= 1)
 			// Simon Bates <Simon.Bates@cl.cam.ac.uk>'s idea led to this.
@@ -1440,39 +1326,40 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 					write(fdDAC, rgb, cBuffer * cb);
 					}
 				}
-#elif defined(VSS_IRIX)
+#elif defined VSS_IRIX
 			alWriteFrames(alp, sampbuff, samps/nchans);
 			alSetFillPoint(alp, (long)(qsize-latency));
-#elif defined(VSS_WINDOWS)
+#elif defined VSS_WINDOWS
 			// Tell streamcallback() where to find the samples.
 			vrgsCallback = sampbuff;
 			vcbCallback = samps*sizeof(short);
-#elif defined(VSS_LINUX_UBUNTU)
+#elif defined VSS_LINUX_UBUNTU
 			// to sync: snd_pcm_delay() returns how much time will pass before a sample written now gets played.
 			{
 			    signed short *ptr = sampbuff; // sampbuff is interleaved.
 			    int cptr = samps / NchansOut();
-			    while (cptr > 0) {
-				const int err = snd_pcm_writei(pcm_handle_write, ptr, cptr);
-				if (err == -EAGAIN)
-				    continue;
-				if (err < 0) {
-				    if (xrun_recovery(pcm_handle_write, err) < 0) {
-					printf("Write error: %s\n", snd_strerror(err));
-					exit(EXIT_FAILURE);
-				    }
-				    break; /* skip one period */
+				while (cptr > 0) {
+					const auto err = snd_pcm_writei(pcm_handle_write, ptr, cptr);
+					if (err == -EAGAIN)
+						continue;
+					if (err < 0) {
+						if (xrun_recovery(pcm_handle_write, err) < 0) {
+							printf("vss failed to play: %s\n", snd_strerror(err));
+							return FALSE;
+						}
+						break;
+					}
+					ptr += err * NchansOut(); // err is also # of frames written.
+					cptr -= err;
 				}
-				ptr += err * NchansOut();
-				cptr -= err;
-			    }
 			}
 #else
-			#error No source code written for audio output.
-#endif
+			#error "$(PLATFORM) has not implemented audio output."
+#endif // many platforms
 			}
 		if (globs.fdOfile >= 0 && globs.ofile_enabled)
 			{
+			// ALSA does this with the "tee device" tee:hw.
 			const int cb = samps*sizeof(short);
 			if (globs.vcbBufOfile)
 				{
@@ -1569,10 +1456,10 @@ static inline void closeudp(int sockfd)
 char mbuf[MAXMESG];
 int caught_sigint = 0;
 
-#if defined(VSS_IRIX_63_MIPS3) || defined(VSS_LINUX) || defined(VSS_REDHAT7) || defined(VSS_WINDOWS)
-#define SignalHandlerType int
+#if defined VSS_IRIX_63_MIPS3 || defined VSS_LINUX || defined VSS_REDHAT7 || defined VSS_WINDOWS
+	#define SignalHandlerType int
 #else
-#define SignalHandlerType ...
+	#define SignalHandlerType ...
 #endif
 
 void catch_sigint(SignalHandlerType)
@@ -1583,30 +1470,21 @@ void catch_sigint(SignalHandlerType)
 
 #ifdef VSS_IRIX
 #include <sys/types.h>
-#include <dmedia/midi.h>
-
 extern void CloseOfile(char*);
-
 extern void VSS_SetGlobalAmplitude(float ampl);
 extern float VSS_GetGlobalAmplitude(void);
-
 extern void VSS_SetGear(int iGear);
-
 void doActors(void);
 void doActorsCleanup(void);
 void deleteActors(void);
-
 extern "C" int actorMessageMM(void *pmm, struct sockaddr_in *cl_addr);
-
 int Initsynth(int udp_port, float srate, int nchans,
 			  int nchansIn, int liveaudio, int latency, int hwm);
 void Closesynth(void);
-
 int mdClosePortInput(MDport port);
 int mdClosePortOutput(MDport port);
-
 extern "C" const float* VssInputBuffer(void);
-#endif
+#endif // VSS_IRIX
 
 static int viGear = 1;
 enum { prndl_parked=0, prndl_low, prndl_drive }; // for viGear
@@ -1660,7 +1538,7 @@ static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
 //	compute a number of sample buffers that will keep the 
 //	latency within the bounds set by the high and low
 //	water marks:
-#if defined(VSS_IRIX) 
+#ifdef VSS_IRIX
 	const int c = (wCatchUp!=0) ? wCatchUp :
 					(vv.hwm-r) / (vv.nchansOut * MaxSampsPerBuffer);
 #else
@@ -1674,13 +1552,12 @@ static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
 }
 
 #ifdef VSS_IRIX
-#define SOCK struct sockaddr_in
+	#define SOCK struct sockaddr_in
 #else
-#define SOCK sockaddr_in
+	#define SOCK sockaddr_in
 #endif
 
 #ifdef VSS_WINDOWS
-
 void streamcallback(FSOUND_STREAM*, void *buff, int len, int)
 {
 	if (vfDie)
@@ -1783,13 +1660,11 @@ LDone:
 	vfCalledback = 0;
 	vfLiveTickPaused = 0;
 }
-#endif	//	def VSS_WINDOWS
-
+#endif // VSS_WINDOWS
 
 // Usec() returns how many microseconds have elapsed since the
 // previous time it was called.
-//
-#if defined(VSS_IRIX)
+#ifdef VSS_IRIX
 #include <dmedia/dmedia.h>
 static unsigned long long tPrev;
 static inline int Usec()
@@ -1800,12 +1675,12 @@ static inline int Usec()
 	tPrev = t;
 	return (int)(dt / 1000);
 }
-#elif defined(VSS_WINDOWS)
+#elif defined VSS_WINDOWS
 static inline const int Usec()
 {
 	return 10000;
 }
-#else
+#else // VSS_LINUX
 //	note: no account is taken of the fact that clock() wraps around
 //	every 36 minutes or so (according to the man pages).
 //
@@ -1819,8 +1694,7 @@ static inline const int Usec()
 	tPrev = t;
 	return (int)(dt / (CLOCKS_PER_SEC / 1000000));
 }
-#endif
-
+#endif // VSS_LINUX
 
 //	tick function when liveaudio is set.
 //
@@ -1901,13 +1775,12 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 #endif
 		return 1;
 	}
-
-#endif
+#endif // !VSS_WINDOWS
 
 	int n;
 
 //... Yes. Client input pending.
-#if defined(VSS_WINDOWS)
+#ifdef VSS_WINDOWS
 	if
 	// "while" throws an exception, oddly.
 	// Even if we ioctl FIONBIO and fcntl FNDELAY.
@@ -1923,7 +1796,6 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 			{
 			if (!actorMessageMM(mbuf, (SOCK*)&cl_addr))
 				return 0;
-
 			/*
 			if (mbuf is a SendData message)
 				{
@@ -1953,7 +1825,7 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 
 			}
 		else
-#endif
+#endif // UNDER_CONSTRUCTION
 			{
 			if (!actorMessageMM(mbuf, (SOCK*)&cl_addr))
 				return 0;
@@ -1987,19 +1859,16 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 
 static inline int BatchTick(VSSglobals& vv, int sockfd)
 {
-#if defined(VSS_IRIX)
+#ifdef VSS_IRIX
 	struct sockaddr_in cl_addr;
 	int clilen;
-#endif
-#if defined(VSS_LINUX)
+#elif defined VSS_LINUX
 	struct sockaddr cl_addr;
 	unsigned int clilen;
-#endif
-#if defined(VSS_WINDOWS)
+#elif defined VSS_WINDOWS
 	struct sockaddr cl_addr;
 	int clilen;
 #endif
-
 	while (clilen = sizeof(cl_addr),
 		recvfrom(sockfd, mbuf, MAXMESG, 0, &cl_addr, &clilen) > 0)
 		{
@@ -2053,8 +1922,7 @@ LAgain:
 		fprintf(stderr, "HACK: trying next lower port.\n");
 		vv.udp_port--;
 		goto LAgain;
-#endif
-#ifndef VSS_WINDOWS
+#else
 		fprintf(stderr, "\nIf so, type \"vsskill\" or \"kill -9 <processid>\" to kill it.\n");
 #endif
 		return;
@@ -2064,11 +1932,7 @@ LAgain:
 		vv.nchansIn, liveaudio, vv.lwm, vv.hwm);
 
 	if (liveaudio && (vv.dacfd < 0))
-		{
-		// This was already reported.
-		// fprintf(stderr, "vss error: no audio out.\n");
 		goto LDie;
-		}
 
 #ifndef VSS_WINDOWS
 	if (liveaudio)
@@ -2087,9 +1951,9 @@ LAgain:
 		}
 #endif
 
-#if defined(VSS_IRIX)
+#ifdef VSS_IRIX
 	flushme_(); // set "flush zero" bit to avoid underflow exceptions
-#elif !defined(VSS_WINDOWS)
+#elif defined VSS_LINUX
 	t0 = clock();
 #endif
 	
