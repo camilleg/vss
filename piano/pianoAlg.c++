@@ -304,14 +304,10 @@ void pianoAlg::setTstep()
 void pianoAlg::setBoth()
 {
   printf("pianoAlg setBoth with key %d dyna %d\n",key,dyna);
-
   dur = pianod->durtab[key*128+dyna];
   noteOffTime = dur;
   rlsratesamp = pianod->rlsratetab[key*128+dyna];
   rlsratesec = powf(rlsratesamp, sr);
-
-  printf("foo %d\n", pianod->gmaxtabdim[1]);
-  printf("foo %d\n", pianod->gmaxtabdim[2]);
   k = pianod->gmaxtabdim[1]*pianod->gmaxtabdim[2];
   j = whichone*k + dyna*pianod->gmaxtabdim[2];
   for (i=0;i<pianod->gmaxtabdim[2];i++) 
@@ -358,7 +354,7 @@ void pianoAlg::setPianoData(PIANODATA * data)
   //for (i=0; i<4; i++) printf("%d %d %d %d\n",i,pianod->gmaxtabdim[i],pianod->durtabdim[i],pianod->rlsratetabdim[i]);
 }
 
-void pianoAlg::setNoteOn(int z)
+void pianoAlg::setNoteOn(bool z)
 {
   if ( !noteOn )
     {

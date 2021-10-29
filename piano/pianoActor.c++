@@ -2,7 +2,7 @@
 
 ACTOR_SETUP(pianoActor, PianoActor)
 
-pianoActor::pianoActor(void) : 
+pianoActor::pianoActor() :
   VGeneratorActor(),
   defaultFreq(110.0),
   defaultDyna(120.0)
@@ -31,10 +31,13 @@ pianoActor::sendDefaults(VHandler * p)
 int
 pianoActor::receiveMessage(const char * Message)
 {
+#if 0
+	// Test this elswhere, not here where only the base classes are used.
 	if (!pianod->fValid) {
 		fprintf(stderr, "PianoActor corrupt, ignoring all messages.\n");
 		Uncatch();
 	}
+#endif
 	CommandFromMessage(Message);
 	return VGeneratorActor::receiveMessage(Message);
 }
@@ -45,9 +48,6 @@ PIANODATA::~PIANODATA()
   delete[] wavetab;
   delete[] attn;
   delete[] rlsn;
-//   delete[] gmaxtab;
-//   delete[] durtab;
-//   delete[] rlsratetab;
   free(gmag);
 }
 
@@ -212,12 +212,9 @@ PIANODATA::PIANODATA(float z):
 	    }
 	}
     }
-  
   printf("\nMemory usage: gmag %d\twavetab %d\n", sizegmag, sizewave);
 
-  //
   // Reading in attack and release noise
-  //
 
   attndur=0.5;
   rlsndur=0.65;
@@ -233,9 +230,7 @@ PIANODATA::PIANODATA(float z):
   if ( !readpcm(filename, rlsn, tempi) ) return;
 }
 
-//===========================================================================
 //		read COMM chunk of cwd file
-//
 int PIANODATA::readcwdcomm(FILE *fp, CWDHDR *cwdHdr, COMMCK *commCk)
 {
   rewind(fp);
@@ -344,7 +339,7 @@ int PIANODATA::readdat(const char *filename, int *dim, float *data) {
 	printf("Reading in %s...", filename);
 	(void)!fread(dim, SZINT, 4, fp);
 	printf("dimensions %d %d %d %d\n",dim[0],dim[1],dim[2],dim[3]);
-	if (abs(dim[0]) > 10000 || abs(dim[1]) > 10000 || abs(dim[2]) > 10000 || abs(dim[3]) > 10000) {
+	if (abs(dim[0]) > 1000 || abs(dim[1]) > 1000 || abs(dim[2]) > 1000 || abs(dim[3]) > 1000000) {
 		fprintf(stderr, "Corrupt data in file %s.\n", filename);
 		return 0;
 	}

@@ -34,7 +34,6 @@ public:
   float durtab[128*128];
   float rlsratetab[NODAMPERKEY*128];
 
-  // float *gmaxtab, *durtab, *rlsratetab;
   float tabsizef;
   int gmaxtabdim[4], durtabdim[3], rlsratetabdim[3], tabsize, tabsize1, nhar;
   int ngroup[NPITCH];
@@ -125,9 +124,9 @@ class pianoAlg : public VAlgorithm
   void setSoftPedal(int); 
   void setSusPedal(int) { cerr << "pianoAlg::setSusPedal NYI\n"; }
   void setDur(float);
-  void setNoteOn(int);
+  void setNoteOn(bool);
 
-  int finished(void) { return noteDone; }
+  int finished() const { return noteDone; }
   void setAttnAmp(float z) { attnamp = z; }
   void setRlsnAmp(float z) { rlsnamp = z; }
   void setInhar(float z) { printf("got %f\t",z); inhrange = z*maxinhar; setTstep(); }
@@ -136,14 +135,13 @@ class pianoAlg : public VAlgorithm
 
   void	generateSamples(int);
 
-  pianoAlg(void);
+  pianoAlg();
   ~pianoAlg();
 };
 
 class pianoHand : public VHandler
 {
-protected:
-	pianoAlg * getAlg(void)	{ return (pianoAlg *) VHandler::getAlg(); }
+  pianoAlg* getAlg() { return (pianoAlg*)VHandler::getAlg(); }
 
 public:
   void	setFreq(float);
@@ -153,36 +151,32 @@ public:
   void	setRlsnAmp(float);
   void	setInhar(float z) { getAlg()->setInhar(z); }
 
-  void	setNoteOn(float z) { getAlg()->setNoteOn(int(z)); }
+  void	setNoteOn(float z) { getAlg()->setNoteOn(z); }
   void	setSoftPedal(float z) { getAlg()->setSoftPedal(int(z)); }
   void	setSusPedal(float z) { getAlg()->setSusPedal(int(z)); }
-	
-  void setPianoData(PIANODATA * data) { getAlg()->setPianoData(data); }
 
-  void	act(void);
-  virtual void actCleanup(void) {}
+  void setPianoData(PIANODATA* data) { getAlg()->setPianoData(data); }
 
-  pianoHand(pianoAlg * alg = new pianoAlg);
-  virtual	~pianoHand() {}
-  int receiveMessage(const char * Message);
+  void act();
+
+  pianoHand(pianoAlg* alg = new pianoAlg);
+  ~pianoHand() {}
+  int receiveMessage(const char*);
 };
 
 class pianoActor : public VGeneratorActor
 {
-  PIANODATA * pianod;
-
-public:
-  virtual VHandler* newHandler() { return new pianoHand(); }
-  pianoActor(void);
-  virtual ~pianoActor() { delete pianod; }
-
-  virtual void	sendDefaults(VHandler *);
-  virtual int	receiveMessage(const char * Message);
-  PIANODATA * getPianoData(void) { return pianod; }
-
-protected:
+  PIANODATA* pianod;
   float defaultFreq;
   float defaultDyna;
+
+public:
+  VHandler* newHandler() { return new pianoHand(); }
+  pianoActor();
+  ~pianoActor() { delete pianod; }
+
+  void sendDefaults(VHandler*);
+  int receiveMessage(const char*);
 };
 
 static inline int	CheckFreq(float f) { return f>=27.5 && f<=3520.; }

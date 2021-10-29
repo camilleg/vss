@@ -1,11 +1,9 @@
 #ifndef _CWD_H_
 #define _CWD_H_
 
-typedef unsigned char  BYTE;	/* must be 1 byte (8 bits) */
-typedef unsigned short WORD;	/* must be 2 bytes (16 bits) */
-#ifndef VSS_WINDOWS
-typedef unsigned long  DWORD;	/* must be 4 bytes (32 bits) */
-#endif
+typedef uint8_t BYTE;
+typedef uint16_t WORD;
+typedef uint32_t DWORD;
 typedef DWORD CKID;	/* a four character code */
 
 #define mmioID(ch0, ch1, ch2, ch3) \
@@ -86,16 +84,12 @@ typedef struct
 	  int  npts;          /* number of analysis blocks                */
 } PVANCK;
 
-#define SZCHAR sizeof(char)
 #define SZFLOAT sizeof(float)
 #define SZINT sizeof(int)
 #define SZSHORT sizeof(short)
 #define SZCKHDR sizeof(CKHDR)
-#define SZCKID sizeof(CKID)
-#define SZCKSZ sizeof(DWORD)
 #define SZCWDHDR sizeof(CWDHDR)
 #define SZCOMM sizeof(COMMCK)
-#define SZDATA sizeof(DATACK)
 
 int readcwdcomm(FILE *fp, CWDHDR *cwdHdr, COMMCK *commCk);
 int readcwddata(FILE *fp, DATACK *dataCk, CKID ckID);
