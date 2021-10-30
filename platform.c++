@@ -70,16 +70,10 @@ extern "C" {
 #include "vssglobals.h"
 #include "VAlgorithm.h" // only for dBFromScalar()
 
-#ifdef VSS_LINUX
-#ifdef VSS_LINUX_UBUNTU
-  #define VSS_LINUX_2012
-#elif defined VSS_LINUX_20ALSA || defined VSS_LINUX_21ALSA
+#if defined VSS_LINUX_20ALSA || defined VSS_LINUX_21ALSA
   // VSS_LINUX_21ALSA is for ALSA 0.5.3+.
   #define VSS_LINUX_ALSA
-#else
-  #define VSS_LINUX_OSS
 #endif
-#endif // VSS_LINUX
 
 #ifdef VSS_LINUX_UBUNTU
 #include <alsa/asoundlib.h> // apt install libasound2-dev
@@ -305,8 +299,6 @@ extern "C" const float* VssInputBuffer()
 extern int vfWaitForReinit;
 int vfWaitForReinit = 0;
 
-// static int vf24bit = 0; // might need this later.
-
 int Initsynth(int /*udp_port*/, float srate, int nchans,
 	int nchansInArg, int liveaudio, int lat, int hwm)
 {
@@ -443,108 +435,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 
 #endif // VSS_IRIX_63 or VSS_IRIX_65
 #endif // VSS_IRIX
-
-#ifdef VSS_LINUX_OSS
-		// If fdDAC >= 0, we already opened it -- this is a reset button or something.
-		if (fdDAC < 0)
-			fdDAC = open("/dev/dsp", fSoundIn ? O_RDWR : O_WRONLY);
-		if (fdDAC < 0)
-			{
-			if (fSoundIn)
-				{
-				// Fall back to only audio output.
-				fSoundIn = 0;
-				fprintf(stderr, "vss warning: can't open audio input port.\n");
-				if (errno == EACCES)
-					(void)system("/bin/ls -l /dev/dsp");
-				fdDAC = open("/dev/dsp", O_WRONLY);
-				}
-			if (fdDAC < 0)
-				{
-				perror("vss error: can't open audio output port");
-				if (errno == EACCES)
-					{
-					cerr << "\n";
-					(void)system("/bin/ls -l /dev/dsp*");
-					cerr << "\n";
-					return -1;
-					}
-				liveaudio = 0;
-				}
-			}
-		if (ioctl(fdDAC, SNDCTL_DSP_RESET, 0))
-			perror("vss warning: ioctl failed");
-		if (fSoundIn)
-			{
-			int caps = 0;
-			if (ioctl(fdDAC, SNDCTL_DSP_SETDUPLEX, 0))
-				perror("vss warning: ioctl failed");
-			if (ioctl(fdDAC, SNDCTL_DSP_GETCAPS, &caps))
-				perror("vss warning: ioctl failed");
-			// caps == 0x3101 on edison, 3/19/99.
-			if (!(caps & DSP_CAP_DUPLEX))
-				{
-				fprintf(stderr, "vss error: sound card can't do full duplex.\n");
-				// Fall back to only audio output.
-				fSoundIn = 0;
-				}
-			else
-				globs.nchansIn = nchansIn = nchansInArg;
-			}
-
-		// Compute vwAntidropout from globs.msecAntidropout and globs.SampleRate
-		// vwAntidropout==1 iff the dropout length in msec is 128000/SR,
-		// where 128000 = MaxSampsPerBuffer * 1000
-		if (globs.msecAntidropout == 0.)
-			vwAntidropout = 1;
-		else
-			{
-			vwAntidropout = (int)(globs.msecAntidropout / (MaxSampsPerBuffer * 1000. / globs.SampleRate));
-			if (vwAntidropout <= 1)
-				{
-				fprintf(stderr, "vss warning: -antidropout duration too short, ignored (%.1f msec instead).\n",
-					MaxSampsPerBuffer * 1000. / globs.SampleRate);
-				vwAntidropout = 1;
-				}
-			if (vwAntidropout > vwAntidropoutMax)
-				{
-				fprintf(stderr, "vss warning: -antidropout duration too long, limiting to %d msec.\n",
-					(int)(vwAntidropoutMax * (MaxSampsPerBuffer * 1000. / globs.SampleRate)));
-				vwAntidropout = vwAntidropoutMax;
-				}
-			}
-
-#define CFRAGMENT (3*vwAntidropout)
-		// CFRAGMENT fragments of 256*nchans bytes (128 samples) each
-		int frag = (CFRAGMENT << 16) + (8 * nchans);
-		//printf("\t\t(%d fragments of %d bytes each).\n", (frag>>16), 1<<(frag&0xffff));;
-		if (ioctl(fdDAC, SNDCTL_DSP_SETFRAGMENT, &frag))
-			perror("vss warning: ioctl failed");
-
-		int audioformat = AFMT_S16_LE;
-		if (ioctl(fdDAC, SNDCTL_DSP_SETFMT, &audioformat) ||
-			audioformat != AFMT_S16_LE)
-			{
-			fprintf(stderr, "vss error: can't set output format to signed 16-bit little-endian.\n");
-			liveaudio = 0;
-			goto LContinue;
-			}
-
-		int stereo = nchans==1 ? 0 : 1;
-		if (ioctl(fdDAC, SNDCTL_DSP_STEREO, &stereo) ||
-			stereo != (nchans==1 ? 0 : 1))
-			fprintf(stderr, "vss warning: can't set output mono/stereo.\n");
-
-		int SR = (int)globs.SampleRate;
-		if (ioctl(fdDAC, SNDCTL_DSP_SPEED, &SR) ||
-			SR != (int)globs.SampleRate)
-			{
-			fprintf(stderr, "vss warning: set output sampling rate to %d Hz instead of %d Hz.\n",
-				SR, (int)globs.SampleRate);
-			globs.SampleRate = SR;
-			globs.OneOverSR = 1.0 / globs.SampleRate;
-			}
-#endif // VSS_LINUX_OSS
 
 #ifdef VSS_LINUX_UBUNTU
 		int err;
@@ -898,7 +788,7 @@ LContinue:
 #elif defined VSS_IRIX
 	return liveaudio ? alGetFD(alp) : -1;
 #elif defined VSS_WINDOWS
-		return liveaudio ? 0 : -1;
+	return liveaudio ? 0 : -1;
 #endif
 }
 
@@ -926,7 +816,7 @@ void VSS_ResyncHardware()
 }
 
 // How many samples can we compute without getting too far ahead?
-int Scount(void)
+int Scount()
 {
 #ifdef VSS_IRIX
 	return alGetFilled(alp);
@@ -935,19 +825,6 @@ int Scount(void)
 #elif defined VSS_LINUX_UBUNTU
 	// # frames ready to capture or play (how far from xrun): snd_pcm_avail(), or cheap approximate snd_pcm_avail_update().
 	return pcm_handle_write ? snd_pcm_avail_update(pcm_handle_write) : 0;
-#elif defined VSS_LINUX_OSS
-	audio_buf_info x;
-	if (ioctl(fdDAC, SNDCTL_DSP_GETOSPACE, &x))
-		perror("vss warning: ioctl failed");
-
-	// x.bytes is how many bytes we can write without blocking.
-	// So, to emulate alGetFilled, which is the # of sample frames pending,
-	// we compute numfragments * bytes_per_frag / samples_per_byte,
-	// the total # of samples.
-	// From this we subtract x.bytes / samples_per_byte,
-	// the number of samples we can write without blocking.
-
-	return CFRAGMENT * 256 / sizeof(short) - x.bytes / sizeof(short);
 #elif defined VSS_WINDOWS
 	return MaxSampsPerBuffer; // wild guess
 #endif
@@ -960,7 +837,7 @@ extern void VSS_SetGlobalAmplitude(float ampl)
 	global_ampl = ampl;
 }
 
-extern float VSS_GetGlobalAmplitude(void)
+extern float VSS_GetGlobalAmplitude()
 {
 	return global_ampl;
 }
@@ -986,9 +863,6 @@ void Closesynth()
 			snd_pcm_close(pcm_handle_write);
 		if (pcm_handle_read)
 			snd_pcm_close(pcm_handle_read);
-#elif defined VSS_LINUX_OSS
-		close(fdDAC);
-		fdDAC = -1;
 #elif defined VSS_WINDOWS
 		if (vfCalledback)
 			{
@@ -1085,24 +959,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 		auto p = 0; for (i=0; i<n*nchansIn; ++i) p = std::max(p, abs(ibuf[i]));
 		if (p != 0) printf("peak = %4d\n", p);
 #endif
-#elif defined VSS_LINUX_OSS
-		// EFFECTIVELY nchansIn == nchans in ALSA and OSS,
-		// even if nchansIn is actually 1.
-		// So if nchans==2, fake nchansIn to be 1 by summing the two
-		// channels actually read in.
-		if (nchans==1)
-			(void)read(fdDAC, ibuf, n * nchansIn * sizeof(short));
-		else if (nchans==2)
-			{
-			//printf(";; don't do stereo input!\n");;;;
-			// This does the right thing, but we get ~1/3 second lag!
-			(void)read(fdDAC, ibuf, n * nchansIn * sizeof(short));
-			for (i=0; i<n; ++i)
-				//ibuf[i] = ibuf[i*2];
-				ibuf[i] = (ibuf[i*2] + ibuf[i*2+1]) / 2;
-			}
-		else
-			fprintf(stderr, "input for > 2 channels NYI.\n");
 #elif defined VSS_IRIX
 		alReadFrames(alpin, ibuf, n);
 #endif
@@ -1291,41 +1147,6 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 			{
 #ifdef VSS_LINUX_ALSA
 			(void)snd_pcm_write(pcm_handle_write, sampbuff, samps*sizeof(short));
-#elif defined VSS_LINUX_OSS
-			write(fdDAC, sampbuff, samps*sizeof(short));
-#elif defined VSS_LINUX_OSS
-			// Not reachable!
-			const int cb = samps*sizeof(short);
-			// assert(vwAntidropout >= 1)
-			// Simon Bates <Simon.Bates@cl.cam.ac.uk>'s idea led to this.
-			if (vwAntidropout == 1)
-				write(fdDAC, sampbuff, cb);
-			else
-				{
-				const int sampsMax = MaxSampsPerBuffer*MaxNumChannels;
-				static int i=0;
-				static char rgb[sampsMax*sizeof(short) * vwAntidropoutMax];
-				const int cBuffer = vwAntidropout; // 16: 44kHz delays 46 msec not 3 msec.
-
-				// Pre-delay, an intentional "dropout".
-				static int fFirst = 1;
-				if (fFirst)
-					{
-					fFirst = 0;
-					memset(rgb, 0, cBuffer * cb);
-					write(fdDAC, rgb, cBuffer * cb);
-					}
-
-				// Append to the buffer.
-				memcpy(rgb + i*cb, (const char*)sampbuff, cb);
-
-				if (++i >= cBuffer)
-					{
-					i = 0;
-					// Flush the buffer.
-					write(fdDAC, rgb, cBuffer * cb);
-					}
-				}
 #elif defined VSS_IRIX
 			alWriteFrames(alp, sampbuff, samps/nchans);
 			alSetFillPoint(alp, (long)(qsize-latency));
@@ -1398,7 +1219,6 @@ int mdClosePortOutput(MDport port)
 	return mdClosePort(port);
 }
 #endif
-
 
 // If caller passes in 0, *vpfnMidi should return an int filehandle
 // corresponding to the midi port to read from.

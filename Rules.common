@@ -1,6 +1,6 @@
 # Definitions for various make thingies.
 
-.SUFFIXES: .c .c++ .C .o .a .l .y
+.SUFFIXES: .c .c++ .o .a
 .PHONY: clean_dso clean all
 
 # Operating system.
@@ -21,9 +21,6 @@ endif
 ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
   PLATFORMBASE := VSS_LINUX
 endif
-ifeq "$(PLATFORM)" "VSS_LINUX_21"
-  PLATFORMBASE := VSS_LINUX
-endif
 ifeq "$(PLATFORM)" "VSS_REDHAT7"
   PLATFORMBASE := VSS_LINUX
 endif
@@ -31,9 +28,6 @@ ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
   PLATFORMBASE := VSS_LINUX
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
-  PLATFORMBASE := VSS_LINUX
-endif
-ifeq "$(PLATFORM)" "VSS_LINUX_K7"
   PLATFORMBASE := VSS_LINUX
 endif
 ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
@@ -92,15 +86,6 @@ ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
     cFLAGS = $(CcFLAGS)
 	LDFLAGS := -lasound
 endif
-ifeq "$(PLATFORM)" "VSS_LINUX_21"
-    #CcFLAGS += -g -DREDHAT52 -malign-double
-    CcFLAGS += -fPIC
-    #CFLAGS = $(CcFLAGS) -fno-exceptions
-    CFLAGS = $(CcFLAGS) -fno-exceptions
-    # STL requires -fno-exceptions
-    cFLAGS = $(CcFLAGS)
-	LDFLAGS :=
-endif
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
@@ -111,12 +96,6 @@ ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
     CFLAGS = $(CcFLAGS) -fno-exceptions
     cFLAGS = $(CcFLAGS)
 	LDFLAGS := -lasound
-endif
-ifeq "$(PLATFORM)" "VSS_LINUX_K7"
-    #CcFLAGS += -DREDHAT52 -malign-double
-    CFLAGS = $(CcFLAGS) -fno-exceptions
-    cFLAGS = $(CcFLAGS)
-	LDFLAGS :=
 endif
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 # VSS_CYGWIN32_NT40

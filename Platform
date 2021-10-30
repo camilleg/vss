@@ -3,7 +3,6 @@
   PLATFORM := VSS_LINUX_UBUNTU
   # 070315 linz ia64 works, SGI Prism running linux IA64.
   # 070316 qix compiles,runs.  Not fully tested.
-  # 110301 zx81 runs (ubuntu 10, OSS, VSS_LINUX_21).
   # 121204 zx81 fails (ubuntu 12, ALSA.  VSS_LINUX_21ALSA doesn't compile.)
 
 # PLATFORM := VSS_CYGWIN32_NT40
@@ -15,5 +14,3 @@
 # PLATFORM := VSS_IRIX_65
 # PLATFORM := VSS_LINUX_20ALSA
 # PLATFORM := VSS_LINUX_21ALSA
-
-# PLATFORM := VSS_LINUX_K7
