@@ -2,8 +2,8 @@
 //
 #pragma once
 
-#undef ACTOR_SETUP // Override VActor.h's definition with a typeless one.
-#define ACTOR_SETUP(ignored, t) extern "C" VActor* t##_New();
+#undef ACTOR_SETUP // Override VActor.h's definition with a compatible but typeless one.
+#define ACTOR_SETUP(ignored, t) extern VActor* t##_New();
 
 #define FOO(T, t) { T, t##_New },
 

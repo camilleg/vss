@@ -134,4 +134,5 @@ static void curtainCall(std::ostream &os);
 
 #include "parseActorMessage.h"
 
-#define ACTOR_SETUP(T, t) extern "C" VActor* t##_New() { return new T; }
+// Compatible with actorlist.h's.
+#define ACTOR_SETUP(T, t) VActor* t##_New() { return new T; }

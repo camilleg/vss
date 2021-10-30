@@ -1,5 +1,3 @@
-/* msg.c++  --  send data over udp packets in "mm" format */
-
 #include <iostream>
 #include <cctype>
 #include <cerrno>
@@ -22,20 +20,18 @@ static void AckNote(float returnVal)
 	if(AckPrint)
 		printf("AckNote got %f.\n", returnVal);
 	vhnote = returnVal;
-	/* stuff it in this global */
 }
 
-extern "C" void setAckPrint(int flag)
+void setAckPrint(int flag)
 {
 	AckPrint = flag;
 }
 
-float HnoteFromAckNote(void)
+float HnoteFromAckNote()
 {
 	return vhnote;
 }
 
-/***********************************/
 #ifdef xxx_midi62_xxx
 #include "vssMidicore.h"
 
@@ -53,9 +49,7 @@ VSSMDevent* MidiMsgsFromAckMidi(float* pcvssmdevent)
 }
 #endif
 
-/*************************************/
-
-extern "C" void clientMessageCall(char* Message)
+void clientMessageCall(char* Message)
 {
 #ifdef xxx_midi62_xxx
 	// format of string: "AckMidiInputMsg 5 00ff00ff00",

@@ -1,6 +1,4 @@
-extern const float vssversion = 4.2f;
-
-extern "C" const char* GetVssLibVersion()
+const char* GetVssLibVersion()
 {
 	return "Virtual Sound Server v4.2.1"
 #ifdef DEBUG
@@ -9,7 +7,7 @@ extern "C" const char* GetVssLibVersion()
 		;
 }
 
-extern "C" const char* GetVssLibDate()
+const char* GetVssLibDate()
 {
 	return __TIMESTAMP_ISO8601__;
 }

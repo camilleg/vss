@@ -1,8 +1,3 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-//	actually, this code was written by Camille, he should have his own banner.
-
 #pragma once
 #include <fstream>
 #include <iostream>
@@ -21,12 +16,12 @@ static inline int SzStart(const char* msg, const char* cmd)
 		!strncmp(msg, cmd, cch);
 }
 
-extern "C" float* VrgzMG(void);
-extern "C" int SscanfFloats(int cz, float* rgz, const char* sz);
-extern "C" int SscanfInts(int cw, int* rgw, const char* sz);
+float* VrgzMG();
+int SscanfFloats(int cz, float* rgz, const char* sz);
+int SscanfInts(int cw, int* rgw, const char* sz);
 
-extern "C" char sscanf_cmd[1000];
-extern "C" const char* sscanf_msg;
+extern char sscanf_cmd[];
+extern const char* sscanf_msg;
 #define CommandIs(_) (!strcmp(sscanf_cmd, _))
 
 #ifdef DEBUG
@@ -34,15 +29,15 @@ extern "C" const char* sscanf_msg;
 #endif
 
 #ifdef CATCHES
-inline int VActor::Catch(void)   { cerr <<typeName() <<": <" <<sscanf_cmd <<sscanf_msg <<">\n"; return 1; }
-inline int VActor::Uncatch(void) { cerr<<"msg missed (unexpected args) by " <<typeName() <<"\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
-inline int Catch(void) { cerr<<"msg caught\n\t<" << sscanf_cmd << sscanf_msg << ">\n"; return 1; }
-inline int Uncatch(void) { cerr<<"msg missed (unexpected args)\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
+inline int VActor::Catch()   { cerr <<typeName() <<": <" <<sscanf_cmd <<sscanf_msg <<">\n"; return 1; }
+inline int VActor::Uncatch() { cerr<<"msg missed (unexpected args) by " <<typeName() <<"\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
+inline int Catch() { cerr<<"msg caught\n\t<" << sscanf_cmd << sscanf_msg << ">\n"; return 1; }
+inline int Uncatch() { cerr<<"msg missed (unexpected args)\n\t<" <<sscanf_cmd <<sscanf_msg <<">\n"; return 0; }
 #else
-inline int VActor::Catch(void)		{ return 1; }
-inline int VActor::Uncatch(void)	{ return 0; }
-inline int Catch(void)				{ return 1; }
-inline int Uncatch(void)			{ return 0; }
+inline int VActor::Catch()		{ return 1; }
+inline int VActor::Uncatch()	{ return 0; }
+inline int Catch()				{ return 1; }
+inline int Uncatch()			{ return 0; }
 #endif
 
 //         ifXYZ(x,y,z, foo(x,y,z));
@@ -227,4 +222,4 @@ inline int Uncatch(void)			{ return 0; }
 		1 == sscanf(strchr(sscanf_msg, ']')+1, "%f", &f2)) \
 		Do_(_) }
 
-extern "C" void CommandFromMessage(const char* message, int fGenActor=0);
+void CommandFromMessage(const char* message, int fGenActor=0);

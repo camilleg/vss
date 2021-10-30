@@ -140,33 +140,26 @@ static void* SynthThread(void *)
 #include <sys/utsname.h>
 #endif
 
-extern "C" int VSS_main(int argc,char *argv[])
+int VSS_main(int argc,char *argv[])
 {
-#ifdef VSS_LINUX
-	// check that alsa or studi/o or whatever is installed (uname, /proc/pci, lsmod).
-#endif
-
 #ifdef VSS_IRIX
-	// Run on only the version of IRIX this was compiled for.
 	{
 	struct utsname name;
 	(void)uname(&name);
 	char* sz = name.release;
-#if defined(VSS_IRIX_65)
+#if defined VSS_IRIX_65
 	if (!(sz[0]=='6' && sz[1]=='.' &&sz[2] >= '5'))
 		{
 		fprintf(stderr, "This copy of VSS requires IRIX 6.5 or greater.\n");
 		return -1;
 		}
-#endif
-#if defined(VSS_IRIX_63)
+#elif defined VSS_IRIX_63
 	if (!(sz[0]=='6' && sz[1]=='.' &&sz[2] >= '3'))
 		{
 		fprintf(stderr, "This copy of VSS requires IRIX 6.3 or greater.\n");
 		return -1;
 		}
-#endif
-#ifdef VSS_IRIX_62
+#elif defined VSS_IRIX_62
 	if (!(sz[0]=='6' && sz[1]=='.' &&sz[2] == '2'))
 		{
 		fprintf(stderr, "This copy of VSS requires IRIX 6.2.\n");
@@ -188,21 +181,21 @@ extern "C" int VSS_main(int argc,char *argv[])
 		GetVssLibVersion(),
 		GetVssLibDate());
 
-#if defined(VSS_IRIX_53) || defined (VSS_IRIX_62)
+#if defined VSS_IRIX_53 || defined VSS_IRIX_62
 //|| defined (VSS_IRIX_63)
 	prctl(PR_SETEXITSIG, SIGINT);
-		SynthThread(NULL);
-#elif defined(VSS_WINDOWS)
+	SynthThread(NULL);
+#elif defined VSS_WINDOWS
 	schedulerMain(globs, &sample);
 #else
 	// VSS_IRIX_63, VSS_LINUX, etc.
-		SynthThread(NULL);
+	SynthThread(NULL);
 #endif
 
 	return 0;
 }
 
-extern void DumpServerStats(void)
+void DumpServerStats()
 {
 	printf("[31m");
 	printf("SR %g, 1/1/SR %g\n", globs.SampleRate, 1./globs.OneOverSR);
@@ -227,14 +220,14 @@ int printCommands = 0;
 
 // Handle to return to client.
 static float vzReturnToClient = hNil;
-extern float ClientReturnVal()
+float ClientReturnVal()
 {
 	return vzReturnToClient;
 }
 
 // Data to return to client.
 static char vszReturnToClient[cchmm] = {0};
-extern const char* ClientReturnValString()
+const char* ClientReturnValString()
 {
 	if (vszReturnToClient[0] != '\0')
 		return vszReturnToClient;
@@ -246,7 +239,7 @@ extern const char* ClientReturnValString()
 
 static struct sockaddr_in* vcl_addr;
 
-extern "C" void ReturnFloatMsgToClient(float z, const char* msg)
+void ReturnFloatMsgToClient(float z, const char* msg)
 {
 	mm mmT;
 	mmT.fRetval = 0;
@@ -293,7 +286,7 @@ extern "C" void ReturnFloatMsgToClient(float z, const char* msg)
 		cerr << "vss: ignored ReturnFloatMsgToClient with unexpected args: " << msg << "\n";
 }
 
-extern "C" void ReturnSzMsgToClient(const char* sz, const char* msg)
+void ReturnSzMsgToClient(const char* sz, const char* msg)
 {
 	mm mmT;
 	mmT.fRetval = 0;
@@ -328,14 +321,14 @@ extern void deleteActors(void)
 //	returns.
 
 // Called only by AmplAlg::generateSamples.
-extern "C" void ReturnStringToClient(const char* sz)
+void ReturnStringToClient(const char* sz)
 {
 	strncpy(vszReturnToClient, sz, cchmm-1);
 	vszReturnToClient[cchmm-1] = '\0';
 	ReturnSzMsgToClient(vszReturnToClient, "DataReply");
 }
 
-extern "C" void ReturnFloatToClient(float aFloat)
+void ReturnFloatToClient(float aFloat)
 {
 	//	if it is a float to be returned, make sure the
 	//	string isn't hanging around.
@@ -345,8 +338,7 @@ extern "C" void ReturnFloatToClient(float aFloat)
 }
 
 float vzMessageGroupRecentHandle = hNil;
-
-extern "C" float* PvzMessageGroupRecentHandle(void)
+float* PvzMessageGroupRecentHandle()
 {
 	return &vzMessageGroupRecentHandle;
 }
@@ -354,7 +346,7 @@ extern "C" float* PvzMessageGroupRecentHandle(void)
 static bool vfAlreadyLogged = false;
 
 // Called by LiveTick or BatchTick.
-extern "C" int actorMessageMM(const void* pv, struct sockaddr_in* cl_addr)
+int actorMessageMM(const void* pv, struct sockaddr_in* cl_addr)
 {
 	const mm* pmm = (const mm*)pv;
 	const auto message = pmm->rgch;
@@ -572,7 +564,7 @@ int actorMessageHandlerCore(const char* Message)
 }
 
 // Returns 0 iff Message tells vss to quit.
-extern "C" int actorMessageHandler(const char* Message)
+int actorMessageHandler(const char* Message)
 {
 	vzReturnToClient = hNil;
 	fKeepRunning = 1;

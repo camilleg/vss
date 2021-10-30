@@ -1,5 +1,3 @@
-// #include this only from C++, not from C.
-
 #pragma once
 
 #ifdef VSS_WINDOWS
@@ -18,35 +16,32 @@ using namespace std;
 #include "vssglobals.h"
 
 #define iNil (-1)
-#define hNil (-1.f)	// also defined in vssMsg.h
+#define hNil (-1.0f)
 
 typedef unsigned long ulong;
 
-inline void
-FloatCopy( void * dst, const void * src, const int n )
+inline void FloatCopy(void* dst, const void* src, const int n)
 {
-	memcpy( dst, src, n * sizeof(float) );
+	memcpy(dst, src, n * sizeof(float));
 }
 
-inline void
-ZeroFloats( void *array, const int n )
+inline void ZeroFloats(void* dst, const int n)
 {
-	memset( array, 0, n * sizeof(float) );
+	memset(dst, 0, n * sizeof(float));
 }
 
-// from vssSrv.c++
+// vssSrv.c++
+extern void PingServer(struct sockaddr_in*);
+extern void Srv_UpdateMasterVolume(float);
+extern void Srv_UpdateMidiVolume(float);
+extern int actorMessageMM(const void*, struct sockaddr_in*);
+extern int actorMessageHandler(const char*);
 
-extern void PingServer(struct sockaddr_in *cl_addr);
-extern void Srv_UpdateMasterVolume(float newGain);
-extern void Srv_UpdateMidiVolume(float newGain);
-extern "C" int actorMessageMM(const void* pv, struct sockaddr_in *cl_addr);
-extern "C" int actorMessageHandler(const char* message);
+// Only to test vss by sending messages to itself.
+extern float ClientReturnVal();
+extern const char * ClientReturnValString();
 
-// Only so we can test vss by sending messages to itself.
-extern "C" float ClientReturnVal(void);
-extern "C" const char * ClientReturnValString(void);
+extern void ReturnFloatToClient(float);
+extern void ReturnStringToClient(const char*);
 
-extern "C" void ReturnFloatToClient(float);
-extern "C" void ReturnStringToClient(const char*);
-
-extern "C" float* PvzMessageGroupRecentHandle(void);
+extern float* PvzMessageGroupRecentHandle();

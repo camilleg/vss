@@ -1,12 +1,11 @@
-// Send data over UDP packets.
+// Send data over UDP packets in "mm" format.
 
 #pragma once
 #include "vssglobals.h"
-#define hNil (-1.f)
 
-extern "C" void setAckPrint(int);
-extern "C" void Msgsend(struct sockaddr_in *, mm*);
-extern "C" void clientMessageCall(char*);
+extern void setAckPrint(int);
+extern void Msgsend(struct sockaddr_in*, mm*);
+extern void clientMessageCall(char*);
 
-extern "C" const char* GetVssLibVersion(); // from vssBuild.c++
-extern "C" const char* GetVssLibDate();
+extern const char* GetVssLibVersion(); // from vssBuild.c++
+extern const char* GetVssLibDate();

@@ -1,4 +1,4 @@
-//	Globals defined in vssSrv.c++ that we need to access elsewhere.
+//	Globals defined in vssSrv.c++.
 
 #pragma once
 
@@ -17,10 +17,6 @@
 #ifdef VSS_WINDOWS
 #define MaxSampsPerBuffer       ((int) /*8192*/4096)
 #endif
-
-////////////////////////////////////////////////////////////////////////////
-//
-// types and classes
 
 class VSSglobals
 {
@@ -42,7 +38,7 @@ public:
 	float   msecAntidropout;// longest duration of cpu-starvation to endure
 	const char *  hostname;
 	int     udp_port;	// port to receive client msgs from
-	int		dacfd;
+	int		dacfd;		// Was audio input.  Deprecated because it practically duplicates liveaudio.
 	int		fdOfile;
 	int		vcbBufOfile;
 	int		vibBufOfile;
@@ -63,9 +59,8 @@ extern VSSglobals globs;
 const int cchmm = 5 * 1024;
 typedef struct mm
 {
-	char fRetval;		// Nonzero iff server should return a float to the
-						// client in response to this message.
-	char rgch[cchmm];	// ASCII string containing the message.
+	char fRetval; // Nonzero iff server should respond with a float.
+	char rgch[cchmm]; // Message.
 } mm;
 
 inline int Nchans()
@@ -80,18 +75,18 @@ inline unsigned long SamplesToDate()
 #ifdef VSS_LINUX
 #include <sys/time.h>
 #endif
-inline float currentTime()
+inline float currentTime() // In seconds.
 	{
 #ifdef VSS_LINUX
 	if (globs.liveaudio)
-		return (float)globs.SampleCount * globs.OneOverSR;
+		return globs.SampleCount * globs.OneOverSR;
 	struct timeval tNow;
 	gettimeofday(&tNow, 0);
 	tNow.tv_sec -= 86400*365*36; // seconds since 1/1/2006 approx.
-	return tNow.tv_sec + (float)tNow.tv_usec / 1e6;
+	return tNow.tv_sec + tNow.tv_usec / 1000000.0;
 #else
-	return (float)globs.SampleCount * globs.OneOverSR;
+	return globs.SampleCount * globs.OneOverSR;
 #endif
 	}
 
-extern "C" int VSS_main(int argc, char *argv[]);
+extern int VSS_main(int argc, char *argv[]);

@@ -42,9 +42,7 @@
 #include <unistd.h>
 
 #ifdef VSS_IRIX
-extern "C" {
 #include <dmedia/audio.h>
-}
 #include <stropts.h>
 #include <sys/lock.h>
 #include <sys/prctl.h>
@@ -294,8 +292,8 @@ static int nchansIn = 0;
 static int fSoundIn = 0;
 extern void SetSoundIn(int fSoundInArg)
 	{ fSoundIn = fSoundInArg; }
-extern "C" const float* VssInputBuffer()
-	{ return fSoundIn ? inpvecp : NULL; }
+const float* VssInputBuffer()
+	{ return fSoundIn ? inpvecp : nullptr; }
 extern int vfWaitForReinit;
 int vfWaitForReinit = 0;
 
@@ -1297,13 +1295,13 @@ extern void VSS_SetGear(int iGear);
 void doActors(void);
 void doActorsCleanup(void);
 void deleteActors(void);
-extern "C" int actorMessageMM(void *pmm, struct sockaddr_in *cl_addr);
+int actorMessageMM(void*, struct sockaddr_in*);
 int Initsynth(int udp_port, float srate, int nchans,
 			  int nchansIn, int liveaudio, int latency, int hwm);
 void Closesynth(void);
 int mdClosePortInput(MDport port);
 int mdClosePortOutput(MDport port);
-extern "C" const float* VssInputBuffer(void);
+const float* VssInputBuffer();
 #endif // VSS_IRIX
 
 static int viGear = 1;
@@ -1713,7 +1711,7 @@ static inline int BatchTick(VSSglobals& vv, int sockfd)
 }
 
 #ifdef VSS_IRIX
-extern "C" void flushme_(void);
+void flushme_();
 #endif
 
 void schedulerMain(VSSglobals& vv,

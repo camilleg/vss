@@ -1,15 +1,5 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-//	actually, this code was written by Camille, he should have his own banner.
-//===========================================================================
-//	Kelly's too kind.  But if I put my name on everything I wrote in here,
-//	it would get kinda cluttered.
-//===========================================================================
-
 #include <cstring> // for strstr()
 #include "VActor.h"
-
 
 //===========================================================================
 // sscanf-parsing support.
@@ -31,7 +21,7 @@ char sscanf_cmd[1000] = {0};
 // skips over actor handle (2nd token),
 // leaves *message pointing to remaining tokens for further parsing.
 
-extern "C" void CommandFromMessage(const char* message, int fGenActor)
+void CommandFromMessage(const char* message, int fGenActor)
 {
 	int cch = 0;
 	if (!message)
@@ -59,14 +49,14 @@ extern "C" void CommandFromMessage(const char* message, int fGenActor)
 // Bogus indices into this are NOT tested for.
 // If you use "*4" peculiarly, you may get garbage data.  Caveat user.
 float vrgzMG[200];
-extern "C" float* VrgzMG(void)
+float* VrgzMG()
 {
 	return vrgzMG;
 }
 
-// Try to match up to cz floats in sz, stuff them in rgz.
+// Match up to cz floats in sz.  Stuff them in rgz.
 // Return # of floats matched, or -1 if none were.
-extern "C" int SscanfFloats(int cz, float* rgz, const char* sz)
+int SscanfFloats(int cz, float* rgz, const char* sz)
 {
 	char ch;
 	int cch;
@@ -148,7 +138,7 @@ LContinue:
 }
 
 // Used only by thresh/switchActor.c++ ifIntArray.  Retire?
-extern "C" int SscanfInts(int cw, int* rgw, const char* sz)
+int SscanfInts(int cw, int* rgw, const char* sz)
 {
 	char ch;
 	int cch;

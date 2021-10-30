@@ -1,18 +1,8 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "add.h"
 
 ACTOR_SETUP(addActor, AddActor)
 
-//===========================================================================
-//		construction
-//
-//	Initialize the defaults for add parameters, they will be
-//	sent in sendDefaults().
-//
-addActor::addActor(void) : 
+addActor::addActor() :
 	VGeneratorActor(),
 	defaultFreq( 200. )
 {
@@ -27,11 +17,7 @@ addActor::addActor(void) :
 	defaultIthAmpl[0] = 1.0;
 }
 
-//===========================================================================
-//		sendDefaults
-//
-void 
-addActor::sendDefaults(VHandler * p)
+void addActor::sendDefaults(VHandler* p)
 {
 	VGeneratorActor::sendDefaults(p);
 	addHand * h = (addHand *)p;
@@ -43,12 +29,7 @@ addActor::sendDefaults(VHandler * p)
 	}
 }
 
-
-//===========================================================================
-//		receiveMessage
-//
-int
-addActor::receiveMessage(const char * Message)
+int addActor::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 
@@ -64,7 +45,6 @@ addActor::receiveMessage(const char * Message)
 		ifF(z, setFreq(z) );
 		return Uncatch();
 	}
-
 
 	if (CommandIs("SetAmplPartials"))
 	{
@@ -107,13 +87,8 @@ addActor::receiveMessage(const char * Message)
 	return VGeneratorActor::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setFreq
-//
-//	Set default fundamental frequency for this actor.
-//
-void
-addActor::setFreq(float f)
+// Set default fundamental frequency.
+void addActor::setFreq(float f)
 {
 	if (! CheckFreq(f)) 
 		printf("addActor got bogus fundamental frequency %f.\n", f );
@@ -121,13 +96,8 @@ addActor::setFreq(float f)
 		defaultFreq = f;
 }
 
-//===========================================================================
-//		setAllFreq
-//	
 //	Call setFreq for all of my children.
-//
-void
-addActor::setAllFreq(float f, float t)
+void addActor::setAllFreq(float f, float t)
 {
 	if (!CheckFreq(f)) 
 	{
@@ -137,18 +107,11 @@ addActor::setAllFreq(float f, float t)
 
 	HandlerListIterator< addHand > it;
 	for (it = children.begin(); it != children.end(); it++)
-	{
 		(*it)->setFreq(f, t);
-	}
-
 	defaultFreq = f;
 }
 
-//===========================================================================
-//		setAmplPartials
-//
-void
-addActor::setAmplPartials(int cz, float* rgz)
+void addActor::setAmplPartials(int cz, float* rgz)
 {
 	if (cz > addAlg::cPartial)
 	{
@@ -157,7 +120,7 @@ addActor::setAmplPartials(int cz, float* rgz)
 	}
 
 	int i;
-//	check and fill default amplitudes
+	// Check and fill default amplitudes.
 	for (i = 0; i < cz; i++)
 	{
 		if (!CheckAmpl(rgz[i]))
@@ -165,23 +128,17 @@ addActor::setAmplPartials(int cz, float* rgz)
 			printf("addActor got bogus %dth amplitude %f.\n", i, rgz[i]);
 			return;
 		}
-
 	}
 	for (i = 0; i < cz; i++)
 		defaultIthAmpl[i] = rgz[i];
 
-//	fill remaining amplitudes with zeros
+	// Zero remaining amplitudes.
 	for (i = cz; i < addAlg::cPartial; i++)
 		defaultIthAmpl[i] = 0.0;
 }
 
-//===========================================================================
-//		setIthAmpl
-//
-//	Set default Ith Amplitude for this actor.
-//
-void
-addActor::setIthAmpl(int i, float f)
+// Set default ith amplitude.
+void addActor::setIthAmpl(int i, float f)
 {
 	if (!CheckAmpl(f)) 
 		printf("addActor got bogus amplitude %f.\n", f );
@@ -189,34 +146,21 @@ addActor::setIthAmpl(int i, float f)
 		defaultIthAmpl[i] = f;
 }
 
-//===========================================================================
-//		setAllIthAmpl	
-//
-//	Call setIthAmpl for all of my children.
-//
-void
-addActor::setAllIthAmpl(int i, float f, float t)
+// Call setIthAmpl for all of my children.
+void addActor::setAllIthAmpl(int i, float f, float t)
 {
 	if (!CheckAmpl(f)) 
 	{
 		printf("addActor got bogus amplitude %f.\n", f );
 		return;
 	}
-
 	HandlerListIterator< addHand > it;
     for (it = children.begin(); it != children.end(); it++)
-	{
 		(*it)->setIthAmpl(i, f, t);
-	}
-
 	defaultIthAmpl[i] = f;
 }
 
-//===========================================================================
-//		setFDPartials
-//
-void
-addActor::setFDPartials(int cz, float* rgz)
+void addActor::setFDPartials(int cz, float* rgz)
 {
 	if (cz > addAlg::cPartial)
 	{
@@ -225,7 +169,7 @@ addActor::setFDPartials(int cz, float* rgz)
 	}
 
 	int i;
-//	check and fill default FD
+	// Check and fill default FD.
 	for (i = 0; i < cz; i++)
 	{
 		if (!CheckFD(rgz[i]))
@@ -233,23 +177,17 @@ addActor::setFDPartials(int cz, float* rgz)
 			printf("addActor got bogus %dth frequency deviation %f.\n", i, rgz[i]);
 			return;
 		}
-
 	}
 	for (i = 0; i < cz; i++)
 		defaultIthFD[i] = rgz[i];
 
-//	fill remaining FD with 1
+	// Fill remaining FD with 1.
 	for (i = cz; i < addAlg::cPartial; i++)
 		defaultIthFD[i] = 1.0;
 }
 
-//===========================================================================
-//		setIthFD
-//
-//	Set default Ith FDitude for this actor.
-//
-void
-addActor::setIthFD(int i, float f)
+// Set default Ith FD.
+void addActor::setIthFD(int i, float f)
 {
 	if (!CheckFD(f)) 
 		printf("addActor got bogus frequency deviation %f.\n", f );
@@ -257,52 +195,25 @@ addActor::setIthFD(int i, float f)
 		defaultIthFD[i] = f;
 }
 
-//===========================================================================
-//		setAllIthFD	
-//
-//	Call setIthFD for all of my children.
-//
-void
-addActor::setAllIthFD(int i, float f, float t)
+// Call setIthFD for all of my children.
+void addActor::setAllIthFD(int i, float f, float t)
 {
 	if (!CheckFD(f)) 
 	{
 		printf("addActor got bogus frequency deviation %f.\n", f );
 		return;
 	}
-
 	HandlerListIterator< addHand > it;
     for (it = children.begin(); it != children.end(); it++)
-	{
 		(*it)->setIthFD(i, f, t);
-	}
-
 	defaultIthFD[i] = f;
 }
 
-//===========================================================================
-//	dump
-//
-ostream &
-addActor::dump(ostream &os, int tabs)
+ostream & addActor::dump(ostream &os, int tabs)
 {
 	VGeneratorActor::dump(os, tabs);
-
 	indent(os, tabs) << "Freq: " << defaultFreq << endl;
 	for (int i=0; i<addAlg::cPartial; i++)
-	indent(os, tabs+1) << "Partial amplitude: " << defaultIthAmpl[i] << endl;
-
+		indent(os, tabs+1) << "Partial amplitude: " << defaultIthAmpl[i] << endl;
 	return os;
 }
-
-#if 0
-#if defined(VSS_WINDOWS)
-#include <windows.h>
-
-extern "C" int WINAPI
-mydll_init(HANDLE h, DWORD reason, void *foo)
-{
-	return 1;
-}
-#endif
-#endif

@@ -24,8 +24,8 @@ static inline float fsqrt(float x) { return (float)sqrt(x); }
 #endif
 
 #ifdef VSS_WINDOWS
-extern "C" double drand48();
-extern "C" void srand48(long seedval);
+extern double drand48();
+extern void srand48(long seedval);
 #endif
 
 #ifndef VSS_IRIX
@@ -57,7 +57,7 @@ int mdClosePortInput(MDport port);
 int mdClosePortOutput(MDport port);
 #endif
 
-extern "C" const float* VssInputBuffer();
+extern const float* VssInputBuffer();
 
 void ParseArgs(int argc,char *argv[],int *udp_port, int *liveaudio,
 	float *sample_rate, int *nchansVSS, int *nchansIn, int *nchansOut, int *hog, int *lwm, int *hwm, char* ofile);
