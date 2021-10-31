@@ -41,7 +41,7 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 	return o;
 }
 
-#if defined(VSS_LINUX) || defined(VSS_CYGWIN32_NT40)
+#if defined VSS_LINUX || defined VSS_CYGWIN32_NT40
 #define SPOOGE (const struct sockaddr*)
 #else
 #define SPOOGE

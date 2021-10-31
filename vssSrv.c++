@@ -60,26 +60,12 @@ VSSglobals::VSSglobals()
 	fdOfile = -1;
 	vcbBufOfile = 0;
 	vibBufOfile = 0;
-	rgbBufOfile = NULL;
+	rgbBufOfile = nullptr;
 	ofile[0] = '\0';
 }
 
 VSSglobals::~VSSglobals() {
-	if (rgbBufOfile)
-		delete [] rgbBufOfile;
-}
-
-static int sample(int length,  float* out, int nchans)
-{
-	VAlgorithmList::iterator it;
-	for ( it = VAlgorithm::Generators.begin(); 
-			it != VAlgorithm::Generators.end(); ++it )
-	{
-		(*it)->outputSamples(length, out, nchans);
-	}
-
-	globs.SampleCount += length;
-	return 1;
+	delete [] rgbBufOfile; // smart pointer? uniq pointer? (;;;; after schedulerMain args)
 }
 
 // Reply to a client's ping.
@@ -95,14 +81,14 @@ void PingServer(struct sockaddr_in *cl_addr)
 	MsgsendObj(udpDescObj, cl_addr, &mmT);
 }
 
-void FlushServer(void)
+void FlushServer()
 {
 	VActor::WantToFlush();
 }
 
-void Srv_UpdateMasterVolume(float newGain)
+void Srv_UpdateMasterVolume(float gain)
 {
-	VSS_SetGlobalAmplitude(ScalarFromdB(newGain));
+	VSS_SetGlobalAmplitude(ScalarFromdB(gain));
 }
 
 void AddToCreatedlist(const char*) {}
@@ -116,7 +102,7 @@ void AddToCreatedlist(const char*) {}
 
 static void SynthThread(void *)
 {
-	schedulerMain(globs, &sample);
+	schedulerMain();
 }
 
 #elif defined(VSS_WINDOWS)
@@ -131,7 +117,7 @@ static void* SynthThread(void *)
 	// In IRIX don't bother with schedctl(), setpriority() suffices.
 	if (setpriority(PRIO_PROCESS, 0, -10 /* -20 to 0 */) == 0)
 		cerr << "vss: set priority to -10\n";
-	schedulerMain(globs, &sample);
+	schedulerMain();
 	return NULL;
 }
 #endif
@@ -186,7 +172,7 @@ int VSS_main(int argc,char *argv[])
 	prctl(PR_SETEXITSIG, SIGINT);
 	SynthThread(NULL);
 #elif defined VSS_WINDOWS
-	schedulerMain(globs, &sample);
+	schedulerMain();
 #else
 	// VSS_IRIX_63, VSS_LINUX, etc.
 	SynthThread(NULL);

@@ -48,8 +48,7 @@ void deleteActors();
 
 int Initsynth(int udp_port, float srate, int nchans,
 			  int nchansIn, int liveaudio, int latency, int hwm);
-int Synth(register int (*sfunc)(int n, float* outvecp, int nchans),
-		  int n, int nchans);
+int Synth(int n, int nchans);
 void Closesynth();
 
 #ifdef VSS_IRIX
@@ -62,7 +61,7 @@ extern const float* VssInputBuffer();
 void ParseArgs(int argc,char *argv[],int *udp_port, int *liveaudio,
 	float *sample_rate, int *nchansVSS, int *nchansIn, int *nchansOut, int *hog, int *lwm, int *hwm, char* ofile);
 
-void schedulerMain(VSSglobals& vv, int (*sfunc)(int n, float* outvecp, int nchans));
+void schedulerMain();
 extern int Scount();
 extern void SetMidiFunction(int (*vpfnMidiArg)(int));
 

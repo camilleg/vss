@@ -258,7 +258,6 @@ snd_pcm_format_t pformat, rformat;
 	static HMODULE fmod_dll = NULL;
 	static int vfCalledback = 0;
 	static int vfLiveTickPaused = 1; // first streamcallback happens before first LiveTick.
-	static int vfLiveTickShouldReturnZero = 0;
 	extern short* vrgsCallback;
 	short* vrgsCallback = NULL;
 	int vcbCallback = 0;
@@ -267,16 +266,15 @@ snd_pcm_format_t pformat, rformat;
 
 #endif // VSS_WINDOWS
 
-extern int liveaudio;
-extern int vfDie; // set to 1 when app is dying
-int vfDie = 0;
+static int liveaudio = 0; // Sort-of duplicates globs.liveaudio.  Set by Initsynth(), but also an arg thereof (!).
+static auto vfDie = false; // Set to true when vss is dying.
 
 int vfSoftClip = FALSE;
 int vfLimitClip = FALSE;
 int vwAntidropout = 1; // # of extra 128-byte buffers of resistance to dropouts
 static const int vwAntidropoutMax = 64; // at 44kHz, that's 185 msec latency.
 
-#define NSAMPS (MaxSampsPerBuffer * MaxNumChannels) /* or even more! */
+constexpr auto NSAMPS = MaxSampsPerBuffer * MaxNumChannels; /* or even more! */
 short sampbuff[NSAMPS] = {0};
 
 #define wSoftclipLim 50000	/* start clipping at +-25000 (about -3 dB) */
@@ -866,7 +864,7 @@ void Closesynth()
 			{
 			//printf("Closesynth called during callback. dehr?!  It's waiting.\n");
 			vfLiveTickPaused = 1; // Ack that FMOD callback needs to run.
-			//;; vfDie = 1; // give callback a hint to go away already, eh.
+			//;; vfDie = true; // give callback a hint to go away already, eh.
 			while (vfCalledback) // wait for callback to go away
 				usleep(2000);
 			printf("Closesynth finished waiting.\n");;;;
@@ -928,10 +926,7 @@ static inline void MaybeResetsynth()
 	fWantToResetsynth = 0;
 }
 
-static int (*vsfunc)(int n, float* outvecp, int nchans) = NULL;
-
-int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
-              int n, int nchans)
+int Synth(int n, int nchans)
 {
 #ifndef VSS_WINDOWS
 	MaybeResetsynth();
@@ -987,17 +982,11 @@ int Synth(int (*sfunc)(int n, float* outvecp, int nchans),
 				// That's ok, synthesis classes only see [-1,1].
 		}
 
-	if (!sfunc)
-		{
-		printf("vss internal error: Synth(NULL) (%p).\n", vsfunc);
-		return FALSE;
-		}
-
-	// Zero the output buffer.
-	memset(outvecp, 0, n * nchans * sizeof(float));
-
-	if (!(*sfunc)(n, outvecp, nchans))
-		return FALSE;
+	// Stuff the output buffer.
+	ZeroFloats(outvecp, n * nchans);
+    for (auto alg: VAlgorithm::Generators)
+        alg->outputSamples(n, outvecp, nchans);
+    globs.SampleCount += n;
 
 	if (globs.fRemappedOutput)
 		{
@@ -1242,7 +1231,6 @@ static inline void mdSchedule(int hog)
 #endif
 }
 
-int liveaudio = 0;
 static inline int initudp(int chan)
 {
 	struct sockaddr_in serv_addr;
@@ -1332,7 +1320,7 @@ int nfds = -1;
 //	wCatchUp seems like a very bad idea. It allows sample buffers
 //	to be computed far in advance of what can be written, and then
 //	the write() (or whatever call) has to block! Dehr? 
-static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
+static void doSynth(int r, int fForce=0, int wCatchUp=0)
 {
 	//;;;; get rid of wCatchUp, try this in irix, it may be jumping ahead and
 	//;;;; then waiting.
@@ -1343,30 +1331,23 @@ static inline int doSynth(VSSglobals& vv, int r, int fForce=0, int wCatchUp=0)
 	finding that its a real balancing act, between latency,
 	interruptability, and cpu usage.
 	*/
-	if (vfDie)
-		return 0;
 
 	// Do nothing if we're parked,
 	// or if we hit an interruption (r==0) and we're not forcing it anyways.
 	if (FParked() || (r <= 0 && !fForce))
-		{
-		return 1;
-		}
+		return;
 
 //	compute a number of sample buffers that will keep the 
 //	latency within the bounds set by the high and low
 //	water marks:
 #ifdef VSS_IRIX
 	const int c = (wCatchUp!=0) ? wCatchUp :
-					(vv.hwm-r) / (vv.nchansOut * MaxSampsPerBuffer);
+					(globs.hwm-r) / (globs.nchansOut * MaxSampsPerBuffer);
 #else
 	const int c = 1; // much better for linux, I observe.
 #endif
 	for (int i=0; i<c; i++)
-		{
-		(void)Synth(vsfunc, MaxSampsPerBuffer, vv.nchansVSS);
-		}
-	return 1;
+		(void)Synth(MaxSampsPerBuffer, globs.nchansVSS);
 }
 
 #ifdef VSS_IRIX
@@ -1435,8 +1416,9 @@ LReset:
 #define without_smoother_every_128
 #ifdef without_smoother_every_128
 
-	if (!doSynth(globs/*vv*/, Scount()))
-		vfLiveTickShouldReturnZero = 1;
+	if (vfDie)
+		return;
+	doSynth(Scount());
 	doActors();
 	doActorsCleanup(); // after doActors(), in case handlers got deleted.
 
@@ -1459,13 +1441,9 @@ LReset:
 		goto LDone;
 		}
 
-	for (int i=0; i<foo/128; i++)
+	for (int i=0; i<foo/128 && !vfDie; i++)
 		{
-		if (!doSynth(globs/*vv*/, Scount()))
-			{
-			vfLiveTickShouldReturnZero = 1;
-			break;
-			}
+		doSynth(Scount());
 		doActors();
 		doActorsCleanup(); // after doActors(), in case handlers got deleted.
 		memcpy(buff + foo, vrgsCallback, vcbCallback);
@@ -1485,7 +1463,7 @@ LDone:
 #ifdef VSS_IRIX
 #include <dmedia/dmedia.h>
 static unsigned long long tPrev;
-static inline int Usec()
+static int Usec()
 {
 	unsigned long long t;
 	dmGetUST(&t);
@@ -1494,28 +1472,24 @@ static inline int Usec()
 	return (int)(dt / 1000);
 }
 #elif defined VSS_WINDOWS
-static inline const int Usec()
+static int Usec()
 {
 	return 10000;
 }
 #else // VSS_LINUX
 //	note: no account is taken of the fact that clock() wraps around
 //	every 36 minutes or so (according to the man pages).
-//
-// #include <time.h>	using <ctime>
 static clock_t t0;
 static clock_t tPrev;
-static inline const int Usec()
+static int Usec()
 {
-	clock_t t = clock() - t0;
-	clock_t dt = t - tPrev;
+	const auto t = clock() - t0;
+	const auto dt = t - tPrev;
 	tPrev = t;
-	return (int)(dt / (CLOCKS_PER_SEC / 1000000));
+	return dt / (CLOCKS_PER_SEC / 1000000);
 }
 #endif // VSS_LINUX
 
-//	tick function when liveaudio is set.
-//
 //	The basic structure (for Unices) is:
 //		generate samples
 //		do actors
@@ -1524,30 +1498,24 @@ static inline const int Usec()
 //		generate samples
 //		handle messages
 //
-static int LiveTick(VSSglobals& vv, int sockfd)
+static int LiveTick(int sockfd)
 {
 	while (vfWaitForReinit)
 		usleep(50000);
-
-#ifdef VSS_LINUX
-	struct sockaddr cl_addr;
-	unsigned int clilen;
-#endif
-#ifndef VSS_WINDOWS
-	{
-	int r = Scount();
-//	if (r<globs.lwm || r>globs.hwm) printf("\t\t\t\tr == %d, water %d/%d\n", r, globs.lwm, globs.hwm);
-	if (!doSynth(vv, r, 1))
+	if (vfDie)
 		return 0;
-	}
+
+#ifndef VSS_WINDOWS
+	doSynth(Scount(), 1);
 #endif
 
 	doActors();
 	doActorsCleanup(); // after doActors(), in case handlers got deleted.
 
 #ifndef VSS_WINDOWS
-	if (!doSynth(vv, Scount()))
+	if (vfDie)
 		return 0;
+	doSynth(Scount());
 
 	nfds = (vpfnMidi && ((pfds[2].fd = (*vpfnMidi)(0)) >= 0)) ? 3 : 2;
 	// 3 if midi is running, otherwise 2.
@@ -1566,21 +1534,20 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 	//	latency control, no?
 	//	That arg is ignored on platforms other than
 	//	IRIX.
-	int r = Scount();
-	if (!doSynth(vv, r, 0, 2))		// ;;;; what is this "2" wCatchUp for?
+	if (vfDie)
 		return 0;
+	const int r = Scount();
+	doSynth(r, 0, 2);
 
 	// Is midi input pending?  (And do we have time to deal with it now?)
 	if (r>0 && nfds==3 && (pfds[2].revents & POLLIN))
 		{
 		if (!(*vpfnMidi)(1))
 			fprintf(stderr, "vss: error reading midi input\n");
-		if (r < vv.lwm)
+		if (r < globs.lwm)
 			return 1;
 		}
 
-	// Is client input pending?...
-	//	If not, return.
 	if (!(pfds[1].revents & POLLIN))
 	{
 #ifdef EXPERIMENT
@@ -1591,13 +1558,25 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 		if (usec < MinStep)
 			usleep(MinStep - usec);
 #endif
+		// No pending input from a client.
 		return 1;
 	}
 #endif // !VSS_WINDOWS
 
 	int n;
 
-//... Yes. Client input pending.
+	// Input is pending from a client.
+#ifdef VSS_IRIX
+	struct sockaddr_in cl_addr;
+	int clilen;
+#elif defined VSS_LINUX
+	struct sockaddr cl_addr;
+	unsigned int clilen;
+#elif defined VSS_WINDOWS
+	struct sockaddr cl_addr;
+	int clilen;
+#endif
+
 #ifdef VSS_WINDOWS
 	if
 	// "while" throws an exception, oddly.
@@ -1661,7 +1640,7 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 // If r<=300, the message queue is flushed and we'll probably get an
 // audio interrupt.
 #ifndef VSS_WINDOWS
-		if (r > 300 && Scount() < vv.lwm)
+		if (r > 300 && Scount() < globs.lwm)
 			{
 		//	printf("message backlog (%d)\n", Scount());;
 			break;
@@ -1675,7 +1654,7 @@ static int LiveTick(VSSglobals& vv, int sockfd)
 	return 1;
 }
 
-static inline int BatchTick(VSSglobals& vv, int sockfd)
+static inline int BatchTick(int sockfd)
 {
 #ifdef VSS_IRIX
 	struct sockaddr_in cl_addr;
@@ -1695,7 +1674,7 @@ static inline int BatchTick(VSSglobals& vv, int sockfd)
 		}
 
 	if (!FParked())
-		if (!Synth(vsfunc, MaxSampsPerBuffer, vv.nchansVSS))
+		if (!Synth(MaxSampsPerBuffer, globs.nchansVSS))
 			return 0;
 
 	doActors();
@@ -1714,31 +1693,23 @@ static inline int BatchTick(VSSglobals& vv, int sockfd)
 void flushme_();
 #endif
 
-void schedulerMain(VSSglobals& vv,
-				   int (*sfunc)(int n, float* outvecp, int nchans))
+void schedulerMain()
 {
-	if (!sfunc)
-		{
-		cerr << "vss internal error: schedulerMain() got null sfunc.\n";
-		return;
-		}
-	vsfunc = sfunc;
 	int sockfd;
-	liveaudio = vv.liveaudio;
+	liveaudio = globs.liveaudio;
 
-	mdSchedule(vv.hog);
-	/* xxx control tic interval */
+	mdSchedule(globs.hog);
 
 #ifdef VSS_WINDOWS
 LAgain:
 #endif
-	if ((sockfd = initudp(vv.udp_port)) <= 0)
+	if ((sockfd = initudp(globs.udp_port)) <= 0)
 		{
 		perror("Another copy of vss may be running on this machine");
-		fprintf(stderr, " (port %d)\n", vv.udp_port);
+		fprintf(stderr, " (port %d)\n", globs.udp_port);
 #ifdef VSS_WINDOWS
 		fprintf(stderr, "HACK: trying next lower port.\n");
-		vv.udp_port--;
+		globs.udp_port--;
 		goto LAgain;
 #else
 		fprintf(stderr, "\nIf so, type \"vsskill\" or \"kill -9 <processid>\" to kill it.\n");
@@ -1746,17 +1717,17 @@ LAgain:
 		return;
 		}
 
-	vv.dacfd = Initsynth(vv.udp_port, vv.SampleRate, vv.nchansVSS,
-		vv.nchansIn, liveaudio, vv.lwm, vv.hwm);
+	globs.dacfd = Initsynth(globs.udp_port, globs.SampleRate, globs.nchansVSS,
+		globs.nchansIn, liveaudio, globs.lwm, globs.hwm);
 
-	if (liveaudio && (vv.dacfd < 0))
+	if (liveaudio && (globs.dacfd < 0))
 		goto LDie;
 
 #ifndef VSS_WINDOWS
 	if (liveaudio)
 		{
-		//;; probably we don't need to poll this first one, vv.dacfd.
-		pfds[0].fd = vv.dacfd;				// audio to audio-output port
+		//;; probably we don't need to poll this first one, globs.dacfd.
+		pfds[0].fd = globs.dacfd;				// audio to audio-output port
 		pfds[0].events = POLLOUT;
 		pfds[0].revents = 0;
 
@@ -1778,12 +1749,12 @@ LAgain:
 	caught_sigint = 0;
 	signal(SIGINT, catch_sigint);
 	while ((!caught_sigint && !vfDie) &&
-		(liveaudio ? LiveTick(vv, sockfd) : BatchTick(vv, sockfd)))
+		(liveaudio ? LiveTick(sockfd) : BatchTick(sockfd)))
 		;
 
 LDie:
 	// We got a ctrl+C.
-	vfDie = 1;
+	vfDie = true;
 	deleteActors();
 	if (fWantToResetsynth)
 		cerr <<"vss internal error: confused between quit and reset.\n";
