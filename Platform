@@ -1,16 +1,36 @@
-# Uncomment one of these, to make vss for that platform.
+# Included by Rules.common.
 
+PLATFORM := VSS_NOT_YET_PORTED
+uname := $(shell sh -c 'uname -s 2>/dev/null')
+
+ifeq ($(uname),Linux)
   PLATFORM := VSS_LINUX_UBUNTU
-  # 070315 linz ia64 works, SGI Prism running linux IA64.
-  # 070316 qix compiles,runs.  Not fully tested.
-  # 121204 zx81 fails (ubuntu 12, ALSA.  VSS_LINUX_21ALSA doesn't compile.)
-
-# PLATFORM := VSS_CYGWIN32_NT40
-
-# PLATFORM := VSS_IRIX_53
-# PLATFORM := VSS_IRIX_62
-
-# PLATFORM := VSS_IRIX_63
-# PLATFORM := VSS_IRIX_65
-# PLATFORM := VSS_LINUX_20ALSA
 # PLATFORM := VSS_LINUX_21ALSA
+# PLATFORM := VSS_LINUX_20ALSA
+  # To detect WSL, try uname -r.
+endif
+
+ifneq ($(findstring CYGWIN,$(uname)),)
+  PLATFORM := VSS_CYGWIN32_NT40
+endif
+ifneq ($(findstring MINGW,$(uname)),)
+  PLATFORM := VSS_CYGWIN32_NT40
+endif
+ifneq ($(findstring MSYS,$(uname)),)
+  PLATFORM := VSS_CYGWIN32_NT40
+endif
+
+ifeq ($(uname),IRIX)
+  PLATFORM := VSS_IRIX_65
+# PLATFORM := VSS_IRIX_63
+# PLATFORM := VSS_IRIX_62
+# PLATFORM := VSS_IRIX_53
+endif
+
+ifeq ($(uname),Darwin)
+  PLATFORM := VSS_MACOS
+endif
+
+ifeq ($(PLATFORM), VSS_NOT_YET_PORTED)
+  $(error "Unrecognized platform.")
+endif
