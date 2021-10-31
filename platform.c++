@@ -1233,29 +1233,21 @@ static inline void mdSchedule(int hog)
 
 static inline int initudp(int chan)
 {
-	struct sockaddr_in serv_addr;
-	int sockfd;
-
-	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-			return sockfd;
-	memset((char *)&serv_addr, 0, sizeof(serv_addr));
+	const auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0)
+		return -1;
+	struct sockaddr_in serv_addr = {0};
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(chan);
-
-	if(bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-	{
+	if (bind(sockfd, (struct sockaddr*)&serv_addr, sizeof serv_addr) < 0)
 		return -1;
-	}
 	fcntl(sockfd, F_SETFL, FNDELAY);
-#ifdef DEBUG
-	printf("socket fd %d on channel %d\n", sockfd, chan);
-#endif
 	return sockfd;
 }
 static inline void closeudp(int sockfd)
 {
-		close(sockfd);
+	close(sockfd);
 }
 
 #define MAXMESG 16384

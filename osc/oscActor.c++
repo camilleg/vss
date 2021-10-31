@@ -147,9 +147,6 @@ class OSCServer : public VActor
 ACTOR_SETUP(OSCActor, OSCActor)
 ACTOR_SETUP(OSCServer, OSCServer)
 
-//////////////////////////////////////////////////////////////////////////
-
-
 OSCActor::OSCActor() :
 	 VActor(),
 	 pbuf(&buf),
@@ -158,10 +155,7 @@ OSCActor::OSCActor() :
 	setTypeName("OSCActor");
 	pbBuf = new char[cbBuf];
 	if (!pbBuf)
-		{
 		fprintf(stderr, "vss error: OSCActor out of memory, crash imminent.\n");
-		pbBuf = NULL;
-		}
 	OSC_initBuffer(pbuf, cbBuf, pbBuf);
 }
 
@@ -178,7 +172,7 @@ void OSCActor::init(char *szHostname, int channel)
 		return;
 		}
 
-	memset((char *)&addr, 0, sizeof(addr));
+	memset(&addr, 0, sizeof addr);
 	addr.sin_family = AF_INET;
 #ifdef OLD_WAY
 	addr.sin_addr.s_addr = inet_addr(szHostname);
@@ -203,7 +197,7 @@ void OSCActor::init(char *szHostname, int channel)
 		return;
 		}
 
-	memset((char *)&cl_addr, 0, sizeof(cl_addr));
+	memset(&cl_addr, 0, sizeof cl_addr);
 	cl_addr.sin_family = AF_INET;
 	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	cl_addr.sin_port = htons(0);
@@ -414,7 +408,7 @@ void OSCServer::init(int port)
 		return;
 		}
 	struct sockaddr_in serv_addr;
-	memset((char *)&serv_addr, 0, sizeof(serv_addr));
+	memset(&serv_addr, 0, sizeof serv_addr);
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
