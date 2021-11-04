@@ -1,31 +1,19 @@
-#ifndef _ROBIN_THRESH_H_
-#define _ROBIN_THRESH_H_
-
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-
+#pragma once
 #include "VActor.h"
 #include "../msg/messageGroup.h"
 #include <deque>
 
 class ThreshTestNmsg;
 
-//===========================================================================
-//		class ThresholdActor
-//
 //	A ThresholdActor keeps a set of thresholds and, for each, a set of
 //	messages to be sent when they are met or crossed by incoming test data.
-//
 class ThresholdActor : public VActor	
 {
 public:
 	ThresholdActor();
 	~ThresholdActor();
-
-//	actor behavior
-virtual void act(void);
-virtual	int receiveMessage(const char*);
+	void act();
+	int receiveMessage(const char*);
 
 //	threshold testing:
 //	we can test for equalityor crossing in 
@@ -96,16 +84,11 @@ typedef deque<ThreshTestNmsg *> ThreshDeque;
 	MessageGroup* pmsgPending;
 	float rgzPending[200];
 	int czPending;
+};
 
-};	// 	end of class ThresholdActor
-
-//===========================================================================
-//		class ThreshTestNmsg
-//
 //	Class ThreshTestNmsg stores a threshold, the messages associated
 //	with crossing that threshold, and the test that determines the detection
 //	of a crossing (<, >, =, <=, >=);
-//
 class ThreshTestNmsg
 {
 public:
@@ -114,15 +97,9 @@ public:
 	MessageGroup	msg;
 
 private:
-	// dont allow construction without inits	
-	ThreshTestNmsg(void) { }
-
+	ThreshTestNmsg() {}
 public:
-	ThreshTestNmsg(float th, ThresholdActor::ThreshTest tst, char * m) :
-		thresh( th ), test( tst ) { msg.addMessage( m ); }
-
-	~ThreshTestNmsg()	{}
-	
-};	// end of class ParamMsg
-
-#endif	// ndef _ROBIN_THRESH_H_
+	ThreshTestNmsg(float th, ThresholdActor::ThreshTest tst, char* m) :
+		thresh(th), test(tst) { msg.addMessage(m); }
+	~ThreshTestNmsg() {}
+};

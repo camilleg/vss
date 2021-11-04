@@ -1,5 +1,4 @@
 #pragma once
-
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
@@ -58,16 +57,15 @@ class stkHand : public VHandler
   void setShakerType(int iType);
 
   stkHand(stkAlg* alg = new stkAlg);
-  virtual ~stkHand() = default;
+  ~stkHand() = default;
 };
 
 class stkActor : public VGeneratorActor
 {
  public:
-  virtual VHandler* newHandler() { return new stkHand(); }
-  virtual void sendDefaults(VHandler*);
-  virtual int receiveMessage(const char *);
-
+  VHandler* newHandler() { return new stkHand(); }
+  void sendDefaults(VHandler*);
+  int receiveMessage(const char*);
   stkActor();
-  virtual ~stkActor() = default;
+  ~stkActor() = default;
 };

@@ -23,7 +23,6 @@ public:
 	void setEnvDecay(float);
 
 	void generateSamples(int);
-
 	tb303Alg();
 	~tb303Alg();
 };
@@ -35,17 +34,10 @@ class tb303Hand : public VHandler
 	float zResonance;
 	float zEnvMod;
 	float zEnvDecay;
-
-	enum {
-		isetFreq,
-		isetFilterCutoff,
-		isetResonance,
-		isetEnvMod,
-		isetEnvDecay };
+	enum { isetFreq, isetFilterCutoff, isetResonance, isetEnvMod, isetEnvDecay };
 	
 protected:
-	tb303Alg * getAlg()	{ return (tb303Alg *) VHandler::getAlg(); }
-
+	tb303Alg* getAlg() { return (tb303Alg*)VHandler::getAlg(); }
 public:
 	void SetAttribute(IParam iParam, float z);
 	void setFreq(float z, float t=timeDefault)
@@ -63,23 +55,19 @@ public:
 
 	float dampingTime() { return 0.03; }
 
-	tb303Hand(tb303Alg * alg = new tb303Alg);
-	virtual ~tb303Hand() {}
-
-	int receiveMessage(const char * Message);
-
+	tb303Hand(tb303Alg* alg = new tb303Alg);
+	~tb303Hand() {}
+	int receiveMessage(const char*);
 };
 
 class tb303Actor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler()	{ return new tb303Hand(); }
-
+	VHandler* newHandler() { return new tb303Hand(); }
 	tb303Actor();
-	virtual ~tb303Actor() {}
-
-	virtual void sendDefaults(VHandler *);
-	virtual int	receiveMessage(const char * Message);
+	~tb303Actor() {}
+	void sendDefaults(VHandler*);
+	int	receiveMessage(const char*);
 
 	void setFreq(float f);
 	void setFilterCutoff(float z);
@@ -94,21 +82,14 @@ virtual	VHandler * newHandler()	{ return new tb303Hand(); }
 
 protected:
 	float defaultFreq, defaultFilterCutoff, defaultResonance, defaultEnvMod, defaultEnvDecay;
-
-	virtual ostream &dump(ostream &os, int tabs);
+	ostream& dump(ostream& os, int);
 };
 
 static inline int CheckFreq(float f) { return f >= 0.01 && f <= globs.SampleRate; }
 
-//static inline int CheckFilterCutoff(float f) { return f >= 0. && f <= 1.; }
-//static inline int CheckResonance(float f) { return f >= 0. && f <= 1.; }
-//static inline int CheckEnvMod(float f) { return f >= 0. && f <= 1.; }
-//static inline int CheckEnvDecay(float f) { return f >= 0. && f <= 1.; }
-
+// clamping, with no error messages
 inline void Clamp(float& z, float zmin=0., float zmax=1.)
 	{ if (z<zmin) z=zmin; else if (z>zmax) z=zmax; }
-
-// clamping, with no error messages
 static inline int CheckFilterCutoff(float& f) { Clamp(f); return 1; }
 static inline int CheckResonance(float& f) { Clamp(f); return 1; }
 static inline int CheckEnvMod(float& f) { Clamp(f); return 1; }

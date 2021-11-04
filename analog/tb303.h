@@ -5,7 +5,6 @@
 
 class analogAlg : public VAlgorithm
 {
-private:
 	float vco_inc, vco_k, vco_freq;
 	float vcf_cutoff, vcf_envmod, vcf_envdecay, vcf_reso, vcf_rescoeff;
 	float vcf_e0, vcf_e1;
@@ -13,8 +12,8 @@ private:
 	float vcf_a, vcf_b, vcf_c, vcf_d1, vcf_d2, vcf_envpos;
 	float balance;
 
-	void recalc(void);
-	void vibrate(void);
+	void recalc();
+	void vibrate();
 
 public:
 	void setFreq(float);
@@ -25,13 +24,12 @@ public:
 
 	void generateSamples(int);
 
-	analogAlg(void);
+	analogAlg();
 	~analogAlg();
 };
 
 class analogHand : public VHandler
 {
-private:
 	float zFreq;
 	float zFilterCutoff;
 	float zResonance;
@@ -46,7 +44,7 @@ private:
 		isetEnvDecay };
 	
 protected:
-	analogAlg * getAlg(void)	{ return (analogAlg *) VHandler::getAlg(); }
+	analogAlg* getAlg() { return (analogAlg*)VHandler::getAlg(); }
 
 public:
 	void SetAttribute(IParam iParam, float z);
@@ -61,25 +59,22 @@ public:
 	void setEnvDecay(float z, float t=timeDefault)
 		{ modulate(isetEnvDecay, zEnvDecay, z, AdjustTime(t)); }
 
-	float dampingTime(void) { return 0.03; }
+	float dampingTime() { return 0.03; }
 
 	analogHand(analogAlg * alg = new analogAlg);
-	virtual ~analogHand() {}
-
+	~analogHand() {}
 	int receiveMessage(const char * Message);
-
 };
 
 class analogActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new analogHand(); }
+	VHandler* newHandler() { return new analogHand(); }
+	analogActor();
+	~analogActor() {}
 
-	analogActor(void);
-	virtual ~analogActor() {}
-
-	virtual void sendDefaults(VHandler *);
-	virtual int	receiveMessage(const char * Message);
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char *);
 
 	void setFreq(float f);
 	void setFilterCutoff(float z);
@@ -95,7 +90,7 @@ virtual	VHandler * newHandler(void)	{ return new analogHand(); }
 protected:
 	float defaultFreq, defaultFilterCutoff, defaultResonance, defaultEnvMod, defaultEnvDecay;
 
-	virtual ostream &dump(ostream &os, int tabs);
+	ostream &dump(ostream &, int);
 };
 
 static inline int CheckFreq(float f) { return f >= 0.01 && f <= globs.SampleRate; }

@@ -1,13 +1,8 @@
-#ifndef _loopActor_h_
-#define _loopActor_h_
-
+#pragma once
 #include "VActor.h"
 
 class loopActor : public VActor
 {
-private:
-	// Implementation variables and functions
-
 	float x; // data
 	int n;   // step
 			 // time is implicitly loopTime();
@@ -32,31 +27,26 @@ private:
 	int fSwing; // swing back and forth, if true
 
 	float xIrreg, tIrreg; // dataish and temporal irregularity, 0 to 1.
-
 	float zUserFloat;
-
 	char szMG[1024]; // Name of message group to send messages to.  Slightly larger than parseActorMessage.h's char[]'s.
 
 	void MaybeDump() { if (isDebug()) bio(cout, 0); }
-	float loopTime() { return currentTime() - tOffset; }
+	float loopTime() const { return currentTime() - tOffset; }
 	void resetLoopTime() { tOffset = currentTime(); }
 
 public:
-	// Constructor, destructor
-	loopActor(void);
-	virtual ~loopActor() {}
+	loopActor();
+	~loopActor() {}
 
-	// Actor behavior
-	virtual void act(void);
-	virtual int receiveMessage(const char * Message);
-	int receiveMessageCore(char * Message);
+	void act();
+	int receiveMessage(const char*);
+	int receiveMessageCore(char*);
 	void setActive(int);
 
 protected:
-	// Parameter setting
 	void setDataStart(float z) { xStart = x = z; }
 	void setDataLimit(float z) { xLimit = z; fDisableXLimit = 0; }
-	void setNoDataLimit(void)  { fDisableXLimit = 1; }
+	void setNoDataLimit() { fDisableXLimit = 1; }
 	void setTimeLimit(float z) { tLimit = z; fDisableTLimit = z<0; }
 	void setStepLimit(int w)   { nLimit = w; fDisableNLimit = w<0; }
 
@@ -79,15 +69,13 @@ protected:
 			}
 		}
 
-	void computeDataLimit(void);
-	void computeDataStep(void);
-	void computeTimeLimit(void);
-	void computeTimeStep(void);
-	void computeStepLimit(void);
+	void computeDataLimit();
+	void computeDataStep();
+	void computeTimeLimit();
+	void computeTimeStep();
+	void computeStepLimit();
 
-	void setMessageGroup(char* name)
+	void setMessageGroup(const char* name)
 		{ strncpy(szMG, name, sizeof(szMG)-2); }
-	virtual ostream &dump(ostream &os, int tabs);
+	ostream& dump(ostream&, int);
 };
-
-#endif

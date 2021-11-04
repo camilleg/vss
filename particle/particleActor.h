@@ -1,19 +1,6 @@
-#ifndef _PARTICLE_H_
-#define _PARTICLE_H_
-
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-
+#pragma once
 #include "../msg/messageGroup.h"
 
-//===========================================================================
-//		class ParticleActor
-//
-//	This one is Robin's funkay thang. If the MessageGroup's 
-//	ScheduleData mechanism needs some filtering on the data, 
-//	he can implement it here.
-//
 class ParticleActor : public MessageGroup	
 {
 public:
@@ -33,11 +20,7 @@ public:
 //	does nothing for start and endReceiveSchedule(), and adds
 //	the array to its dataList in receiveScheduledData().
 protected:
-// virtual	int		parseSchedule(char *);
-virtual	void	startReceiveSchedule(int);
-virtual	void	receiveScheduledData(float, float *, int);
-virtual void	endReceiveSchedule(int);
-
-};	// 	end of class ParticleActor
-
-#endif	// ndef _PARTICLE_H_
+	void startReceiveSchedule(int);
+	void receiveScheduledData(float, float*, int);
+	void endReceiveSchedule(int);
+};

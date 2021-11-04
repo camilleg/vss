@@ -1,5 +1,4 @@
 #pragma once
-
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
@@ -29,56 +28,43 @@ public:
 						// 0 = "in your face"
 						// 1 = "clipping plane"
 
-//	sample generation
-	int	FValidForOutput(void) { return (source != NULL); }
+	int	FValidForOutput() { return source != NULL; }
 	void	generateSamples(int howMany);
-
-		distanceAlg(void);
+		distanceAlg();
 		~distanceAlg();
 };
 
 class distanceHand : public VHandler
 {
-//	modulating parameters of processAlg
 	float zDistance;
 	enum { isetDistance };
-
 protected:
-	distanceAlg * getAlg(void)	{ return (distanceAlg *) VHandler::getAlg(); }
-
+	distanceAlg* getAlg() { return (distanceAlg*)VHandler::getAlg(); }
 public:
 	void SetAttribute(IParam iParam, float z);
 	void setDistance(float z, float t = timeDefault)
 		{ modulate(isetDistance, zDistance, z, AdjustTime(t)); }
 	
-	float	dampingTime(void)	{ return 0.03; }
-
-	distanceHand(distanceAlg * alg = new distanceAlg);
-	virtual ~distanceHand() {}
-
-	virtual void actCleanup(void);
-
-	int	receiveMessage(const char * Message);
-
+	float dampingTime() { return 0.03; }
+	distanceHand(distanceAlg* alg = new distanceAlg);
+	~distanceHand() {}
+	void actCleanup();
+	int receiveMessage(const char*);
 };
 
 class distanceActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new distanceHand(); }
-
-		distanceActor(void);
-virtual		~distanceActor() {}
-
-virtual	void 	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
+	VHandler* newHandler() { return new distanceHand(); }
+	distanceActor();
+	~distanceActor() {}
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
 	void	setDistance(float f);
 	void	setAllDistance(float f, float t = 0.);
-
 protected:
 	float	defaultDistance;
-
 };
 
 static inline int	CheckDist(float f) 	{ return (f >= 0.) && (f <= 3.0); }

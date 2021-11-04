@@ -45,17 +45,17 @@ public:
 	void appendFloats(int cz, float* rgz)
 		{ OSC_writeFloatArgs(pbuf, cz, rgz); }
 
-	void send(void);
+	void send();
 
 	void sendAddrInt(char* sz, int d);
 	void sendAddrFloat(char* sz, float z);
 	void sendAddrString(char* sz, char* szArg);
 	void sendAddrFloatFloat(char* sz, float z1, float z2);
 
-	virtual int receiveMessage(const char*);
+	int receiveMessage(const char*);
 
 	void init(char *szHostname, int channel=2002);
-	void term(void);
+	void term();
 };
 
 #ifdef VSS_LINUX
@@ -136,12 +136,12 @@ class OSCServer : public VActor
 			clilen(maxclilen)
 			{ *szMsgAddr = *szMsg = *mbuf = '\0'; }
 		void init(int port);
-		void term(void);
+		void term();
 		void setAddr(char* addr, char* args, char* cmd, char* msg);
 		void rmAddr(char* addr);
 
-		virtual void act(void);
-		virtual int receiveMessage(const char*);
+		void act();
+		int receiveMessage(const char*);
 };
 
 ACTOR_SETUP(OSCActor, OSCActor)
@@ -221,7 +221,7 @@ void OSCActor::init(char *szHostname, int channel)
 #endif
 }
 
-void OSCActor::term(void)
+void OSCActor::term()
 {
 	close(m_sockfd);
 	m_sockfd = -1;
@@ -272,7 +272,7 @@ void OSCActor::sendAddrFloatFloat(char* sz, float z1, float z2)
 #endif
 #include <cerrno>
 
-void OSCActor::send(void)
+void OSCActor::send()
 {
 	if (m_sockfd < 0)
 		{
@@ -423,7 +423,7 @@ void OSCServer::init(int port)
 		printf("OSCServer listening on port %d.\n", port);
 }
 
-void OSCServer::term(void)
+void OSCServer::term()
 {
 	close(m_sockfd);
 	m_sockfd = -1;
@@ -686,7 +686,7 @@ fprintf(stderr, "} ParseOSCPacket \n");
 		}
 }
 
-void OSCServer::act(void)
+void OSCServer::act()
 {
 	{
 	if (m_sockfd <= 0)

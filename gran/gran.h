@@ -1,21 +1,15 @@
-#ifndef _SAMP_H_
-#define _SAMP_H_
-
+#pragma once
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 #include "../samp/sfile.h"
 #include <list>
+// Has much in common with samp/samp.h.
 
-//===========================================================================
-//		granAlg 
-//
-//	class granAlg is an algorithm class for playing samples from AIFF files.
-//
+// Play grains from AIFF files.
 class granAlg : public VAlgorithm
 {
-private:
-	sfile *	file;
+	sfile*	file;
 	float	index;			// 	into sfile's sampleData
 	ulong	startAt;		//	start and end indices into sampleData
 	ulong 	endAt;			//		(frame indices, actually)
@@ -32,32 +26,32 @@ private:
 	
 //	for speed, and at great expense to elegance, keep copies of these
 //	sfile members, saving on extra indirection every sample.
-	void *	sampleData;
+	void*	sampleData;
 	int		fileNumChans;
 
 //	pointer to member get8bitSamp or get16bitSamp.
 	float	(granAlg::*getSampFn)(ulong, int);
 
 public:
-	char *	getFileName(void)	{ return (file!=NULL) ? file->name() : NULL; }
-	char * 	getDirectory(void)	{ return (file!=NULL) ? file->directory() : NULL; }
-	float	getIntervalStart(void)	{ return (file!=NULL) ? (double) startAt / file->sampleRate() : 0.; }
-	float	getIntervalEnd(void)	{ return (file!=NULL) ? (double) endAt / file->sampleRate() : 0.; }
-	float	getPosition(void)	{ return (file!=NULL) ? (double) index / file->sampleRate() : 0.; }
-	float	getSRratio(void)	{ return (file!=NULL) ? file->sampleRate() * globs.OneOverSR : 0.; }
+	char* getFileName() const { return file ? file->name() : nullptr; }
+	char* getDirectory() const { return file ? file->directory() : nullptr; }
+	float getIntervalStart() const { return file ? startAt / file->sampleRate() : 0.; }
+	float getIntervalEnd() const { return file ? endAt / file->sampleRate() : 0.; }
+	float getPosition() const { return file ? index / file->sampleRate() : 0.; }
+	float getSRratio() const { return file ? file->sampleRate() * globs.OneOverSR : 0.; }
 
 	void	setStart( float );
 	void	setDur( float );
 	void	setSlope( float );
 	void	setFile(sfile *);
-	void	resetFileParams(void);
+	void	resetFileParams();
 	void	setInterval( float, float );
-	void	setSampleStep(float scale = 1.) { if (file != NULL) sampleStep = getSRratio() * scale; }
+	void	setSampleStep(float scale = 1.) { if (file) sampleStep = getSRratio() * scale; }
 	void	setRanges(float controlMin_, float controlMax_, float jumpMin_, float jumpMax_);
 	void	setRebound(float);
 	void	setSpread(float);
 
-virtual	float 	dampingTime(void)	{ return 0.03; }
+	float dampingTime() { return 0.03; }
 	
 private:
 	float	get8bitSamp( ulong, int );
@@ -75,88 +69,63 @@ public:
 	~granAlg();
 };
 
-//===========================================================================
-//		granHand 
-//
-//	class granHand is a handler class for dumbfmAlg.
-//	There are no modulating parameters for granAlg.
-//
 class granHand : public VHandler
 {
-//	granHand may be told to delete itself when the sample is
-//	done playing
-private:
 	float myDur;
 	float mySlope;
-	float	controlMin,controlMax,jumpMin,jumpMax;
-	void	setRanges( void );
+	float controlMin,controlMax,jumpMin,jumpMax;
+	void setRanges();
 
-//	keep track of default directory for loading files
+	// Default directory for loading files.
 	char 	directoryName[180];
 
-//  Algorithm access:
-//  Define a version of getAlg() that returns a pointer to granAlg
 protected:
-    granAlg * getAlg(void) { return (granAlg *) VHandler::getAlg(); }
+	granAlg* getAlg() { return (granAlg*)VHandler::getAlg(); }
 	
 //	the sampleStep in the algorithm accounts for the ratio
 //	of the vss sample rate and the file's sample rate. The handler's
 //	sampleStep scales that value.
 	float sampleStep;
 
-//	parameter access
 public:
-	char *	getFileName(void)	{ return getAlg()->getFileName(); }
-	char * 	getDirectory(void)	{ return getAlg()->getDirectory(); }
-	float	getIntervalStart(void)	{ return getAlg()->getIntervalStart(); }
-	float	getIntervalEnd(void)	{ return getAlg()->getIntervalEnd(); }
+	char* getFileName() { return getAlg()->getFileName(); }
+	char* getDirectory() { return getAlg()->getDirectory(); }
+	float getIntervalStart() { return getAlg()->getIntervalStart(); }
+	float getIntervalEnd() { return getAlg()->getIntervalEnd(); }
 
-//	message handling
-	void	setDirectory(char *);
-	void	setFile(char *);
-	void	setStart( float );
-	void	setDur( float );
-	void	setInterval( float, float );
-	void	setSlope( float );
-	void	setRebound(float);
-	void	setSpread(float);
-	void	setSampleStep(float);
+	void setDirectory(char*);
+	void setFile(char*);
+	void setStart(float);
+	void setDur(float);
+	void setInterval(float, float);
+	void setSlope(float);
+	void setRebound(float);
+	void setSpread(float);
+	void setSampleStep(float);
 
-//	construction/destruction
-		granHand(granAlg * alg = new granAlg);
-virtual	~granHand() {}
+	granHand(granAlg* alg = new granAlg);
+	~granHand() {}
+	void act();
+	int receiveMessage(const char*);
+};
 
-//	actor behavior
-	void	act(void);
-	int		receiveMessage(const char * Message);
-	
-};	// end of class granHand
-
-//===========================================================================
-//		granActor
-//
-//	class granActor is a generator actor class for granAlg
-//
 class granActor : public VGeneratorActor
 {
-//	construction/destruction
 public:
-	granActor(void);
-virtual	~granActor();
+	granActor();
+	~granActor();
+	VHandler* newHandler() { return new granHand(); }
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
-virtual VHandler * newHandler(void) { return new granHand(); }
+	// message handling
+	void rewindAll();
+	void setAllDirectory(char *);
+	void setDirectory(char *);
+	void setStep(float);
 
-virtual	void 	sendDefaults(VHandler *);
-virtual int		receiveMessage(const char * Message);
-
-//	message handling members
-	void	rewindAll(void);
-	void	setAllDirectory(char *);
-	void	setDirectory(char *);
-	void	setStep(float);
-
-//	default parameters
 private:
+	// default parameters
 	float	myDur, myStart, mySlope;
 	float	controlMin,controlMax,jumpMin,jumpMax;
 	float	rebound;
@@ -164,15 +133,14 @@ private:
 	char 	defaultDirectory[180];
 	float	defaultSampleStep;
 	
-//	maintain a list of sample files in memory
-	typedef list<sfile *> SfileList;
-	SfileList	fileList;
+	using SfileList = std::list<sfile*>;
+	SfileList fileList;
 	
 public:
-	sfile *	loadFile(char *, char *);
-	sfile *	loadFile(char * fname)		{ return loadFile(defaultDirectory, fname); }
-	void	unloadFile(char *, char *);
-	void	unloadFile(char * fname)	{ unloadFile(defaultDirectory, fname); }
+	sfile*	loadFile(char*, char*);
+	sfile*	loadFile(char* fname) { return loadFile(defaultDirectory, fname); }
+	void	unloadFile(char*, char*);
+	void	unloadFile(char* fname) { unloadFile(defaultDirectory, fname); }
 	void	unloadAllFiles(int = 0);
 
 	void	setStart( float );
@@ -186,20 +154,15 @@ public:
 	void	setRebound(float);
 	void	setSpread(float);
 
-	float Start(void) { return myStart; }
-	float Dur(void) { return myDur; }
-	float Slope(void) { return mySlope; }
-	float ControlMin(void) { return controlMin; }
-	float ControlMax(void) { return controlMax; }
-	float JumpMin(void) { return jumpMin; }
-	float JumpMax(void) { return jumpMax; }
-	float Rebound(void) { return rebound; }
-	float Spread(void) { return spread; }
+	float Start() const { return myStart; }
+	float Dur() const { return myDur; }
+	float Slope() const { return mySlope; }
+	float ControlMin() const { return controlMin; }
+	float ControlMax() const { return controlMax; }
+	float JumpMin() const { return jumpMin; }
+	float JumpMax() const { return jumpMax; }
+	float Rebound() const { return rebound; }
+	float Spread() const { return spread; }
+};
 
-};	// end of class granActor
-
-//	Bounds checking.
-//
 static	inline	int	CheckSampleStep(float f) 	{ return f > 0. && f < 1000.; }
-
-#endif // ndef _SAMP_H_

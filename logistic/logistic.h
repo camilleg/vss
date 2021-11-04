@@ -1,40 +1,37 @@
 #pragma once
-
 #include "VActor.h"
-
-enum { NORMAL, LINBIN, LOGBIN, SEQ };
 
 class logisticActor : public VActor
 {
- private:
-  int outputMode;
-  int binNum;
-  float state;
-  float ctrl;
-  float output;
-  float scale;
-  float offset;
-  int go;
-  float zUserFloat;
-  char szMG[80];
+	enum { NORMAL, LINBIN, LOGBIN, SEQ };
+	int outputMode;
+	int binNum;
+	float state;
+	float ctrl;
+	float output;
+	float scale;
+	float offset;
+	int go;
+	float zUserFloat;
+	char szMG[80];
 
 public:
-	logisticActor(void);
-virtual	~logisticActor() {}
+	logisticActor();
+	~logisticActor() {}
 
- void setMG(char *);
- void goOnce();
- void setState(float);
- void setCtrl(float);
- void setScaleandOffset(float, float);
- void setOutput(float); 
- void setOutputMode(float);
- void setBinNum(float);
+	void setMG(char*);
+	void goOnce();
+	void setState(float);
+	void setCtrl(float);
+	void setScaleandOffset(float, float);
+	void setOutput(float); 
+	void setOutputMode(float);
+	void setBinNum(float);
 
-virtual void act(void);
-virtual int	receiveMessage(const char * Message);
+	void act();
+	int receiveMessage(const char*);
+
+	int CheckState(float f) { return f > 0.0 && f < 1.0; }
+	int CheckOutputMode(float f) { return f >= NORMAL && f <= SEQ; }
+	int CheckBinNum(float f) { return f >= 1.0; }
 };
-
-static inline int	CheckState(float f) 	{ return (f < 1. && f > 0.); }
-static inline int	CheckOutputMode(float f){ return (f <= SEQ && f >= NORMAL); }
-static inline int	CheckBinNum(float f){ return (f >= 1.); }

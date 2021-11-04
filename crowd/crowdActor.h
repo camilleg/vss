@@ -1,6 +1,4 @@
-#if !defined(crowdActor_inc)
-#define crowdActor_inc
-
+#pragma once
 #include "VActor.h"
 
 // id's should ideally be 32-bit values, but they're passed in
@@ -11,7 +9,6 @@ class CrowdHandler
 public:
 	float h; // handle to SampleHandler actor
 	float id;
-
 	void Init(float hArg, float idArg) { h=hArg; id=idArg; }
 };
 
@@ -29,7 +26,6 @@ public:
 
 class CrowdActor : public VActor	
 {
-private:
 	VActor* mgDelete;
 	VActor* sampActor;
 	float hSampActor;
@@ -52,26 +48,22 @@ private:
 	int cxyzPrev;
 	int ihPrev;
 
-	int FTopN(float id);
-	int FTopNPrev(float id);
-	float& PhFromId(float id);
-	XYZ& XYZFromId(float id);
+	int FTopN(float) const;
+	int FTopNPrev(float) const;
+	float& PhFromId(float);
+	XYZ& XYZFromId(float);
 
 public:
 	CrowdActor();
 	~CrowdActor();
-
-	/*;;;; virtual void act(void);*/
-	virtual	int receiveMessage(const char*);
+	int receiveMessage(const char*);
 
 protected:
-	void setDirectory(char* sz);
-	void setFile(char* sz);
+	void setDirectory(const char*);
+	void setFile(const char*);
 	void setRate(float rMin, float rMax);
 	void setMaxSimultaneous(int c);
 	void play(float x=0., float y=5., float z=0.);
 	void xyzArray(float* rgz, int cz);
 	void autostop(float h);
 };
-
-#endif

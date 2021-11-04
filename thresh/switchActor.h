@@ -1,15 +1,11 @@
-#ifndef _switchActor_h
-#define _switchActor_h
-
+#pragma once
 #include <iostream>		// used for debugging stuff and warning messages.
-
 #include "VActor.h"
 #if 1
 #include "threshActor.h"
 #else
 #include "saThreshActor.h"
 #endif
-
 #include "cxArray.h"
 
 typedef float (*SwitchGateTester)(float,float);
@@ -111,9 +107,7 @@ protected:
 public:
   SwitchActor();
   //~SwitchActor();
-
-  //	actor behavior
-  virtual	int receiveMessage(const char*);
+  int receiveMessage(const char*);
 
   /* Init the combiner and all the gate testers and the initial input values. */
   void	init(int numGates, const char* combinerName);
@@ -192,5 +186,3 @@ public:
   //--------------- Testing protocol: TestActor?? ---------------
   void assertGates(int* bools, int count, int trueCase=1, int falseCase=0);
 };
-
-#endif /* _switchActor_h */

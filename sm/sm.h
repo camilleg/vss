@@ -1,15 +1,14 @@
-#ifndef _SM_H_
-#define _SM_H_
-
+#pragma once
 #include "VActor.h"
 #include "VHandler.h"
 #include <deque>
+
+// State machine.
 
 #define MAX_NODE 100
 #define MAX_TERM 5
 #define MAX_EDGE 5
 #define MAX_DOOR 5
-
 
 struct Node;
 
@@ -51,43 +50,27 @@ struct Door
   Node * doorNode; // the node at which the door is
 };
 
-
 class smActor : public VActor 
 {
- public:
-  smActor(void);
-  virtual ~smActor() {}
+public:
+  smActor();
+  ~smActor() {}
   
-  void act(void);
-  virtual int receiveMessage(const char * Message);
+  void act();
+  int receiveMessage(const char*);
 
-  void setMessageGroup(char* name)
-    { strncpy(szMG, name, sizeof(szMG)-2); }
-
+  void setMessageGroup(const char* name) { strncpy(szMG, name, sizeof(szMG)-2); }
   void setDirectory(const char* dirname);
+  void setPresetFile(char* prefile);
+  void setDoorNum(int Num);
+  void initDoor(int Num, int iNode);
+  void triggerDoor(int iDoor);
+  void setRange(int iDoor, float range);
+  void setTimelimit(float timelimit) { TIME_NoEvent = timelimit; }
+  void setMinRepeatTime(float mintime) { MinRepeatTime = mintime; }
+  void setCoupling(int coup) { coupling = bool(coup); }
 
-  void setPresetFile(char * prefile);
-
-  void setDoorNum(const int Num);
-
-  void initDoor(const int Num, const int iNode);
-
-  void triggerDoor(const int iDoor);
-
-  void setRange(const int iDoor, const float range);
-
-  void setTimelimit(const float timelimit)
-    { TIME_NoEvent = timelimit; }
-
-  void setMinRepeatTime(const float mintime)
-    { MinRepeatTime = mintime; }
-
-  void setCoupling(const int coup) 
-    { coupling = bool(coup); }
-
-
- private:
-
+private:
   char szMG[100];
   char szFilename[180];
   bool initGraph;
@@ -103,5 +86,3 @@ class smActor : public VActor
   Door door[MAX_DOOR];
   Door* MostRecentDoor;
 };
-
-#endif

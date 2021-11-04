@@ -1,14 +1,9 @@
-#ifndef _SEQ_H_
-#define _SEQ_H_
-
-// Basic sequencer actor.  Camille Goudeseune, 1997.
-// Based on a vss2.3 design by Kelly Fitz.
-
+#pragma once
 #include "VActor.h"
 #include "../msg/messageGroup.h"
 #include <list>
 
-class Event // from vss2.3's AUD_EVENT
+class Event
 {
 public:
 	VActor* myMom;	// what am in?
@@ -29,28 +24,26 @@ class SeqActor : public VActor
 {
 public:
 	SeqActor();
-	SeqActor(SeqActor& seq);
-	virtual ~SeqActor();
+	SeqActor(SeqActor&);
+	~SeqActor();
 
-/*** Read access to internal state ***/
 ///    float   beatLength()    { return myBeatLength; } // in seconds
-    float   bpm()       { return 60.0 / myBeatLength; } // beats per minute
+    float bpm() const { return 60.0 / myBeatLength; } // beats per minute
 ///    float   numloops()  { return myNumLoops; }
-    float   startTime() { return myStartTime; }
+    float startTime() const { return myStartTime; }
 ///    float   currentBeat()   { return myNowBeat; }
 ///    int numEvents() { return myList.size(); }
 
-/*** Parameter update functions ***/
-    void setBeatLength(float BeatLength)    { myBeatLength = BeatLength; }
-    void setBpm(float BPM)                  { setBeatLength(60.0 / BPM); }
-///    void setStartTime(float aTime)          { myStartTime = aTime; }
-    void setNumLoops(const float loops)     { myNumLoops = int(loops); }
-	void setLoopStart(const float start)    { myLoopStart = start; }
-    void setLoopEnd(const float end)        { myLoopEnd = end; }
+    void setBeatLength(float BeatLength) { myBeatLength = BeatLength; }
+    void setBpm(float BPM) { setBeatLength(60.0 / BPM); }
+/// void setStartTime(float aTime) { myStartTime = aTime; }
+    void setNumLoops(float loops) { myNumLoops = loops; }
+	void setLoopStart(float start) { myLoopStart = start; }
+    void setLoopEnd(float end) { myLoopEnd = end; }
 
- ///   void addMessage(const float when, const float returnID, char* msg) {}
-    void addMessage(const float when, char* msg);
-    void addMessage(const float when, Event& anEvent);
+/// void addMessage(const float when, const float returnID, char*) {}
+    void addMessage(float when, char*);
+    void addMessage(float when, Event&);
 
 #ifdef UNDER_CONSTRUCTION
     // void addMessagesRet(const float howMany);
@@ -58,47 +51,36 @@ public:
 
 	// The deleteFoo's may need to change the global iterator if it's
 	// pointing at something which will be deleted!
-	//
 	// An intermediate step would be to automatically deactivate and rewind
 	// the sequence before any deleteFoo operation.
 
-    void deleteEvent(Event *anEvent);
-    void deleteEvent(const float when);
-    void deleteEvent(const float when, const float aHandle);
-    void deleteAllEventsBefore(const float when);
-    void deleteAllEventsAfter(const float when);
-    void deleteAllEvents(void);
+    void deleteEvent(Event*);
+    void deleteEvent(float when);
+    void deleteEvent(float when, float aHandle);
+    void deleteAllEventsBefore(float when);
+    void deleteAllEventsAfter(float when);
+    void deleteAllEvents();
 #endif
 
     void rewind(float where=0.0);
     void skipEvents(float howMany);
-///    float valueFromID(float anID) {}
+/// float valueFromID(float anID) {}
     void setActive(const int n);
     void jumpTo(float Where);
-
-	void act(void);
+	void act();
 
 private:
-
-	typedef list<Event> SeqList;
-
-    virtual ostream &dump(ostream &os, int tabs);
+    ostream &dump(ostream&, int);
 
     float myStartTime;
     float myLoopStart, myLoopEnd;
     int   myNumLoops;
     float myBeatLength;
     float myNowBeat;
+	using SeqList = std::list<Event>;
 	SeqList::iterator myIter;
     SeqList myList;
 
 public:
-
-//	actor behavior
-	virtual	int receiveMessage(const char*);
-
- 
-};	// 	end of class SeqActor
-
-#endif	// ndef _SEQ_H_
- 
+	int receiveMessage(const char*);
+};

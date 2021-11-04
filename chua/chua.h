@@ -12,7 +12,6 @@
 class chuaAlg : public VAlgorithm
 {
 //	synthesis parameters
-
 	float	potentiometer;
 	double	Q;
 	int	cursamp;
@@ -43,21 +42,20 @@ class chuaAlg : public VAlgorithm
 	double	g0BPH1, g0BPH2, AA, BB, MA, MB, rho, p5m;
 
 public:
-	double		getR(void)			{ return ( R ); }
-	double		getR0(void)			{ return ( R0 ); }
-	double		getC1(void)			{ return ( C1 ); }
-	double		getC2(void)			{ return ( C2 ); }
-	double		getL(void)			{ return ( L ); }
-	double		getBPH1(void)			{ return ( BPH1 ); }
-	double		getBPH2(void)			{ return ( BPH2 ); }
-	double		getBP1(void)			{ return ( BP1 ); }
-	double		getBP2(void)			{ return ( BP2 ); }
-	double		getM0(void)			{ return ( M0 ); }
-	double		getM1(void)			{ return ( M1 ); }
-	double		getM2(void)			{ return ( M2 ); }
-	double		getM3(void)			{ return ( M3 ); }
-	void		getVector(double * putItHere)
-				{ memcpy ( putItHere, vector_pos, CHUA_DIM * sizeof(double)); }
+	double getR() const { return R; }
+	double getR0() const { return R0; }
+	double getC1() const { return C1; }
+	double getC2() const { return C2; }
+	double getL() const { return L; }
+	double getBPH1() const { return BPH1; }
+	double getBPH2() const { return BPH2; }
+	double getBP1() const { return BP1; }
+	double getBP2() const { return BP2; }
+	double getM0() const { return M0; }
+	double getM1() const { return M1; }
+	double getM2() const { return M2; }
+	double getM3() const { return M3; }
+	void getVector(double* dst) const { memcpy(dst, vector_pos, CHUA_DIM*sizeof(double)); }
 
 	void	setFundamental(float, float);
 	void		setR(float newR)			{ R = newR; }
@@ -73,17 +71,15 @@ public:
 	void		setM1(float newM1)			{ M1 = newM1; }
 	void		setM2(float newM2)			{ M2 = newM2; }
 	void		setM3(float newM3)			{ M3 = newM3; }
-	void		setVector(double * newVector)
-				{ memcpy ( vector_pos, newVector, CHUA_DIM * sizeof(double)); }
+	void		setVector(const double* src) { memcpy(vector_pos, src, CHUA_DIM*sizeof(double)); }
 
-//	initialization type stuff
-	void		resetChuaNote(void);
-	void		resetControlForce(void);
-	void		resetVector(void);
-	void		resetState(void);
+	void		resetChuaNote();
+	void		resetControlForce();
+	void		resetVector();
+	void		resetState();
 
-//	Runge-Kutta integration stuff, inline for speed.
-	void		difeq(double * xx, double * xdot)
+	// Runge-Kutta integration.
+	void difeq(const double* xx, double* xdot)
 	{
 		// Define nonlinear resistor function g(v1)
 		g = (xx[0] < REGbph1) ?
@@ -97,7 +93,7 @@ public:
 		xdot[2] = - BB * (xx[1] + rho * xx[2]);
 	};
 
-	void		rk4(void)
+	void rk4()
 	{
 		int l;
 		double k1[CHUA_DIM];
@@ -127,53 +123,21 @@ public:
 //				vector_pos[0], vector_pos[1], vector_pos[2]);
 	};
 
-	void	generateSamples(int);
+	void generateSamples(int);
 	chuaAlg();
 	~chuaAlg();
 };
 
 class chuaHand : public VHandler
 {
-protected:
-    chuaAlg * getAlg(void) { return (chuaAlg *) VHandler::getAlg(); }
-
-//	modulating parameters of chuaAlg
-private:
-	float	R;
-	float	R0;
-	float	C1;
-	float	C2;
-	float	L;
-	float	BPH1;
-	float	BPH2;
-	float	BP1;
-	float	BP2;
-	float	M0;
-	float	M1;
-	float	M2;
-	float	M3;
-
+	float R, R0, C1, C2, L, BPH1, BPH2, BP1, BP2, M0, M1, M2, M3;
 	enum { isetR, isetR0, isetC1, isetC2, isetL, isetBPH1, isetBPH2, isetBP1, isetBP2, isetM0, isetM1, isetM2, isetM3 };
+protected:
+    chuaAlg* getAlg() { return (chuaAlg*)VHandler::getAlg(); }
 
 public:
-#ifdef UNUSED
-	double		getR(void)			{ return getAlg()->getR() ; }
-	double		getR0(void)			{ return getAlg()->getR0() ; }
-	double		getC1(void)			{ return getAlg()->getC1() ; }
-	double		getC2(void)			{ return getAlg()->getC2() ; }
-	double		getL(void)			{ return getAlg()->getL() ; }
-	double		getBPH1(void)		{ return getAlg()->getBPH1() ; }
-	double		getBPH2(void)		{ return getAlg()->getBPH2() ; }
-	double		getBP1(void)		{ return getAlg()->getBP1() ; }
-	double		getBP2(void)		{ return getAlg()->getBP2() ; }
-	double		getM0(void)			{ return getAlg()->getM0() ; }
-	double		getM1(void)			{ return getAlg()->getM1() ; }
-	double		getM2(void)			{ return getAlg()->getM2() ; }
-	double		getM3(void)			{ return getAlg()->getM3() ; }
-#endif
-
 //	parameter modulation
-	void		resetChuaState(void);
+	void resetChuaState();
 
 	void SetAttribute(IParam iParam, float z);
 
@@ -204,27 +168,24 @@ public:
 	void setM3(float z, float t = timeDefault)
 		{ modulate(isetM3, M3, z, AdjustTime(t)); }
 
-//	chua parameter modification
-
-//	damp amplitude changes
-	float	dampingTime(void)	{ return 0.03; }
+	float	dampingTime()	{ return 0.03; }
 
 	chuaHand(chuaAlg* alg = new chuaAlg);
-	virtual ~chuaHand() {}
-	int receiveMessage(const char * Message);
+	~chuaHand() {}
+	int receiveMessage(const char*);
 };
 
 class chuaActor : public VGeneratorActor
 {
 	static int initialized;
 public:
-	chuaActor(void);
-	virtual	~chuaActor() {}
-	virtual VHandler* newHandler() { return new chuaHand(); }
-	virtual void sendDefaults(VHandler *);
-	virtual int receiveMessage(const char *);
+	chuaActor();
+	~chuaActor() {}
+	VHandler* newHandler() { return new chuaHand(); }
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
-	void		resetAllChuaState(void);
+	void		resetAllChuaState();
 
 	void		setR(float z);
 	void		setAllR(float z, float t = 0.);
@@ -266,17 +227,17 @@ public:
 	void		setAllM3(float z, float t = 0.);
 
 protected:
-	float	defaultR ;
-	float	defaultR0 ;
-	float	defaultC1 ;
-	float	defaultC2 ;
-	float	defaultL ;
-	float	defaultBPH1 ;
-	float	defaultBPH2 ;
-	float	defaultBP1 ;
-	float	defaultBP2 ;
-	float	defaultM0 ;
-	float	defaultM1 ;
-	float	defaultM2 ;
-	float	defaultM3 ;
+	float defaultR;
+	float defaultR0;
+	float defaultC1;
+	float defaultC2;
+	float defaultL;
+	float defaultBPH1;
+	float defaultBPH2;
+	float defaultBP1;
+	float defaultBP2;
+	float defaultM0;
+	float defaultM1;
+	float defaultM2;
+	float defaultM3;
 };

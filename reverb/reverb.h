@@ -1,24 +1,19 @@
-#ifndef _REVERB_H_
-#define _REVERB_H_
-
+#pragma once
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 
-//===========================================================================
 //	Non-interpolating delay line, copied from stk/DLineN.c++
-//
 class DLineNcopy
 {
-  protected:  
 	long inPoint;
 	long outPoint;
 	long length;
 	long lengthm1;
-	float * inputs;
+	float* inputs;
 	float lastOutput;
 
-  public:
+public:
 	DLineNcopy(long len);  
 	~DLineNcopy();  
 	void clear();
@@ -32,17 +27,11 @@ enum { MaxEarlyRefNum = 6, MaxCombNum = 6, MaxAllPassNum = 3 };
 enum { DEFAULT, SMALLROOM, HALL, ECHO1, CANYON, MAXPRE };
 #define ParaNum 44
 
-//===========================================================================
-//		reverbAlg 
-//
-
 class reverbAlg : public VAlgorithm
 {
-private:
-//	synthesis parameters
-	DLineNcopy *delayLineEarlyRef[MaxEarlyRefNum];
-	DLineNcopy *delayLineComb[MaxCombNum];
-	DLineNcopy *delayLineAllPass[MaxAllPassNum];
+	DLineNcopy* delayLineEarlyRef[MaxEarlyRefNum];
+	DLineNcopy* delayLineComb[MaxCombNum];
+	DLineNcopy* delayLineAllPass[MaxAllPassNum];
 	float revMix;
 	float revGain;
 	float pole;
@@ -65,55 +54,43 @@ private:
 	int idle;
 
 public:
-//	access members
 	void clear();
-	int getEarlyRefNum(void) { return earlyRefNum; }
-	float * getEarlyRefDelay(void) { return earlyRefDelay; }
-	float * getEarlyRefCoeff(void) { return earlyRefCoeff; } 
-	int getCombNum(void) { return combNum; }
-	float * getCombDelay(void) { return combDelay; }
-	int getAllPassNum(void) {return allPassNum; }
-	float * getAllPassDelay(void) {return allPassDelay; }
+	int getEarlyRefNum() const { return earlyRefNum; }
+	int getCombNum() const { return combNum; }
+	int getAllPassNum() const { return allPassNum; }
+	const float* getEarlyRefDelay() const { return earlyRefDelay; }
+	const float* getEarlyRefCoeff() const { return earlyRefCoeff; } 
+	const float* getCombDelay() const { return combDelay; }
+	const float* getAllPassDelay() const { return allPassDelay; }
 
-//	parameter update members
-	void setPreset(float z);
-	void setPara(float * p);
+	void setPreset(float);
+	void setPara(float*);
 	void setRevMix(float mix) { revMix = mix; }
 	void setRevGain(float g) { revGain = g; }
 	void setPole(float p) { pole = p; }
 	void setBW(float bw) { BW = bw; }
-	void setEarlyRefNum(float n) { earlyRefNum = int(n); }
-	void setEarlyRefDelay(float * delay);
-	void setEarlyRefCoeff(float * coeff);
-	void setCombNum(float n) { combNum = int(n); }
-	void setComb(void);
-	void setCombDelay(float * delay);
-	void setT60(float t) { t60 = t*MaxT60; this->setComb(); }
-	void setDampRatio(float dr) { dampRatio = dr; this->setComb(); }
-	void setAllPassNum(float n) { allPassNum = int(n); }
+	void setEarlyRefNum(float n) { earlyRefNum = n; }
+	void setEarlyRefDelay(float*);
+	void setEarlyRefCoeff(float*);
+	void setCombNum(float n) { combNum = n; }
+	void setComb();
+	void setCombDelay(float*);
+	void setT60(float t) { t60 = t*MaxT60; setComb(); }
+	void setDampRatio(float dr) { dampRatio = dr; setComb(); }
+	void setAllPassNum(float n) { allPassNum = n; }
 	void setAllPassDelay(float * delay);
 	void setIdle(int i) { idle = i; }
 
-//	sample generation
 	void generateSamples(int);
 	float tick(float input);
-	int FValidForOutput() { return source != NULL; }
+	int FValidForOutput() { return source != nullptr; }
 
-//	construction/destruction
-	reverbAlg(void);
+	reverbAlg();
 	~reverbAlg();
+};
 
-};	// end of class reverbAlg
-
-//===========================================================================
-//		reverbHand 
-//
-//	class reverbHand is a handler class for reverbAlg.
-//
 class reverbHand : public VHandler
 {
-//	modulating parameters of reverbAlg
-private:
 	float revMix;
 	float revGain;
 	float t60; // revTime
@@ -129,12 +106,9 @@ private:
 		isetRevPole,
 		isetDampRatio };
 
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to reverbAlg.
 protected:
-	reverbAlg * getAlg(void) { return (reverbAlg *) VHandler::getAlg(); }
+	reverbAlg* getAlg() { return (reverbAlg*)VHandler::getAlg(); }
 
-//	parameter modulation
 public:
 	void SetAttribute(IParam iParam, float z);
 
@@ -151,52 +125,36 @@ public:
 	void setDampRatio(float z, float t = timeDefault)
 		{ modulate(isetDampRatio, dampRatio, z, AdjustTime(t)); }
 	
-//	parameter setting
-	void setIdle(float z);
-	void setPreset(char * pre);
-	void setPresetFile(char * pre);
-	void setPresetNum(int pre);
-	void setEarlyRefNum(int z);
-	void setEarlyRefMix(float z);
-	void setEarlyRefDelay(int cz, float* rgz);
-	void setEarlyRefCoeff(int cz, float* rgz);
-	void setCombNum(int z);
-	void setCombDelay(int cz, float* rgz);
-	void setAllPassNum(int z);
-	void setAllPassDelay(int cz, float* rgz);
+	void setIdle(float);
+	void setPreset(char*);
+	void setPresetFile(char*);
+	void setPresetNum(int);
+	void setEarlyRefNum(int);
+	void setEarlyRefMix(float);
+	void setEarlyRefDelay(int, float*);
+	void setEarlyRefCoeff(int, float*);
+	void setCombNum(int);
+	void setCombDelay(int, float*);
+	void setAllPassNum(int);
+	void setAllPassDelay(int, float*);
 
-	virtual void actCleanup(void);
+	void actCleanup();
+	float dampingTime() { return 0.03; }
 
-//	damp amplitude changes
-	float	dampingTime(void) { return 0.03; }
+	reverbHand(reverbAlg* alg = new reverbAlg);
+	~reverbHand() {}
+	int receiveMessage(const char*);
+};
 
-//	construction
-	reverbHand(reverbAlg * alg = new reverbAlg);
-		
-//	destruction
-virtual	~reverbHand() {}
-
-	int receiveMessage(const char * Message);
-
-};	// end of class reverbHand
-
-//===========================================================================
-//		reverbActor
-//
 class reverbActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new reverbHand(); }
+	VHandler* newHandler() { return new reverbHand(); }
+	reverbActor();
+	~reverbActor() {}
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
-//	construction/destruction
-public:
-	reverbActor(void);
-virtual	~reverbActor() {}
-
-virtual	void sendDefaults(VHandler *);
-virtual int receiveMessage(const char * Message);
-
-//	parameter setting members
 	void setRevTime(float f);
 	void setAllRevTime(float f, float t = 0.);
 	void setRevMix(float f);
@@ -210,7 +168,6 @@ virtual int receiveMessage(const char * Message);
 	void setDampRatio(float f);
 	void setAllDampRatio(float f, float t = 0.);
 
-//	default parameters
 protected:
 	float defaultRevTime;
 	float defaultRevMix;
@@ -218,14 +175,8 @@ protected:
 	float defaultRevGain;
 	float defaultRevPole;
 	float defaultDampRatio;
+};
 
-};	// end of class reverbActor
-
-//===========================================================================
-//	BOUNDS CHECKING IS VITAL TO OUR SURVIVAL!!!!!!!!!!!!!!!!!!!
-//
-//	Find reasonable bounds and enforce them.
-//
 //	The following places have bounds information:
 //		The following Check*
 //		Error messages giving valid range in set* in reverbHand
@@ -257,5 +208,3 @@ static inline int CheckAllPassNum(int f)
 	{ return ((f >= 0) && (f <= MaxAllPassNum)); }
 static inline int CheckAllPassDelay(float f) 
 	{ return ((f >= 0.1) && (f <= 10.)); }
-
-#endif // ndef _REVERB_H_

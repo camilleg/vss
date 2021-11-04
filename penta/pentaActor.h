@@ -1,11 +1,6 @@
-#if !defined(pentaActor_inc)
-#define pentaActor_inc
-
+#pragma once
 #include "VActor.h"
 
-//===========================================================================
-//		class PentaActor
-//
 //	Camille's mysterious pentatonic trick, first used in the
 //	quartet "The Bottom Line, Drawn Freehand" circa 1993.
 //
@@ -16,20 +11,18 @@
 //
 class PentaActor : public VActor	
 {
-private:
 	int fRecomputeDuration;
-	void RecomputeDuration(void);
+	void RecomputeDuration();
 	float zDuration;
 
 public:
 	PentaActor();
 	~PentaActor() {}
 
-//	actor behavior
-	virtual void act(void);
-	virtual	int receiveMessage(const char*);
+	void act();
+	int receiveMessage(const char*);
 	
-	void setMG(char *);     // Message group to send [ampl, pitch, value] to.
+	void setMG(char*);		// Message group to send [ampl, pitch, value] to.
 	void setDensity(float);	// Mean events per second.
 	void setIrreg(float);  	// Irregularity (0 = steady pulse).
 	void setHue(float);    	// Pitch set, 0 to 1.  Twelve pentachords.
@@ -39,7 +32,7 @@ public:
 	void setWidth(float);		// Average width of pitch set, 0 to 1.
 	void setLowestFreq(float);	// Base of our tuning system, in Hz.
 
-protected:
+private:
 	float zAmplScale;	// Amplitude scaling factor
 	float zIrreg;		// irregularity (0 to infinity)
 	float zAlpha;		// density
@@ -52,7 +45,4 @@ protected:
 	int iPitchPrev;
 	char szMG[80];		// message-group to send to
 	int rgPS[12][5];	// twelve pentatonic chords
-
-};	// 	end of class PentaActor
-
-#endif
+};

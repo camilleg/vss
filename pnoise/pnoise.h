@@ -51,9 +51,7 @@ public:
 	float	getModCutoff()	{ return getAlg()->getModCutoff(); }
 	float	getModIndex()	{ return getAlg()->getModIndex(); }
 
-//	parameter modulation
 	void SetAttribute(IParam iParam, float z);
-
 	void setCutoff(float z, float t = timeDefault)
 		{ modulate(isetCutoff, fCutoff, z, AdjustTime(t)); }
 	void setModCutoff(float z, float t = timeDefault)
@@ -61,23 +59,22 @@ public:
 	void setModIndex(float z, float t = timeDefault)
 		{ modulate(isetModIndex, modIndex, z, AdjustTime(t)); }
 
-//	damp amplitude changes
 	float dampingTime() { return 0.03; }
 
 	pnoiseHand(pnoiseAlg* alg = new pnoiseAlg);
-	virtual ~pnoiseHand() {}
+	~pnoiseHand() {}
 	int receiveMessage(const char*);
 };
 
 class pnoiseActor : public VGeneratorActor
 {
 public:
-	virtual VHandler* newHandler() { return new pnoiseHand(); }
+	VHandler* newHandler() { return new pnoiseHand(); }
 	pnoiseActor();
-	virtual ~pnoiseActor() {}
+	~pnoiseActor() {}
 
-	virtual void sendDefaults(VHandler*);
-	virtual int receiveMessage(const char*);
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
 	void	setCutoff(float f);
 	void	setAllCutoff(float f, float t = 0.);
@@ -88,7 +85,7 @@ public:
 
 protected:
 	float defaultCutoff, defaultModCutoff, defaultModIndex;
-	virtual ostream& dump(ostream&, int tabs);
+	ostream& dump(ostream&, int);
 };
 
 static inline int CheckCutoff(float f) { return 0.01 <= f && f <= globs.SampleRate; }

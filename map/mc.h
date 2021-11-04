@@ -1,34 +1,21 @@
-#ifndef __MC_H__
-#define __MC_H__
-
+#pragma once
+#include "common.h"
 #include <cstdio>
 #include <iostream>
-#include "common.h"
 using namespace std;
 
-#ifdef VSS_WINDOWS
-#include "platform.h"
-#endif
-
-#define dasize 2400
-
-#undef TINY
-#ifdef TINY
-	#define iMaxMCPoint 10
-#else
-	#define iMaxMCPoint 45
-#endif
+constexpr auto dasize = 2400;
+constexpr auto iMaxMCPoint = 45;
 
 class MCPoint
 {
-private:
 	int cx;
 	unsigned checksumPrev;
 	float t;
-	float x[iMaxMCPoint];		// defined for 0 <= i < cx
+	float x[iMaxMCPoint]; // defined for 0 <= i < cx
 public:
-	MCPoint() { t = 0.; cx = 0; }
-	MCPoint(int cxArg) { t = 0; SetCDim(cxArg); }
+	MCPoint(): cx(0), t(0.0) {}
+	MCPoint(int cxArg): t(0.0) { SetCDim(cxArg); }
 	~MCPoint() {};
 
 	// implement "<" to compare "t".
@@ -36,8 +23,8 @@ public:
 	void PtFromTX(float tArg, float* rgx, int cxArg);
 	void TXFromPt(float& tArg, float* rgx, int& cxArg) const;
 
-	int fscanme(FILE* pf);		// I/O
-	int fprintme(FILE* pf) const;
+	int fscanme(FILE*);
+	int fprintme(FILE*) const;
 	friend std::ostream& operator<<(std::ostream&, const MCPoint&);
 	friend std::istream& operator>>(std::istream&, MCPoint&);
 
@@ -46,7 +33,7 @@ public:
 	float X(int i) const		{ if (i>=cx) { printf("errA X(%d) cx=%d:  ",i,cx); fprintme(stdout); crash(); } return x[i]; }
 
 	float operator[](int i) const { return X(i); }
-	float* Pz()				{ return &x[0]; } // for glVertex3fv(), when we need a float*.  Ugly but fast.
+	float* Pz() { return x; } // Ugly but fast.
 
 	void SetCDim(int cxArg)		{ cx = min(cxArg, iMaxMCPoint); }
 	void SetT(float tNew)		{ t = tNew; }
@@ -59,14 +46,12 @@ public:
 	friend float dist3D(const MCPoint& p1, const MCPoint& p2)
 		{ return dist3D(p1.x, p2.x); }
 
-
-	int FChanged(void);
-	unsigned Checksum(void);
+	int FChanged();
+	unsigned Checksum();
 };
 
 class MCPath
 {
-private:
 	int cPt;
 	int cDim;
 	int iPtFirstNext;	// for "first" & "next" methods
@@ -76,17 +61,14 @@ private:
 	#define zExtraPathRez 3
 	float rgzCentroid[3];
 
-	void QuantizeFromRawPoints(
-		int cPtQuantize, int cPtRaw, MCPoint* pPtRaw);
-	void ComputeCentroid(void);
-
-public:
-	float ptQuantize[cPtMax * zExtraPathRez][3]; // sigh, need it in draw.cc now.
+	void QuantizeFromRawPoints(int cPtQuantize, int cPtRaw, MCPoint* pPtRaw);
+	void ComputeCentroid();
+	float ptQuantize[cPtMax * zExtraPathRez][3];
 
 public:
 	void Reset() { cPt = 0; iPtFirstNext = -1; /*tScale = 1.;*/ }
 	MCPath() { Reset(); }
-	virtual ~MCPath() {}
+	~MCPath() {}
 
 // BASIC I/O
 
@@ -124,24 +106,19 @@ public:
 	int CDim() const { return cDim; }
 	void PointFromT(MCPoint& pt, float t, int fNormalized = 0) const;
 	void PointFromT(float* pz, float t, int fNormalized = 0) const;
-	float TFinal(void) const;
-//	float TScale(void) const { return tScale; }
+	float TFinal() const;
+//	float TScale() const { return tScale; }
 //	void TScale(float t) { tScale = t; }
 	int fPlayPathTime;
 
 // DISPLAY
-	friend void DrawPath(void); // needs ptQuantize
-	void ComputeDrawnPath(void);
+	friend void DrawPath(); // needs ptQuantize
+	void ComputeDrawnPath();
 	void GetCentroid(float* pz); // In pz, store xyz coords of approximate spatial center.
 };
 
-#ifdef TINY
-	#define cStepCircumfMax 35
-	#define cStepRadiusMax 30
-#else
-	#define cStepCircumfMax 50
-	#define cStepRadiusMax 35
-#endif
+#define cStepCircumfMax 50
+#define cStepRadiusMax 35
 
 typedef struct { float x, y, z; } pt3;
 
@@ -155,21 +132,18 @@ public:
 
 class MCSurface
 {
-public:
-	MCEllipseParams ell; // drawing routines need to get at this, yuk.
+	MCEllipseParams ell;
 	float rgzCentroid[3];
-	void ComputeCentroid(void);
-protected:
-
+	void ComputeCentroid();
 	int cPt;
 	#define cPtSurfaceMax 50	// hardcoded for now ;;
 	MCPoint rgPt[cPtSurfaceMax];	// array of xyz points defining surface
 
 public:
 	MCSurface();
-	virtual ~MCSurface() {}
-	int FLoad(char* szFile);				// load from disk
-	int FSave(const char* szFile) const;	// save to disk
+	~MCSurface() {}
+	int FLoad(char* szFile);
+	int FSave(const char* szFile) const;
 	int FOnSurf(float x, float y);
 	float ZSurfFromXY(float x, float y);
 	int AddPoint(int i);
@@ -184,7 +158,7 @@ public:
 	float GetPtIY(int i) const { return rgPt[i].X(1); }
 	float GetPtIZ(int i) const { return rgPt[i].X(2); }
 	int CPt() const { return cPt; }
-	void EllipseFromSurf(void);
+	void EllipseFromSurf();
 	void GetCentroid(float* pz); // In pz, store xyz coords of approximate spatial center.
 };
 
@@ -199,7 +173,6 @@ typedef struct
 } Barycoords;
 
 const int maxCtlPoints = 100;
-
 const int cacheSize = 5000;
 
 class TT
@@ -223,7 +196,6 @@ public:
 
 class MCMap
 {
-private:
 	int cPt;
 	int cPtAlloc() const { return cPt+1; } // Extra 1 for the centroid.
 						// Centroid of lowdim space is stored at Q[cPt]
@@ -232,7 +204,7 @@ private:
 
 	int ctet;			// # of tetrahedra (or triangles if cdimLow==2)
 	int ctri;			// # of triangles (or line segments if cdimLow==2)
-	int ctetHull(void) const { return ctet+ctri; }
+	int ctetHull() const { return ctet+ctri; }
 	int cdim;
 	int cdimLow;			// 2 or 3
 
@@ -258,15 +230,15 @@ private:
 
 private:
 	int MaxTets() { return cPt * 4 + 3; } // unjustified approximation
-	void GAcore(void);
-	void Sammon(void);
+	void GAcore();
+	void Sammon();
 
 public:
 	MCMap();
 	~MCMap() {};
 
-	void Delaunay(void);
-	void GA(void);
+	void Delaunay();
+	void GA();
 	void SetSammon(int f) { fSammon = f; }
 
 	int Init(int cpt, int dimLo, int dimHi, float* rgzLo, float* rgzHi);
@@ -314,50 +286,8 @@ public:
 	friend std::ostream& operator<<(std::ostream&, const MCMap&);
 	friend std::istream& operator>>(std::istream&, MCMap&);
 
-	int FValid(void)
-		{ return cdimLow > 0 &&
-			cdim > 0 &&
-			cPt > 0 &&
-			(rgq && Q && P && T) &&
-			ctet > 0;
-			}
-
-	void Free() // unused?
-		{
-		free(T);
-		free(P);
-		free(Q);
-		free(rgq);
-		rgq = NULL;
-		Q = NULL;
-		P = NULL;
-		T = NULL;
-		}
-
-#ifdef UNUSED
-{
-	void mapWindowPtToControlPt (const MCPoint&, MCPoint& pointDst);
-	void mapControlPtToWindowPt (const MCPoint&, MCPoint& pointDst);
-
-	int getControlSpaceDim() const { return cdim; }
-	int getWindowSpaceDim() const { return cdimLow; }
-
-	const MCPoint* IthPoint(int i) const { return &Q[i]; }
-	void SetIthPoint(int i, const MCPoint& pt); // { Q[i] = pt; Delaunay(); }
-
-	float dist2D(const MCPoint& a, const MCPoint& b)
-		{ return fsqrt(sq(b[0] - a[0]) + sq(b[1] - a[1])); }
-	float dist3D(const MCPoint& a, const MCPoint& b)
-		{ return fsqrt(sq(b[0] - a[0]) + sq(b[1] - a[1]) + sq(b[2] - a[2])); }
-}
-#endif
-};
-
-class MCNotation
-{
-public:
-	int FLoad(const char* /*szFile*/) { printf("MCNotation::FLoad NYI"); return 1; }		// load from disk
-	int FSave(const char* /*szFile*/) const { printf("MCNotation::FSave NYI"); return 1; }	// save to disk
+	int FValid() const
+		{ return cdimLow > 0 && cdim > 0 && cPt > 0 && (rgq && Q && P && T) && ctet > 0; }
 };
 
 void FindBary2D(
@@ -381,6 +311,3 @@ void Edahiro_Init(int cpt, MCPoint* rgpt, int ctriangle, TT* rgtri);
 int Edahiro_RegionFromPoint(float x, float y);
 	// Returns -1 if point lies outside the hull.
 #endif
-
-
-#endif // __MC_H__

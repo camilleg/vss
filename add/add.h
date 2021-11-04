@@ -22,7 +22,7 @@ private:
 	float rgzfd[cPartial];		// frequency deviations of partials
 
 public:
-	float	getFreq(void)		{ return freq; }
+	float	getFreq()			{ return freq; }
 	float	getIthAmpl(int i)	{ return rgzAmpl[i]; }
 	float	getIthFD(int i)		{ return rgzfd[i]; }
 
@@ -42,7 +42,7 @@ inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
 	void	generateSamples(int);
 
 //	static wavetable initialization
-	void	InitAddSintab(void);
+	void	InitAddSintab();
 
 	addAlg();
 	~addAlg();
@@ -51,7 +51,6 @@ inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
 class addHand : public VHandler
 {
 //	modulating parameters of addAlg
-private:
 	float freq;			// base frequency
 	float partials[addAlg::cPartial]; 	// amplitudes of partials
 	float fd[addAlg::cPartial]; 	// frequency deviation of partials
@@ -73,7 +72,7 @@ public:
 	void SetAttribute(IParam iParam, float);
 	void SetAttribute(IParam iParam, const float*);
 
-	float	getFreq(void)		{ return getAlg()->getFreq(); }
+	float	getFreq()			{ return getAlg()->getFreq(); }
 	float	getIthAmpl(int i)	{ return getAlg()->getIthAmpl(i); }
 
 	void	setFreq(float z, float  t = timeDefault)
@@ -91,10 +90,10 @@ public:
 	void	setIthFreq(int i, float z, float  t = timeDefault)
 			{ modulate(isetIthFreq, i, allfreq[i], z, AdjustTime(t)); }
 
-	float	dampingTime(void)	{ return 0.03; }
+	float	dampingTime() { return 0.03; }
 
-	addHand(addAlg * alg = new addAlg() );
-	virtual	~addHand() {}
+	addHand(addAlg* alg = new addAlg());
+	~addHand() {}
 	int receiveMessage(const char * Message);
 };
 
@@ -102,12 +101,12 @@ public:
 class addActor : public VGeneratorActor
 {
 public:
-	virtual	VHandler* newHandler() { return new addHand(); }
+	VHandler* newHandler() { return new addHand(); }
 	addActor();
-	virtual	~addActor() {}
+	~addActor() {}
 
-	virtual	void sendDefaults(VHandler *);
-	virtual int	receiveMessage(const char * Message);
+	void sendDefaults(VHandler*);
+	int	receiveMessage(const char*);
 
 	void	setFreq(float f);
 	void	setAllFreq(float f, float t = 0.);
@@ -123,7 +122,7 @@ protected:
 	float	defaultIthAmpl[addAlg::cPartial];
 	float	defaultIthFD[addAlg::cPartial];
 
-	virtual ostream &dump(ostream &os, int tabs);
+	ostream &dump(ostream &os, int tabs);
 };
 
 	static	inline int CheckFreq(float f) { return f >= 0. && f <= 24000.; }

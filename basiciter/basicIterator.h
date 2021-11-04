@@ -1,13 +1,8 @@
-#ifndef _basicIterator_h_
-#define _basicIterator_h_
-
+#pragma once
 #include "VActor.h"
 
 class iter1Actor : public VActor
 {
-private:
-	// Implementation variables and functions
-
 //CG_ADDED
 	// additional variables:
 	int 	IterationLimit;
@@ -30,13 +25,11 @@ private:
 //CG_ADDED
 
 public:
-	// Constructor, destructor
-	iter1Actor(void);
-	virtual ~iter1Actor() {}
+	iter1Actor();
+	~iter1Actor() {}
 
-	// Actor behavior
-	virtual void act(void);
-	virtual int receiveMessage(const char * Message);
+	void act();
+	int receiveMessage(const char*);
 	void setActive(const int);
 
 	// Parameter setting
@@ -76,11 +69,8 @@ public:
 	void setenableSwing(int enableSwing);
 	void setenableRandom(int enableRandom);	// randomiter
 	void setSeed(int seed);	// randomiter
-	virtual ostream &dump(ostream &os, int tabs);
-}; // end of class iter1Actor
-
-
-// Bounds checking
+	ostream& dump(ostream&, int);
+};
 
 static inline int Check_timeIncrement(float z)
 	{ return z >= -1e+09 && z < 1e+09; }
@@ -94,5 +84,3 @@ static inline int Check_data(float z)
 	{ return z >= -1e+09 && z < 1e+09; }
 static inline int Check_duration(float z)
 	{ return z >= -1e+09 && z < 1e+09; }
-
-#endif

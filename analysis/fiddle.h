@@ -1,6 +1,4 @@
-#ifndef _fiddle_h_
-#define _fiddle_h_
-
+#pragma once
 #include "fiddleguts.h"
 #include "VAlgorithm.h"
 #include "VHandler.h"
@@ -8,7 +6,6 @@
 
 class PitchAlg: public VAlgorithm
 {
-private:
 	int isamp;
 	int wDuration;
 	int iDuration;
@@ -17,7 +14,7 @@ private:
 	float zDisableElision;
 
 public:
-	enum { csamp = 512 }; // const int.
+	enum { csamp = 512 };
 	// csamp=256 ok down to Bb below middle C, 220 Hz.
 private:
 	float rgsamp[csamp];
@@ -32,25 +29,24 @@ private:
 	char szMGRelease[3][80];
 
 	void sigfiddle_doit(t_sigfiddle *);
-	void PerformAnalysis(void);
+	void PerformAnalysis();
 	void VSS_Release_Note(int);
 	void VSS_Attack_Note(int, t_pitchhist*);
 
 public:
-	void setMGTransient(const char* sz1);
-	void setMGAttack(const char* sz1, const char* sz2, const char* sz3);
-	void setMGTrack(const char* sz1, const char* sz2, const char* sz3);
-	void setMGRelease(const char* sz1, const char* sz2, const char* sz3);
+	void setMGTransient(const char*);
+	void setMGAttack(const char*, const char*, const char*);
+	void setMGTrack(const char*, const char*, const char*);
+	void setMGRelease(const char*, const char*, const char*);
 	void setRate(float);
 	void setUserFloat(float z) { zUserFloat = z; }
 	void generateSamples(int);
-	PitchAlg(void);
+	PitchAlg();
 	~PitchAlg();
 };
 
 class PitchHand: public VHandler
 {
-private:
 	float zRate;
 protected:
 	PitchAlg* getAlg() { return (PitchAlg*)VHandler::getAlg(); }
@@ -60,38 +56,27 @@ public:
 	void setMGAttack(const char* sz1, const char* sz2, const char* sz3);
 	void setMGTrack(const char* sz1, const char* sz2, const char* sz3);
 	void setMGRelease(const char* sz1, const char* sz2, const char* sz3);
-	void Analyze(void);
+	void Analyze();
 
-	// message handling
 	int receiveMessage(const char * Message);
-
-	// constructor, destructor
 	PitchHand(PitchAlg* alg = new PitchAlg);
-	virtual ~PitchHand() {}
-	virtual void actCleanup(void);
+	~PitchHand() {}
+	void actCleanup();
 };
 
 class PitchActor: public VGeneratorActor
 {
-private:
 	float defaultRate;
 public:
-	virtual VHandler * newHandler(void) { return new PitchHand; }
-	virtual void sendDefaults(VHandler *);
-	PitchActor(void);
-	virtual ~PitchActor() {}
-	virtual void act(void);
-	virtual int receiveMessage(const char * Message);
-
-	// Parameter setting
+	VHandler* newHandler() { return new PitchHand; }
+	void sendDefaults(VHandler *);
+	PitchActor();
+	~PitchActor() {}
+	void act();
+	int receiveMessage(const char * Message);
 	void setRate(float z);
-
-	virtual ostream &dump(ostream &os, int tabs);
+	ostream &dump(ostream &, int);
 };
-
-// Bounds checking
 
 static inline int CheckRateFiddle(float z)
 	{ return z >= 0. && z < 100000.; }
-
-#endif

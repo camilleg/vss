@@ -38,14 +38,14 @@ CrowdActor::~CrowdActor()
 #endif
 }
 
-void CrowdActor::setDirectory(char* sz)
+void CrowdActor::setDirectory(const char* sz)
 {
 	char szCmd[1100];
 	sprintf(szCmd, "SetDirectory %g %s", hSampActor, sz);
 	actorMessageHandler(szCmd);
 }
 
-void CrowdActor::setFile(char* sz)
+void CrowdActor::setFile(const char* sz)
 {
 	strncpy(szFile, sz, cchFileMax);
 	char szCmd[1100];
@@ -94,6 +94,7 @@ float& CrowdActor::PhFromId(float id)
 	return _;
 }
 
+// The return value may be modified.
 XYZ& CrowdActor::XYZFromId(float id)
 {
 	static /*const*/ XYZ _ = { -1., 0.,0.,0. };
@@ -238,12 +239,12 @@ for (i=0; i<ihMax; i++)
 int CompareXYZ(const void* pv1, const void* pv2)
 {
 	// For comparing distances, don't need to take the square root.
-	float d1 = DistSquaredXYZ((const XYZ*)pv1);
-	float d2 = DistSquaredXYZ((const XYZ*)pv2);
+	const float d1 = DistSquaredXYZ((const XYZ*)pv1);
+	const float d2 = DistSquaredXYZ((const XYZ*)pv2);
 	return d1<d2 ? -1 : d1>d2 ? 1 : 0;
 }
 
-int CrowdActor::FTopN(float id)
+int CrowdActor::FTopN(float id) const
 {
 	for (int i=0; i<ih; i++)
 		if (id == rgidTopN[i])
@@ -251,7 +252,7 @@ int CrowdActor::FTopN(float id)
 	return 0;
 }
 
-int CrowdActor::FTopNPrev(float id)
+int CrowdActor::FTopNPrev(float id) const
 {
 	for (int i=0; i<ihPrev; i++)
 		if (id == rgidTopNPrev[i])

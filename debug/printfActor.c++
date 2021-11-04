@@ -65,7 +65,7 @@ void PrintfActor::setFile(const char* sz)
 
 // Convert '_' to ' ', and trailing "\n" to newline, in place.
 // Then append a color-reset string if needed.
-char* PrintfActor::munch(char* sz)
+char* PrintfActor::munch(char* sz) const
 {
 	for (char* p = sz; *p; p++)
 		{
@@ -86,9 +86,6 @@ char* PrintfActor::munch(char* sz)
 	return sz;
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int 
 PrintfActor::receiveMessage(const char* Message)
 {

@@ -1,17 +1,11 @@
-#ifndef _BIQUAD_H_
-#define _BIQUAD_H_
-
+#pragma once
 #include <cmath>
-
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 
 #include "checkBounds.h"
 
-//===========================================================================
-//		biquadFiltAlg 
-//
 //	class biquadFiltAlg is a state-space implementation of a second-order
 //	"biquad" filter. Use it to realize classic second-order lowpass, 
 //	bandpass, highpass, notch, and allpass (phase-shift) filters. The 
@@ -20,7 +14,6 @@
 //
 class biquadFiltAlg : public VAlgorithm
 {
-private:
 //	internal synthesis stateholders
 	float	w0;				// prewarped analog corner frequency, rad/sec
 	float	a0, a1, b0, b1, b2;		// prewarped analog filter coefficients
@@ -36,16 +29,14 @@ private:
 	float	Alp, Abp, Ahp, Aap, An;		// Low-Band-High-Allpass and Notch gains
 
 public:
-//	access members
-	float	getFrequency(void)	{ return wd / (2.0 * M_PI); }
-	float	getResonance(void)	{ return Q; }
-	float	getLowpassGain(void)	{ return Alp; }
-	float	getBandpassGain(void)	{ return Abp; }
-	float	getHighpassGain(void)	{ return Ahp; }
-	float	getAllpassGain(void)	{ return Aap; }
-	float	getNotchGain(void)	{ return An; }
+	float getFrequency() const { return wd / (2.0 * M_PI); }
+	float getResonance() const { return Q; }
+	float getLowpassGain() const { return Alp; }
+	float getBandpassGain() const { return Abp; }
+	float getHighpassGain() const { return Ahp; }
+	float getAllpassGain() const { return Aap; }
+	float getNotchGain() const { return An; }
 	
-//	parameter update members
 	void	setFrequency(float f);
 	void	setResonance(float Qi);
 	void	setLowpassGain (float A);
@@ -54,27 +45,14 @@ public:
 	void	setAllpassGain (float A);
 	void	setNotchGain (float A);
 
-//	utility members
-	void	computeCoef(void);
-
-//	sample generation
+	void	computeCoef();
 	void	generateSamples(int);
+	biquadFiltAlg();
+	~biquadFiltAlg();
+};
 
-//	construction/destruction
-		biquadFiltAlg(void);
-		~biquadFiltAlg();
-
-};	// end of class biquadFiltAlg
-
-//===========================================================================
-//		biquadFiltHand 
-//
-//	class biquadFiltHand is a handler class for biquadFiltAlg.
-//
 class biquadFiltHand : public VHandler
 {
-private:
-//	modulating parameters of biquadFiltAlg
 	float frequency;
 	float resonance;
 	float LPgain;
@@ -82,16 +60,12 @@ private:
 	float HPgain;
 	float APgain;
 	float Ngain;
-
 	enum { isetFrequency, isetResonance, isetLPGain, isetBPGain, isetHPGain, isetAPGain, isetNGain };
 
 protected:
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to biquadFiltAlg.
-	biquadFiltAlg * getAlg(void)	{ return (biquadFiltAlg *) VHandler::getAlg(); }
+	biquadFiltAlg* getAlg() { return (biquadFiltAlg*)VHandler::getAlg(); }
 
 public:
-//	parameter modulation
 	void SetAttribute(IParam iParam, float z);
 	void setFrequency(float z, float t = timeDefault)
 		{ modulate(isetFrequency, frequency, z, AdjustTime(t)); }
@@ -108,40 +82,22 @@ public:
 	void setNGain(float z, float t = timeDefault)
 		{ modulate(isetNGain, Ngain, z, AdjustTime(t)); }
 	
-//	damp amplitude changes
-	float	dampingTime(void)	{ return 0.03; }
+	float dampingTime() { return 0.03; }
+	biquadFiltHand(biquadFiltAlg* alg = new biquadFiltAlg);
+	void actCleanup();
+	~biquadFiltHand() {}
+	int receiveMessage(const char*);
+};
 
-//	construction
-	biquadFiltHand(biquadFiltAlg * alg = new biquadFiltAlg);
-
-	virtual void actCleanup(void);
-
-//	destruction
-virtual	~biquadFiltHand() {}
-
-//	message reception
-	int receiveMessage(const char * Message);
-
-};	// end of class biquadFiltHand
-
-//===========================================================================
-//		biquadFiltActor
-//
-//	class biquadFiltActor is a processor actor class for biquadFiltAlg
-//
 class biquadFiltActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new biquadFiltHand(); }
+	VHandler* newHandler() { return new biquadFiltHand(); }
+	biquadFiltActor();
+	~biquadFiltActor() {}
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
-//	construction/destruction
-	biquadFiltActor(void);
-virtual	~biquadFiltActor() {}
-
-virtual	void	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
-
-//	parameter setting members
 	void	setFrequency(float f);
 	void	setResonance(float f);
 	void	setLPGain(float f);
@@ -158,11 +114,6 @@ virtual int	receiveMessage(const char * Message);
 	void	setAllNGain(float f, float t = 0.);
 
 protected:
-//	default parameters
 	float	defaultFrequency, defaultResonance;
 	float	defaultLPgain, defaultBPgain, defaultHPgain, defaultAPgain, defaultNgain;
-
-};	// end of class biquadFiltActor
-
-
-#endif // ndef _BIQUAD_H_
+};

@@ -5,13 +5,13 @@ void PlaneMapActor::setRegistry(int id, float x, float y, int mg)
 {
   if ( mg >= 0 ) // new registry
     {
-      if ( pmReg[id].valid )
+      if (pmReg[id].valid)
 	printf("PlaneMapper warning: registry %d already set. Discard old message group\n",id);
       pmReg[id].id = id;
       pmReg[id].mg = mg;
       pmReg[id].x = x;
       pmReg[id].y = y;
-      pmReg[id].valid = 1;
+      pmReg[id].valid = true;
       printf("Registry %d: %.1f, %.1f, %d\n", id, pmReg[id].x, pmReg[id].y, pmReg[id].mg);
     }
   else // update
@@ -30,7 +30,7 @@ void PlaneMapActor::setPosition(float px, float py, float pt)
   ut = pt;
   for (int i=0; i<MAX_REG; i++)
     {
-      if ( pmReg[i].valid )
+      if (pmReg[i].valid)
 	doit(pmReg[i].x, pmReg[i].y, pmReg[i].mg);
     }
 }
@@ -69,11 +69,6 @@ void PlaneMapActor::doit(float sx, float sy, int mg)
   char msg[100];
   sprintf(msg, "SendData %d [%f %f]", mg, st, d);
   actorMessageHandler(msg);
-}
-
-float PlaneMapActor::map(float datum)
-{
-	return datum;
 }
 
 int PlaneMapActor::receiveMessage(const char* Message)

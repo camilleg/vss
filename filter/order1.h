@@ -1,17 +1,11 @@
-#ifndef _ORDER1_H_
-#define _ORDER1_H_
-
+#pragma once
 #include <cmath>
-
 #include "VAlgorithm.h"
 #include "VHandler.h"
 #include "VGenActor.h"
 
 #include "checkBounds.h"
 
-//===========================================================================
-//		order1FiltAlg 
-//
 //	class order1FiltAlg is a state-space implementation of a first-order
 //	pole/zero pair. Use it to realize first-order lowpass, highpass, and
 //	allpass (phase-shift) filters. The filter is implemented by mapping a
@@ -20,7 +14,6 @@
 //
 class order1FiltAlg : public VAlgorithm
 {
-private:
 //	internal synthesis stateholders
 	float	a0, b0, b1;			// prewarped analog filter coefficients
 	float	A0, zB0, B1;			// BLT-mapped digital filter coefficients
@@ -33,53 +26,31 @@ private:
 	float	Alp, Ahp, Aap;		// Lowpass, Highpass, and Allpass gains
 
 public:
-//	access members
-	float	getFrequency(void)	{ return w0 / (2.0 * M_PI); }
-	float	getLowpassGain(void)	{ return Alp; }
-	float	getHighpassGain(void)	{ return Ahp; }
-	float	getAllpassGain(void)	{ return Aap; }
+	float getFrequency() const { return w0 / (2.0 * M_PI); }
+	float getLowpassGain() const { return Alp; }
+	float getHighpassGain() const { return Ahp; }
+	float getAllpassGain() const { return Aap; }
 	
-//	parameter update members
 	void	setFrequency(float f);
 	void	setLowpassGain (float A);
 	void	setHighpassGain (float A);
 	void	setAllpassGain (float A);
 
-//	utility members
-	void	computeCoef(void);
-
-//	sample generation
+	void	computeCoef();
 	void	generateSamples(int);
+	order1FiltAlg();
+	~order1FiltAlg();
+};
 
-//	construction/destruction
-		order1FiltAlg(void);
-		~order1FiltAlg();
-
-};	// end of class order1FiltAlg
-
-//===========================================================================
-//		order1FiltHand 
-//
-//	class order1FiltHand is a handler class for order1FiltAlg.
-//
 class order1FiltHand : public VHandler
 {
-private:
-//	modulating parameters of order1FiltAlg
-	float frequency;
-	float LPgain;
-	float HPgain;
-	float APgain;
-
+	float frequency, LPgain, HPgain, APgain;
 	enum { isetFrequency, isetLPGain, isetHPGain, isetAPGain };
 
 protected:
-//	Algorithm access:
-// 	Define a version of getAlg() that returns a pointer to order1FiltAlg.
-	order1FiltAlg * getAlg(void)	{ return (order1FiltAlg *) VHandler::getAlg(); }
+	order1FiltAlg* getAlg() { return (order1FiltAlg*)VHandler::getAlg(); }
 
 public:
-//	parameter modulation
 	void SetAttribute(IParam iParam, float z);
 	void setFrequency(float z, float t = timeDefault)
 		{ modulate(isetFrequency, frequency, z, AdjustTime(t)); }
@@ -90,40 +61,23 @@ public:
 	void setAPGain(float z, float t = timeDefault)
 		{ modulate(isetAPGain, APgain, z, AdjustTime(t)); }
 	
-//	damp amplitude changes
-	float	dampingTime(void)	{ return 0.03; }
+	float dampingTime() { return 0.03; }
 
-//	construction
-	order1FiltHand(order1FiltAlg * alg = new order1FiltAlg);
+	order1FiltHand(order1FiltAlg* alg = new order1FiltAlg);
+	void actCleanup();
+	~order1FiltHand() {}
+	int receiveMessage(const char*);
+};
 
-	virtual void actCleanup(void);
-
-//	destruction
-virtual	~order1FiltHand() {}
-
-//	message reception
-	int receiveMessage(const char * Message);
-
-};	// end of class order1FiltHand
-
-//===========================================================================
-//		order1FiltActor
-//
-//	class order1FiltActor is a processor actor class for order1FiltAlg
-//
 class order1FiltActor : public VGeneratorActor
 {
 public:
-virtual	VHandler * newHandler(void)	{ return new order1FiltHand(); }
+	VHandler* newHandler() { return new order1FiltHand(); }
+	order1FiltActor();
+	~order1FiltActor() {}
+	void sendDefaults(VHandler *);
+	int receiveMessage(const char*);
 
-//	construction/destruction
-	order1FiltActor(void);
-virtual	~order1FiltActor() {}
-
-virtual	void	sendDefaults(VHandler *);
-virtual int	receiveMessage(const char * Message);
-
-//	parameter setting members
 	void	setFrequency(float f);
 	void	setLPGain(float f);
 	void	setHPGain(float f);
@@ -134,11 +88,5 @@ virtual int	receiveMessage(const char * Message);
 	void	setAllAPGain(float f, float t = 0.);
 
 protected:
-//	default parameters
-	float	defaultFrequency;
-	float	defaultLPgain, defaultHPgain, defaultAPgain;
-
-};	// end of class order1FiltActor
-
-
-#endif // ndef _ORDER1_H_
+	float defaultFrequency, defaultLPgain, defaultHPgain, defaultAPgain;
+};

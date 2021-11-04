@@ -30,11 +30,9 @@ private:
 	int FValidForOutput() { return source != NULL; }
 
 public:
-//	construction/destruction
-		delayAlg(void);
-		~delayAlg();
-		void clear(void);
-
+	delayAlg();
+	~delayAlg();
+	void clear();
 };
 
 class delayHand : public VHandler
@@ -47,35 +45,30 @@ class delayHand : public VHandler
 protected:
 	delayAlg* getAlg() { return (delayAlg*)VHandler::getAlg(); }
 
-//	parameter modulation
 public:
 	void SetAttribute(IParam iParam, float z);
 	void setDelay(float z, float t = timeDefault)
 		{ modulate(isetDelay, delaySeconds, z, AdjustTime(t)); }
 	void setFB(float z, float t = timeDefault)
 		{ modulate(isetFB, zFB, z, AdjustTime(t)); }
-	void clear(void);
+	void clear();
 	
-//	damp amplitude changes
 	float dampingTime() { return 0.03; }
 
-	delayHand(delayAlg * alg = new delayAlg);
-	virtual void actCleanup();
-	virtual ~delayHand() {}
-
-	int receiveMessage(const char *);
+	delayHand(delayAlg* alg = new delayAlg);
+	void actCleanup();
+	~delayHand() {}
+	int receiveMessage(const char*);
 };
 
 class delayActor : public VGeneratorActor
 {
 public:
-	virtual VHandler* newHandler() { return new delayHand(); }
-
-	delayActor(void);
-	virtual ~delayActor() {}
-
-	virtual void sendDefaults(VHandler*);
-	virtual int receiveMessage(const char*);
+	VHandler* newHandler() { return new delayHand(); }
+	delayActor();
+	~delayActor() {}
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
 	void setDelay(float);
 	void setFB(float);

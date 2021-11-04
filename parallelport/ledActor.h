@@ -12,14 +12,12 @@ class LedActor : public VActor
 public:
 	LedActor();
 	~LedActor();
-
-	virtual void act(void);
-	virtual	int receiveMessage(const char*);
+	void act();
+	int receiveMessage(const char*);
 	
 	void setBrightness(float);
 	void setHue(float);
-	void setBlink(float period, float dutyCycle);
-		// period is in seconds, duty cycle is in [0,1].
+	void setBlink(float period /*seconds*/, float dutyCycle /*[0,1]*/);
 
 private:
 	void recalc();

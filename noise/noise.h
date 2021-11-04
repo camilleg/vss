@@ -20,8 +20,8 @@ class noiseAlg : public VAlgorithm
 	float Lerp(float a, float b, float t) { return a * (1.0-t) + b * t; }
 
 public:
-	float	getCutoff() { return fCutoff; }
-	float	getOrder() { return order; }
+	float getCutoff() const { return fCutoff; }
+	float getOrder() const { return order; }
 	void	setCutoff(float);
 	void	setOrder(int);
 	void	generateSamples(int);
@@ -33,7 +33,6 @@ class noiseHand : public VHandler
 {
 	float fCutoff;
 	enum { isetCutoff };
-protected:
 	noiseAlg* getAlg() { return (noiseAlg*)VHandler::getAlg(); }
 public:
 	float	getCutoff() { return getAlg()->getCutoff(); }
@@ -47,32 +46,29 @@ public:
 //	parameter setting
 	void setOrder(float ord) { getAlg()->setOrder((int) ord); }
 	
-//	damp amplitude changes
 	float dampingTime() { return 0.03; }
 
 	noiseHand(noiseAlg* alg = new noiseAlg);
-	virtual ~noiseHand() {}
+	~noiseHand() {}
 	int receiveMessage(const char*);
 };
 
 class noiseActor : public VGeneratorActor
 {
+	float defaultCutoff, defaultOrder;
+	ostream& dump(ostream&, int tabs);
 public:
-	virtual VHandler* newHandler() { return new noiseHand(); }
+	VHandler* newHandler() { return new noiseHand(); }
 	noiseActor();
-	virtual ~noiseActor() {}
+	~noiseActor() {}
 
-	virtual void sendDefaults(VHandler*);
-	virtual int receiveMessage(const char*);
+	void sendDefaults(VHandler*);
+	int receiveMessage(const char*);
 
 	void	setCutoff(float f);
 	void	setAllCutoff(float f, float t = 0.);
 	void	setOrder(float f);
 	void	setAllOrder(float f);
-
-protected:
-	float defaultCutoff, defaultOrder;
-	virtual ostream& dump(ostream&, int tabs);
 };
 
 static inline int CheckCutoff(float f) { return 0.01 <= f && f <= globs.SampleRate; }
