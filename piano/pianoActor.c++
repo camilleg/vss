@@ -94,22 +94,18 @@ PIANODATA::PIANODATA(float z):
   fValid = true;
 
   // Read cwd files.
-
   int i,j,k,h,tempi;
   float temp,sum;
   FILE *fp;
   CWDHDR cwdHdr;
   COMMCK commCk;
   DATACK dataCk;
-
   gmag = (float *)calloc(1,SZFLOAT);
   sizegmag = offsetgmag[0] = 0;
-  printf("Reading in cwd files: ");
   for (i=0; i<NPITCH; i++)
   {
     if (i<10) sprintf(filename, "%spn0%d.cwd", path, i);
     else sprintf(filename, "%spn%d.cwd", path, i);
-    printf("%d ", i+1); fflush(stdout);
     if ( (fp = fopen(filename, "rb")) != NULL )
       {
 	if ( readcwdcomm(fp, &cwdHdr, &commCk) ) return;
@@ -140,38 +136,36 @@ PIANODATA::PIANODATA(float z):
 	sizegmag += tempi*SZFLOAT;
 	if ( (gmag = (float *)realloc(gmag, sizegmag)) == NULL)
 	  {
-	    printf("\nMemory allocation error for gmag: %d %d %p.\n",
-		   i, sizegmag, offsetgmag);
+	    printf("Out of memory while reading CWD files: %d %d %p.\n", i, sizegmag, offsetgmag);
 	    return;
 	  }
 	for (j=0; j<tempi; j++) gmag[j+offsetgmag[i]] = dataCk.data[j];
 	offsetgmag[i+1] = sizegmag/SZFLOAT;
 	delete[] dataCk.data;
-
 	fclose(fp);
       }
     else
       {
-	printf("\nData file %s not found.\n",filename);
+	printf("Missing CWD file %s.\n",filename);
 	return;
       }
   }
-  printf("\n");
   maxfreq = fa[NPITCH-1];
 
-  //
-  // Exclude partials over Nyquist frequency
-  //
-
-  for (i=0; i<NPITCH; i++)
-    {
-      for (j=0; j<ngroup[i]; j++)
-	if ( hto[i][j]*fa[i] >= sr/2. ) 
-	  { 
-	    ngroup[i]=j;
-	    continue; 
-	  }
+  // Exclude partials that exceed the Nyquist frequency.
+  for (i=0; i<NPITCH; i++) {
+    const auto jMax = ngroup[i];
+    if (jMax < 0) {
+      printf("Skipping corrupt ngroup read by readcwdcomm()'s COMMCK.\n");
+      continue;
     }
+    for (j=0; j<jMax; j++) {
+      if (hto[i][j] * fa[i] >= 0.5 * sr) {
+	ngroup[i] = j; // Cannot be negative.
+	continue;
+      }
+    }
+  }
 
   //
   // Generating wavetables
