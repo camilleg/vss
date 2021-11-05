@@ -33,7 +33,7 @@ void Solve2x2(float A[2][2], float* b, float* x)
 		l[i] = i;
 		smax = 0.;
 		for (j=0; j<2; j++)
-			smax = (float)max(smax, fabs(A[i][j]));
+			smax = std::max(smax, fabs(A[i][j]));
 		s[i] = smax;
 		}
 
@@ -99,7 +99,7 @@ void Solve3x3(float A[3][3], float* b, float* x)
 		l[i] = i;
 		smax = 0.;
 		for (j=0; j<3; j++)
-			smax = max(smax, fabs(A[i][j]));
+			smax = std::max(smax, fabs(A[i][j]));
 		s[i] = smax;
 		}
 
@@ -159,7 +159,7 @@ void Solve4x4(float A[4][4], float* b, float* x)
 		l[i] = i;
 		smax = 0.;
 		for (j=0; j<4; j++)
-			smax = max(smax, fabs(A[i][j]));
+			smax = std::max(smax, fabs(A[i][j]));
 		s[i] = smax;
 		}
 

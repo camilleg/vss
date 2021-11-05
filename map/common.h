@@ -7,21 +7,6 @@
 
 inline void crash() {}
 
-#ifdef min
-#undef min
-#undef max
-#endif
-
-inline float min(float i, float j) { return i < j ? i : j; }
-inline float max(float i, float j) { return i > j ? i : j; }
-
-inline int min(int i, int j) { return i < j ? i : j; }
-inline int max(int i, int j) { return i > j ? i : j; }
-
-// #define min(a,b) ((a) > (b) ? (b) : (a))
-// #define max(a,b) ((a) < (b) ? (b) : (a))
-
-
 // assign values to a point in 3-space
 inline void SetPt(float *pz, float x, float y, float z)
 	{ pz[0] = x; pz[1] = y; pz[2] = z; }
