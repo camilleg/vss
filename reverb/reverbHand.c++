@@ -1,18 +1,12 @@
 #include "reverb.h"
 #include <fstream>			// For preset file
 
-//===========================================================================
-//		construction
-//
 reverbHand::reverbHand( reverbAlg * alg ):
 	VHandler( alg )
 { 
 	setTypeName("reverbHand");
 }
 
-//===========================================================================
-//		receiveMessage
-//
 int	
 reverbHand::receiveMessage(const char * Message)
 {
@@ -129,17 +123,12 @@ reverbHand::receiveMessage(const char * Message)
 	return VHandler::receiveMessage(Message);
 }
 
-//===========================================================================
-//		setIdle: skip the calculation
-//
+// Skip the calculation, or not.
 void reverbHand::setIdle(float z)
 {
 	getAlg()->setIdle(z ? 1 : 0);
 }
 
-//===========================================================================
-//		Preset
-//
 void reverbHand::setPreset(char * pre)
 {
 	int temp;
@@ -169,7 +158,7 @@ void reverbHand::setPresetNum(int pre)
 
 void reverbHand::setPresetFile(char * prefile)
 {
-	ifstream inFile(prefile, ios::in);
+	std::ifstream inFile(prefile, std::ios::in);
 	if (!inFile)
 	{
 		printf("Error in opening preset file %s.\n",prefile);
@@ -241,9 +230,6 @@ void reverbHand::setPresetFile(char * prefile)
 	inFile.close();
 }
 
-//===========================================================================
-//		Global parameters
-//
 void reverbHand::SetAttribute(IParam iParam, float z)
 {
 	if (iParam.FOnlyI())
@@ -312,9 +298,8 @@ void reverbHand::SetAttribute(IParam iParam, float z)
 		printf("vss error: reverbHand got bogus element-of-float-array-index %d.\n", iParam.i);
 }
 
-//===========================================================================
-//		Early reflections
-//
+// Early reflections.
+
 void reverbHand::setEarlyRefNum(int z)
 {
 	if (!CheckEarlyRefNum(z))
@@ -375,9 +360,8 @@ void reverbHand::setEarlyRefCoeff(int cz, float* rgz)
 	getAlg()->setEarlyRefCoeff(rgz);
 }
 
-//===========================================================================
-//		Comb filters
-//
+// Comb filters.
+
 void reverbHand::setCombNum(int z)
 {
 	if (!CheckCombNum(z))
@@ -413,9 +397,8 @@ void reverbHand::setCombDelay(int cz, float* rgz)
 	getAlg()->setCombDelay(rgz);
 }
 
-//===========================================================================
-//		All-pass filters
-//
+// All-pass filters.
+
 void reverbHand::setAllPassNum(int z)
 {
 	if (!CheckAllPassNum(z))
@@ -428,8 +411,7 @@ void reverbHand::setAllPassNum(int z)
 
 void reverbHand::setAllPassDelay(int cz, float* rgz)
 {
-	int temp;
-	temp = getAlg()->getAllPassNum();
+	const auto temp = getAlg()->getAllPassNum();
 	if (cz < temp)
 	{
 		printf("reverbHand got less(%d) all-pass filter delay. ",cz);
@@ -451,10 +433,7 @@ void reverbHand::setAllPassDelay(int cz, float* rgz)
 	getAlg()->setAllPassDelay(rgz);
 }
 
-//===========================================================================
-//		Source detection
-//
-void reverbHand::actCleanup(void)
+void reverbHand::actCleanup()
 {
     // If our source got deleted, clean up after it.
     if (input && !input->FValid())

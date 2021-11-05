@@ -227,8 +227,8 @@ void granAlg::setInterval(float begin, float end /* in seconds */)
 	if (noFile())
 		return;
 	
-	startAt = index = max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
-	endAt = min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
+	startAt = index = std::max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
+	endAt = std::min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
 	rampDown = endAt - ((slope * file->sampleRate()) + 0.5);
 	dur = endAt - startAt;
 }
@@ -242,9 +242,9 @@ granAlg::setDur(float durArg /* in seconds */)
 	}
 	if (noFile())
 		return;
-	dur = (ulong)((durArg * file->sampleRate()) + 0.5);
-	endAt = (ulong)(min(file->numFrames() - 1.,
-		startAt + (durArg * file->sampleRate()) + 0.5));
+	dur = (durArg * file->sampleRate()) + 0.5;
+	endAt = std::min(file->numFrames() - 1.,
+		startAt + (durArg * file->sampleRate()) + 0.5);
 	rampDown = endAt - ((slope * file->sampleRate()) + 0.5);
 }
 

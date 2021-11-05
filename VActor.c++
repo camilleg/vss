@@ -5,9 +5,9 @@
 #include <vector>
 
 // All Actors.
-static map<ActorHandle, VActor*> Actors;
+static std::map<ActorHandle, VActor*> Actors;
 
-// Actors that have been ~VActor()'d, but still need to be removed from Actors.
+// Destructed actors that need to be removed from Actors.
 static std::vector<ActorHandle> deletia;
 static void ProcessDeletia() {
 	for (const auto handle: deletia)
@@ -28,12 +28,8 @@ VActor::VActor() :
 	Actors[myHandle] = this;
 }
 
-//===========================================================================
-//		copy constructor
-//
 //	We have never tried using this. It may or may not be safe/useful.
 //	Don't copy handles, they are supposed to be unique.
-//
 VActor::VActor(VActor & joe) :
 	myHandle(NextHandle++),
 	fActive(joe.fActive),
@@ -49,13 +45,12 @@ VActor::~VActor()
 	deletia.push_back(myHandle);
 }
 
-void 
-VActor::curtainCall(ostream &os)
+void VActor::curtainCall(ostream& os)
 {
-	os << "----------------Curtain Call-------------" << endl;
+	os << "----------------Curtain Call-------------\n";
 	for (const auto a: Actors)
-		a.second->bio(os) << endl;
-	os << "-----------------------------------------" << endl;
+		a.second->bio(os) << "\n";
+	os << "-----------------------------------------\n";
 }
 
 void VActor::flushActorList()
@@ -73,8 +68,7 @@ void VActor::flushActorList()
 	NextHandle = 0;
 }
 
-void 
-VActor::allAct()
+void VActor::allAct()
 {
 	if (fWantToFlush)
 		{
@@ -99,8 +93,7 @@ VActor::allAct()
 	ProcessDeletia();
 }
 
-void 
-VActor::allActCleanup()
+void VActor::allActCleanup()
 {
 	// A VHandler might have been deleted, whose pointer we'll blithely dereference, heap-usr-after-free.
 	ProcessDeletia();
@@ -115,15 +108,13 @@ VActor::allActCleanup()
 	}
 }
 
-VActor *
-VActor::getByHandle(const float aHandle)
+VActor* VActor::getByHandle(const float aHandle)
 {
 	const auto it = Actors.find(aHandle);
 	return it == Actors.end() ? NULL : it->second;
 }
 
-ostream &
-VActor::dump(ostream &os, int tabs)
+ostream& VActor::dump(ostream &os, int tabs)
 {
 	indent(os, tabs) << "Handle:  " << myHandle << endl;
 	indent(os, tabs) << "Active:  " << fActive << endl;
@@ -131,8 +122,7 @@ VActor::dump(ostream &os, int tabs)
 	return os;
 }
 
-int 
-VActor::receiveMessage(const char* Message)
+int VActor::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message, 0);
 

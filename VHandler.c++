@@ -493,8 +493,7 @@ VHandler::RampUpAmps(float time)
 	setAmp(a, time);
 }
 
-ostream & 
-VHandler::dump(ostream &os, int tabs)
+ostream& VHandler::dump(ostream& os, int tabs)
 {
 	VActor::dump(os, tabs);
 	indent(os, tabs) << "Parent generator actor handle: " << parentHandle << endl;
@@ -662,7 +661,7 @@ void VModulatorPool::insert(VHandler& handler, int iParam,
 	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
 		handler.SetAttribute(i, zEnd);
 	else
-		modmap.emplace(i, make_unique<VFloatParam>(zCur, zEnd, duration));
+		modmap.emplace(i, std::make_unique<VFloatParam>(zCur, zEnd, duration));
 }
 
 void VModulatorPool::insert(VHandler& handler, int iParam,
@@ -673,7 +672,7 @@ void VModulatorPool::insert(VHandler& handler, int iParam,
 	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
 		handler.SetAttribute(i, zEnd);
 	else
-		modmap.emplace(i, make_unique<VFloatArrayElement>(zCur, zEnd, duration));
+		modmap.emplace(i, std::make_unique<VFloatArrayElement>(zCur, zEnd, duration));
 }
 
 void VModulatorPool::insert(VHandler& handler, int iParam,
@@ -684,7 +683,7 @@ void VModulatorPool::insert(VHandler& handler, int iParam,
 	if (duration <= MaxSampsPerBuffer * globs.OneOverSR)
 		handler.SetAttribute(i, rgzEnd);
 	else
-		modmap.emplace(i, make_unique<VFloatArray>(cz, rgzCur, rgzEnd, duration));
+		modmap.emplace(i, std::make_unique<VFloatArray>(cz, rgzCur, rgzEnd, duration));
 }
 
 // If iparam already has a modulator,
@@ -698,7 +697,7 @@ void VModulatorPool::insertPrep(const IParam iparam)
 void VModulatorPool::act(VHandler* phandler)
 {
 	SanityCheck(phandler);
-	vector<Modmap::const_iterator> deletia;
+	std::vector<Modmap::const_iterator> deletia;
 	for (auto i = modmap.cbegin(); i != modmap.end(); ++i) {
 		// i->first is an IParam
 		// i->second is a VModulator*
@@ -713,8 +712,6 @@ void VModulatorPool::act(VHandler* phandler)
 
 void VModulatorPool::SanityCheck(VHandler* phandler)
 {
-	// ;;Make sure that two guys aren't modulating the same thing.
-
 	// Do other checking here too.
 	if (!phandler)
 		cerr << "vss internal error: VModulatorPool::SanityCheck() null phandler\n";

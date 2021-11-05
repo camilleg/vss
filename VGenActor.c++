@@ -30,12 +30,11 @@ VGeneratorActor::~VGeneratorActor()
 //	(handler) is added to this generator actor's list of progeny using 
 //	addChild().
 void
-VGeneratorActor::addChild(VHandler * newGuy)
+VGeneratorActor::addChild(VHandler* h)
 {
-	pair< HandlerList::iterator, bool > result = children.insert( newGuy );
-	if ( !result.second )
-		fprintf(stderr, "vss internal error: VGeneratorActor::addChild() failed.\n\n");
-	newGuy->setParent( handle() );
+	if (!children.insert(h).second)
+		std::cerr << "vss internal error: VGeneratorActor::addChild() failed.\n";
+	h->setParent(handle());
 }
 
 //  When a handler is deleted, it informs the parent generator actor so 
@@ -47,9 +46,9 @@ VGeneratorActor::removeChild(VHandler * h)
 		return;
 //  if the child is found in the list of children (and
 //  it had better be), remove it from the list.
-	HandlerListIterator< VHandler > it = children.find( h );
-	if ( it == children.end() )
-		fprintf(stderr, "vss internal error: VGeneratorActor::removeChild() failed.\n\n");
+	const auto it = children.find(h);
+	if (it == children.end())
+		std::cerr << "vss internal error: VGeneratorActor::removeChild() failed.\n";
 	else
 		children.erase( it );
 }
@@ -485,7 +484,7 @@ void VGeneratorActor::setAllXYZ(float x, float y, float z, float t)
 	setXYZ(x,y,z);
 }
 
-ostream & VGeneratorActor::dump(ostream &os, int tabs)
+ostream& VGeneratorActor::dump(ostream& os, int tabs)
 {
 	VActor::dump(os, tabs);
 	indent(os, tabs) << "     Amp: " << zAmpl << endl;

@@ -70,7 +70,7 @@ EnvelopeActor::act()
 		float segModTime = (*nextSegIt).segDur - now + nextSegStart;
 
 //	don't let the modulation time be less than 0.
-		segModTime = max(0.f, segModTime);
+		segModTime = std::max(0.f, segModTime);
 
 #if DEBUG
 		printf("EnvelopeActor::act seg {%f, %f}\n", segDstVal, segModTime );

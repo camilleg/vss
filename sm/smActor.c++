@@ -101,7 +101,7 @@ void smActor::setPresetFile(char * prefile)
     printf("filename = %s\n", szFilename);
   }
 
-  ifstream inFile(szFilename, ios::in);
+  std::ifstream inFile(szFilename, std::ios::in);
   if (!inFile)
     {
       printf("Error in opening preset file %s\n",szFilename);

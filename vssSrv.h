@@ -10,8 +10,6 @@
 #include <cstdlib>
 #include <cstring>
 
-using namespace std;
-
 #include "platform.h"
 #include "vssglobals.h"
 

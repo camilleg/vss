@@ -1,12 +1,5 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "samp.h"
 
-//===========================================================================
-//		sampAlg constructor
-//
 sampAlg::sampAlg(void) :
 	file( NULL ),
 	index( 0. ),
@@ -23,9 +16,6 @@ sampAlg::sampAlg(void) :
 {
 }
 
-//===========================================================================
-//		sampAlg destructor
-//
 sampAlg::~sampAlg(void)
 {
 #if 0
@@ -36,9 +26,7 @@ sampAlg::~sampAlg(void)
 #endif
 }
 
-//===========================================================================
-//		sampleData access
-//
+// sampleData access.
 float
 sampAlg::get8bitSamp( ulong frame, int chan )
 {
@@ -71,13 +59,8 @@ sampAlg::getSamp( ulong frame, int chan )
 	return (this->*getSampFn)(frame, chan);
 }
 
-
-//===========================================================================
-//     sampAlg generateSamples
-//
 //	Number of output channels is the width of the input file, so this could
 //	change during the life of a single actor if it loads different files.
-//
 void
 sampAlg::generateSamples(int howMany)
 {
@@ -138,11 +121,7 @@ sampAlg::generateSamples(int howMany)
 	}
 }
 
-//===========================================================================
-//		sampAlg jumpTo
-//
-//	Move the index to the specified time (in seconds).
-//
+// Move the index to the specified time, in seconds.
 void
 sampAlg::jumpTo( float time )
 {
@@ -160,11 +139,7 @@ sampAlg::jumpTo( float time )
 	}
 }
 
-//===========================================================================
-//		sampAlg setFile
-//
-//	Select a new AIFF file and reset loop parameters. 
-//
+// Select a new AIFF file.  Reset the loop parameters.
 void
 sampAlg::setFile(sfile * newFile)
 {
@@ -202,13 +177,9 @@ sampAlg::setFile(sfile * newFile)
 	file->addUser(this);
 }
 
-//===========================================================================
-//		sampAlg resetFileParams
-//
 //	Clear out all the file parameters and dump any samples in memory.
 //	Don't clear parameters like the loop that aren't related to a 
 //	particular file.
-//
 void
 sampAlg::resetFileParams(void)
 {
@@ -224,12 +195,7 @@ sampAlg::resetFileParams(void)
 	fileNumChans = 0;
 }
 
-//===========================================================================
-//		sampAlg setBounds( begin, end, )
-//
-//	Set the begin and end times for playback of a sample.
-//	Times are specified in seconds.
-//
+// Set the begin and end times for playback of a sample, in seconds.
 void
 sampAlg::setBounds(float begin, float end)
 {
@@ -242,8 +208,8 @@ sampAlg::setBounds(float begin, float end)
 		return;
 	}
 	
-	startAt = (long unsigned int)max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
-	endAt = (long unsigned int)min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
+	startAt = std::max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
+	endAt = std::min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
 
 	//	if endAt has been set back to before current index, 
 	//	push index back to the end sample
@@ -251,12 +217,7 @@ sampAlg::setBounds(float begin, float end)
 		index = (float)endAt;
 }
 
-//===========================================================================
-//		sampAlg setLoop( begin, end, flag )
-//
-//	Set the begin and end times for a sample loop.
-//	Times are specified in seconds.
-//
+//	Set the begin and end times for a sample loop, in seconds.
 void
 sampAlg::setLoop(float begin, float end, int flag)
 {
@@ -270,19 +231,13 @@ sampAlg::setLoop(float begin, float end, int flag)
 		return;
 	}
 	
-	startLoopAt = (long unsigned int)max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
-	endLoopAt = (long unsigned int)min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
+	startLoopAt = std::max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
+	endLoopAt = std::min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
 	loop = flag;
 }
 
-//===========================================================================
-//		sampAlg setLoop(flag)
-//
-//	Turn looping on or off.
-//
 void
 sampAlg::setLoop(int flag)
 {
 	loop = flag;
 }
-

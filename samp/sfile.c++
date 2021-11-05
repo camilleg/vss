@@ -31,7 +31,7 @@ sfile::sfile(char * dir, char * file) :
 	fileNumFrames = nh.fram;
 
 #if 1
-	cerr <<"file: "
+	std::cerr <<"file: "
 		 << (fWAV? "WAV, " : "AIFF, ")
 		 <<fileSampSize <<" bits per sample, "
 		 <<fileNumChans <<" channels, "
@@ -44,7 +44,7 @@ sfile::sfile(char * dir, char * file) :
 	sampleData = new char[fileNumFrames * sampSizeBytes * fileNumChans];
 	if (!sampleData)
 		{
-		cerr <<"vss error: sampleData allocation failure.\n";
+		std::cerr <<"vss error: sampleData allocation failure.\n";
 		fclose(inf);
 		inf = NULL;
 		return;

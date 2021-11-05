@@ -63,7 +63,7 @@ void analogAlg::generateSamples(int howMany)
 
 		Output(sampValue * balance, j);
 		}
-	const float sampMax = max(zMax, -zMin); // 0 to 1 typically
+	const float sampMax = std::max(zMax, -zMin); // 0 to 1 typically
 	const float balanceNew = 1./(sampMax+.0001); // avoid divide by zero
 	balance = .12 * balanceNew + .88 * balance;
 	if (balance > 10.)

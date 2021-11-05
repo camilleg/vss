@@ -2,7 +2,6 @@
 #include "VCircularBuffer.h"
 #include "filter.h" // for distance cues
 #include <set>
-using namespace std;			/* BS: added 04/24/2006 */
 
 //==== dB to linear scalar conversion functions. ==========================
 
@@ -26,9 +25,8 @@ inline double dBFromScalar(double number /*, double ref = 1.0*/)
 		log10(number /* / ref */) * 20.;
 }
 
-//	Define a type for lists of VAlgorithm pointers
 class VAlgorithm;
-typedef	set<VAlgorithm *> VAlgorithmList;
+using VAlgorithmList = std::set<VAlgorithm*>;
 
 //	Class VAlgorithm is an abstract base class for synthesis algorithms 
 //	in VSS. All other synthesis algorithms must be derived from VAlgorithm.
@@ -120,7 +118,7 @@ public:
 	void Nchan(int n)
 		{
 		if (n<1 || n>MaxNumChannels)
-			cerr <<"VSS error: # of channels out of range (" <<n <<").\n";
+			std::cerr <<"VSS error: # of channels out of range (" <<n <<").\n";
 		else
 			nchan = n;
 		}

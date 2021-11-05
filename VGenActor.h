@@ -3,8 +3,7 @@
 #include "VActor.h"
 #include <set>
 
-//	Define container type for HandlerList.
-typedef set<VHandler *> HandlerList;
+using HandlerList = std::set<VHandler*>;
 
 //	Class VGeneratorActor is the base class for actors that create 
 //	and manipulate groups of vss algorithm instances. Algorithm
@@ -105,14 +104,13 @@ virtual int	receiveMessage(const char * Message);
 
 	void	setLinear(int fLin = 1);
 	
-//	Biographical information:
 protected:
-virtual	ostream &dump(ostream &os, int tabs);
+	virtual	ostream& dump(ostream&, int);
 
 //	For identifying special kinds of actors, override as necessary.
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
 public:
-virtual VGeneratorActor * as_generator() { return this; }
+	VGeneratorActor* as_generator() { return this; }
 };
 
 //	Template class for hiding all the pointer type casting that
@@ -122,9 +120,7 @@ virtual VGeneratorActor * as_generator() { return this; }
 template <class HandlerType>
 class HandlerListIterator
 {
-private:
 	HandlerList::iterator it;
-
 public:
 	HandlerListIterator() 	{}
 	HandlerListIterator( HandlerList::iterator i ) : it(i) {}
@@ -133,7 +129,6 @@ public:
 
 	HandlerListIterator & operator ++() 	{ it++; return *this; }
 	HandlerListIterator & operator ++(int) 	{ it++; return *this; }
-	
 	HandlerListIterator & operator=( HandlerList::iterator i ) 
 											{ it = i; return *this; }
 

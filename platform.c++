@@ -73,6 +73,8 @@
   #define VSS_LINUX_ALSA
 #endif
 
+using std::cerr;
+
 #ifdef VSS_LINUX_UBUNTU
 #include <alsa/asoundlib.h> // apt install libasound2-dev
 snd_pcm_t* pcm_handle_read = nullptr;
@@ -1263,7 +1265,6 @@ int caught_sigint = 0;
 void catch_sigint(SignalHandlerType)
 {
    caught_sigint = 1;
-   // cerr << "caught_sigint!\n";
 }
 
 #ifdef VSS_IRIX

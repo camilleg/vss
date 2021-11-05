@@ -1,6 +1,9 @@
 #pragma once
 #include "vssSrv.h"
-using namespace std;			/* BS: added 04/24/2006 */
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ostream;
 
 //	A unique indetifiers for Actors.
 //	Each Actor knows its ActorHandle, a key into the map Actors.
@@ -19,7 +22,6 @@ class VGeneratorActor;
 //
 class VActor
 {
-private:
 	ActorHandle	myHandle;
 public:
 //	If I make this return value a ActorHandle, we dump core all
@@ -44,10 +46,9 @@ public:
 	virtual void setActive(int f) { fActive = (f!=0); }
 	virtual void setDebug(int f)  { fDebug = f; }
 
-public:
-		VActor();
-		VActor(VActor &);
-		virtual ~VActor();
+	VActor();
+	VActor(VActor &);
+	virtual ~VActor();
 	
 //	Asynchronous behavior:
 //	Every so often, actors are offered a chance to do something.
@@ -61,8 +62,8 @@ public:
 //
 //	actCleanup() is a second pass, called by allActCleanup().
 protected:
-virtual void act() {}
-virtual void actCleanup() {}
+	virtual void act() {}
+	virtual void actCleanup() {}
 	
 //	allAct() is called by the scheduler, and hopefully not by anyone else. 
 //	It runs through the entire Actor container and calls act() for everybody.
@@ -72,15 +73,14 @@ virtual void actCleanup() {}
 //	which were recently deleted.  It should be called right after any code
 //	which might have deleted a handler (for now, allAct() and actorMessageMM()).
 public:
-static void	allAct();
-static void	allActCleanup();
+	static void	allAct();
+	static void	allActCleanup();
 
 //	Message handling:
 //	Derived classes that receive messages should override receiveMessage().
 //	They should not fail to call their base class' receiveMessage() for 
 //	messages that they do not understand.
-public:
-virtual	int receiveMessage(const char* Message);
+	virtual	int receiveMessage(const char* Message);
 	
 //	Catch() and Uncatch() are used in message parsing.
 //	Catch() when a message is handled succesfully, Uncatch()
@@ -94,15 +94,15 @@ inline int Uncatch();
 private:
 	static int fWantToFlush;
 public:
-static VActor *	getByHandle(const float aHandle);
-static void		flushActorList();
-static void WantToFlush()
-	{ fWantToFlush = 1; }
+	static VActor* getByHandle(float);
+	static void flushActorList();
+	static void WantToFlush()
+		{ fWantToFlush = 1; }
 
 //	For identifying special kinds of actors, override as necessary
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
-virtual	VHandler * as_handler() { return NULL; }
-virtual VGeneratorActor * as_generator() { return NULL; }
+	virtual	VHandler* as_handler() { return NULL; }
+	virtual VGeneratorActor* as_generator() { return NULL; }
 
 	// Debugging info:
 	// These methods handle the DumpAll message, to report about actors.
@@ -110,26 +110,24 @@ virtual VGeneratorActor * as_generator() { return NULL; }
 private:
 	char myTypeName[30];
 public:
-	void setTypeName(const char * str) { strncpy(myTypeName, str, 29); }
-	char const * typeName() { return myTypeName; }
+	void setTypeName(const char* str) { strncpy(myTypeName, str, 29); }
+	char const* typeName() const { return myTypeName; }
 	
 	// Override this to print actor-specific details.
-	virtual std::ostream &dump(std::ostream &os, int tabs);
+	virtual ostream& dump(ostream&, int);
 
-	std::ostream &indent(std::ostream &os, int tabs) const {
+	ostream& indent(ostream &os, int tabs) const {
 		os << std::string(3*tabs, ' ');
 		return os;
 	}
 
-	std::ostream &bio(std::ostream &os, int tabs = 0) {
-		indent(os, tabs) << myTypeName << endl;
+	ostream& bio(ostream &os, int tabs = 0) {
+		indent(os, tabs) << myTypeName << std::endl;
 		dump(os, tabs+1);
 		return os;
 	}
 	
-//	curtainCall() prints out evberybody's bio.
-public:
-static void curtainCall(std::ostream &os);
+	static void curtainCall(ostream &os); // Print every actor's bio.
 };
 
 #include "parseActorMessage.h"

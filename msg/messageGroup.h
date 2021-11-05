@@ -49,7 +49,7 @@ public:
 protected:
 	//	list of messages to send
 	// Deques don't compile in windows STL.
-	typedef list/*deque*/<ParamMsg> ParamMsgList;
+	using ParamMsgList = std::list/*deque*/<ParamMsg>;
 	ParamMsgList messageList;
 	
 //	for handling scheduled data arrays
@@ -69,11 +69,9 @@ protected:
 	virtual void receiveScheduledData(float, float*, int);
 	virtual void endReceiveSchedule(int) {}
 
-	// delayed data arrays
-	typedef list<DelayedData*> DelayedDataList;
+	using DelayedDataList = std::list<DelayedData*>;
 	DelayedDataList dataList;
 
-	// delayed data is handled at the appropriate time by act()
 public:
 	virtual void act();
 

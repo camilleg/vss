@@ -25,7 +25,7 @@ static	int	ThreshLt( float thresh, float val ) { return thresh > val; }
 static	int	ThreshGtEq( float thresh, float val ) { return thresh <= val; }
 static	int	ThreshLtEq( float thresh, float val ) { return thresh >= val; }
 
-typedef int (* ThreshTest)(float, float);
+	using ThreshTest = int (*)(float, float);
 	
 //	for adding a new threshold
 	void addThreshold(float, ThreshTest, char *);
@@ -49,7 +49,7 @@ typedef int (* ThreshTest)(float, float);
 
 //	list of thresholds
 protected:
-typedef deque<ThreshTestNmsg *> ThreshDeque;
+	using ThreshDeque = std::deque<ThreshTestNmsg*>;
 	ThreshDeque threshList;
 
 //	When the last message was sent.

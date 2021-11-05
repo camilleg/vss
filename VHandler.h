@@ -85,7 +85,7 @@ public:
 
 class VModulatorPool
 {
-	using Modmap = map<IParam, std::unique_ptr<VModulator> >; // Pointer, because VMod is pure virtual.
+	using Modmap = std::map<IParam, std::unique_ptr<VModulator> >; // Pointer, because VMod is pure virtual.
 	Modmap modmap;
 	void insertPrep(const IParam);
 	void SanityCheck(VHandler*);
@@ -219,13 +219,12 @@ public:
 //	messages that they do not specifically handle themselves.
 	virtual int receiveMessage(const char *);
 
-protected:
-	virtual	ostream &dump(ostream &os, int tabs);
-
 //	For identifying special kinds of actors, override as necessary.
 //	We use this in place of RTTI, which isn't yet implemented on the SGI.
-public:
 	virtual	VHandler* as_handler() { return this; }
+
+protected:
+	virtual	ostream& dump(ostream&, int);
 
 private:
 	enum { cDyingHandlerLim = 1000 };

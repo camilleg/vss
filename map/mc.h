@@ -2,7 +2,8 @@
 #include "common.h"
 #include <cstdio>
 #include <iostream>
-using namespace std;
+using std::istream;
+using std::ostream;
 
 constexpr auto dasize = 2400;
 constexpr auto iMaxMCPoint = 45;
@@ -25,8 +26,8 @@ public:
 
 	int fscanme(FILE*);
 	int fprintme(FILE*) const;
-	friend std::ostream& operator<<(std::ostream&, const MCPoint&);
-	friend std::istream& operator>>(std::istream&, MCPoint&);
+	friend ostream& operator<<(ostream&, const MCPoint&);
+	friend istream& operator>>(istream&, MCPoint&);
 
 	int CDim() const		{ return cx; }
 	float T() const		{ return t; }
@@ -35,7 +36,7 @@ public:
 	float operator[](int i) const { return X(i); }
 	float* Pz() { return x; } // Ugly but fast.
 
-	void SetCDim(int cxArg)		{ cx = min(cxArg, iMaxMCPoint); }
+	void SetCDim(int cxArg)		{ cx = std::min(cxArg, iMaxMCPoint); }
 	void SetT(float tNew)		{ t = tNew; }
 	void SetX(int i, float xNew)	{ if (i>=cx) { crash(); printf("errB\n"); } else x[i] = xNew; }
 
@@ -283,8 +284,8 @@ public:
 		Q[i].Pz()[2] = z;
 		}
 
-	friend std::ostream& operator<<(std::ostream&, const MCMap&);
-	friend std::istream& operator>>(std::istream&, MCMap&);
+	friend ostream& operator<<(ostream&, const MCMap&);
+	friend istream& operator>>(istream&, MCMap&);
 
 	int FValid() const
 		{ return cdimLow > 0 && cdim > 0 && cPt > 0 && (rgq && Q && P && T) && ctet > 0; }

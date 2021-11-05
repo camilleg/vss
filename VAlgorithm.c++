@@ -133,8 +133,8 @@ void VAlgorithm::setAmp(float a, float t)
 		}
 	else			// modulate to new value
 		{
-		modGain = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
-		dGain = (a - the_amp) / (float)modGain;
+		modGain = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
+		dGain = (a - the_amp) / modGain;
 		destGain = a;
 //printf("WE ARE LIN %.3g : a=%.3g g=%.3g\n", t, a, dBFromScalar(a));;
 		}
@@ -160,7 +160,7 @@ VAlgorithm::setGain(float a, float t)
 	else			// modulate to new value
 		{
 //printf("we are log: %.3g : a=%.3g g=%.3g\n", t, a, ScalarFromdB(a));;
-		modGain = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
+		modGain = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
 		dGain = (a - the_gain) / (float)modGain;
 		destGain = a;
 		}
@@ -183,7 +183,7 @@ void VAlgorithm::scaleAmp(float a, float t)
 		}
 	else
 		{
-		modScale = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
+		modScale = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
 		dScale = (a - the_ampScale) / (float)modScale;
 		destScale = a;
 		}
@@ -207,7 +207,7 @@ VAlgorithm::scaleGain(float a, float t)
 		}
 	else
 		{
-		modScale = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
+		modScale = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
 		dScale = (a - the_gainScale) / (float)modScale;
 		destScale = a;
 		}
@@ -229,7 +229,7 @@ void VAlgorithm::setInputAmp(float a, float t)
 		}
 	else			// modulate to new value
 		{
-		modInputGain = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
+		modInputGain = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
 		dInputGain = (a - the_inputamp) / (float)modInputGain;
 		destInputGain = a;
 		}
@@ -252,7 +252,7 @@ void VAlgorithm::setInputGain(float a, float t)
 		}
 	else				// modulate to new value
 		{
-		modInputGain = max(1L, (long)(t * globs.SampleRate / (float)csampChunk));
+		modInputGain = std::max(1L, (long)(t * globs.SampleRate / csampChunk));
 		dInputGain = (a - the_inputgain) / (float)modInputGain;
 		destInputGain = a;
 		}
@@ -432,7 +432,7 @@ VAlgorithm::setPan(float a, float t)
 				}
 			}
 
-		modPan = (long)(t * globs.SampleRate / (float)csampChunk);
+		modPan = t * globs.SampleRate / csampChunk;
 		dPan = (destPan - pan) / (float)modPan;
 		if (dPan == 0.)
 			modPan = 0;	// nothing to do, we're there already!
@@ -455,7 +455,7 @@ VAlgorithm::setElev(float a, float t)
 		modElev = 0L;	// in case a slower one was in progress
 	else
 		{
-		modElev = (long)(t * globs.SampleRate / (float)csampChunk);
+		modElev = t * globs.SampleRate / csampChunk;
 		dElev = (a - elev) / (float)modElev;
 		destElev = a;
 		}
@@ -476,7 +476,7 @@ void VAlgorithm::setDistance(float a, float t)
 		modDistance = 0L;	// in case a slower one was in progress
 	else
 		{
-		modDistance = (long)(t * globs.SampleRate / (float)csampChunk);
+		modDistance = t * globs.SampleRate / csampChunk;
 		dDistance = (a - distance) / (float)modDistance;
 		destDistance = a;
 		}

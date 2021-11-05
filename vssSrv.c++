@@ -37,6 +37,8 @@ static OBJ udpDescObj = nullptr;
 
 VSSglobals globs;
 
+using std::cerr;
+
 VSSglobals::VSSglobals()
 {
 	// Always update SampleRate and OneOverSR together.
@@ -504,7 +506,7 @@ int actorMessageHandlerCore(const char* Message)
 
 	if (CommandIs("DumpAll"))		// print list of actors
 		{
-		VActor::curtainCall(cout);
+		VActor::curtainCall(std::cout);
 		DumpServerStats();
 		return Catch();
 		}
