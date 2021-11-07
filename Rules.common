@@ -86,6 +86,7 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 endif
 
 cFLAGS := $(CcFLAGS)
+CFLAGS += -std=c++17
 
 # Optional file containing debugging options for CcFLAGS, LDFLAGS, etc.
 -include Rules.debug
