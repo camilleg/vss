@@ -44,7 +44,7 @@ public:
 
 	~FloatParam() 	{}
 	FloatParam(const FloatParam&) = delete;
-    FloatParam& operator=(const FloatParam&) = delete;
+	FloatParam& operator=(const FloatParam&) = delete;
 
 //	Return the current value of the modulation.
 	float currentValue(void);
