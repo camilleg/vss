@@ -1,7 +1,3 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1997.
-//===========================================================================
-
 #include "messageGroup.h"
 
 // #define _extremely_verbose_
@@ -16,9 +12,6 @@
 const char * MessageGroup::IndexDelimStr = "*";
 const char MessageGroup::HandleDelim = '?';
 
-//===========================================================================
-//		construction
-//
 MessageGroup::MessageGroup() :
 #ifdef VSS_MATH_HACK
 	fMathHack(0),
@@ -31,9 +24,6 @@ MessageGroup::MessageGroup() :
 #endif
 }
 
-//===========================================================================
-//		destruction
-//
 MessageGroup::~MessageGroup()
 {
 	DelayedDataList::iterator it;
@@ -146,19 +136,12 @@ void MessageGroup::receiveData(float* data, int dataSize)
 	recentHandle = hNil;
 }
 
-//===========================================================================
-//		buildMessage
-//
 //	Construct a message by replacing indices in a parameterized message
 //	with data from a data array: look for the delimiter character,
 //	followed by an integer, representing an index into the data array.
 //	Build up a message by replacing these indices with data from the
 //	array. If an index exceeds the size of the data, complain bitterly, 
 //	and don't send the message. 
-//
-//	This member ALLOCATES MEMORY with new()! If somebody doesn't throw it away,
-//	there will be a leak!
-//
 char *
 MessageGroup::buildMessage(const char * pmsg, float * data, int dataSize)
 {
@@ -316,15 +299,12 @@ LGotIndexLast:
 
 //		fEscapeNextDelim = ch[strlen(ch)-1] == '\\';
 		}
+	// Will be delete[]d by the caller, receiveData().
 	char* msgRet = new char[strlen(message) + 2];
 	strcpy(msgRet, message);
 	return msgRet;
-	
-}	// end of buildMessage()
+}
 
-//===========================================================================
-//		parseSchedule
-//
 //	The ScheduleData message requires special parsing, because its
 //	arguments are an unspecified number of arrays of data to be received
 //	(with receiveData()) at some later time. The times are in the first
@@ -335,7 +315,6 @@ LGotIndexLast:
 //	but parseSchedule is the gross part, and should not need to be 
 //	overridden. Try overriding the other members (startReceiveSchedule,
 //	receiveScheduledData, endReceiveSchedule) first.
-//
 int
 MessageGroup::parseSchedule(char* arrays)
 {
@@ -399,33 +378,22 @@ MessageGroup::parseSchedule(char* arrays)
 #endif
 	endReceiveSchedule(count);
 	return Catch();
-	
-}	// end of parseSchedule()
+}
 
-//===========================================================================
-//		receiveScheduledData
-//
 //	Add an array of data with a time offset to the dataList, to be 
 //	handled later. Derived classes may override this member to perform
 //	data filtering or editing.
-//
 void
 MessageGroup::receiveScheduledData(float time, float * data, int size)
 {
-	DelayedData * dd = 
-		new DelayedData(time + currentTime(), data, size);
+	const auto dd = new DelayedData(time + currentTime(), data, size);
 #ifdef DEBUG
 	printf("adding data at time %f, size %d\n", dd->time, dd->size);
 #endif
-
 	dataList.push_back(dd);
 }
 
-//===========================================================================
-//		addMessage
-//
 //	Add a new message to our list.
-//
 void 
 MessageGroup::addMessage(char* message)
 {
@@ -441,9 +409,6 @@ void MessageGroup::addMathPrefix(const char* sz)
 }
 #endif
 
-//===========================================================================
-//		receiveMessage
-//
 int 
 MessageGroup::receiveMessage(const char* Message)
 {
@@ -486,21 +451,13 @@ MessageGroup::receiveMessage(const char* Message)
 	return VActor::receiveMessage(Message);
 }
 
-//===========================================================================
-//		act
-//
 //	Send and delete all delayed data arrays whose time has come.
-//
 void 
-MessageGroup::act(void)
+MessageGroup::act()
 {
-//	don't forget to call parent's act()
 	VActor::act();
-	
-	float now = currentTime();
-
-	DelayedDataList::iterator it;
-	for (it = dataList.begin(); it != dataList.end(); it++ )
+	const float now = currentTime();
+	for (auto it = dataList.begin(); it != dataList.end(); ++it)
 	{
 		if (now >= (*it)->time)
 		{
@@ -508,5 +465,4 @@ MessageGroup::act(void)
 			dataList.erase( it-- );
 		}
 	}
-	
-}	//	end of act()
+}
