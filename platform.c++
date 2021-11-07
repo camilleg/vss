@@ -68,11 +68,6 @@
 #include "vssglobals.h"
 #include "VAlgorithm.h" // only for dBFromScalar()
 
-#if defined VSS_LINUX_20ALSA || defined VSS_LINUX_21ALSA
-  // VSS_LINUX_21ALSA is for ALSA 0.5.3+.
-  #define VSS_LINUX_ALSA
-#endif
-
 using std::cerr;
 
 #ifdef VSS_LINUX_UBUNTU
@@ -205,28 +200,6 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
     return 0;
 }
 #endif // VSS_LINUX_UBUNTU
-
-#ifdef VSS_LINUX_ALSA
-#ifdef VSS_LINUX_20ALSA
-  #include <sys/soundlib.h>
-  #include "/home/camilleg/audio_src/ALSA_0.1.4/ALSA/alsa-utils/include/config.h"
-  #include "/home/camilleg/audio_src/ALSA_0.1.4/ALSA/alsa-utils/aplay/formats.h"
-  void *pcm_handle_read = NULL;
-  void *pcm_handle_write = NULL;
-  struct snd_pcm_playback_info pinfo;
-  struct snd_pcm_record_info rinfo;
-  #define SND_PCM_OPEN_CAPTURE O_RDONLY
-#endif
-#ifdef VSS_LINUX_21ALSA
-  #include <alsa/asoundlib.h>		/* BS: changed 04/24/2006 -- although I didn't get the ALSA version working */
-  snd_pcm_t *pcm_handle_read = NULL;
-  snd_pcm_t *pcm_handle_write = NULL;
-  #define snd_pcm_playback_info(a,b) snd_pcm_info(a,b)
-  #define snd_pcm_record_info(a,b) snd_pcm_info(a,b)
-  snd_pcm_info_t pinfo, rinfo;
-#endif
-snd_pcm_format_t pformat, rformat;
-#endif
 
 #ifdef VSS_LINUX
 
@@ -482,176 +455,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 #endif
 #endif // VSS_LINUX_UBUNTU
 
-#ifdef VSS_LINUX_ALSA
-		int err;
-
-		// O_RDWR O_WRONLY are actually SND_PCM_OPEN_DUPLEX SND_PCM_OPEN_PLAYBACK
-		if ((err = snd_pcm_open( &pcm_handle_write, 0/*card*/, 0/*dev*/, SND_PCM_OPEN_PLAYBACK)) < 0)
-			{
-			fprintf(stderr, "vss error: can't open audio output port: %s\n", snd_strerror(err));
-			liveaudio = 0;
-			goto LContinue;
-			}
-
-		{
-		snd_pcm_channel_info_t info;
-		memset(&info, 0, sizeof(info));
-		if ((err = snd_pcm_channel_info(pcm_handle_write, &info)) < 0)
-			{
-			fprintf(stderr, "ALSA->open(): %s\n", snd_strerror(err));
-			liveaudio = 0;
-			goto LContinue;
-			}
-		}
-
-			{
-			if (fSoundIn)
-				{
-				if ((err = snd_pcm_open( &pcm_handle_read, 0/*card*/, 0/*dev*/, SND_PCM_OPEN_CAPTURE)) < 0)
-					{
-					fSoundIn = 0;
-					fprintf(stderr, "vss warning: can't open audio input port.\n");
-					}
-				}
-			}
-
-		// can we play sounds ok?
-		if ( (err = snd_pcm_playback_info(pcm_handle_write, &pinfo )) < 0 )
-			{
-			fprintf(stderr, "vss error: playback info error: %s\n",
-				snd_strerror(err));
-			liveaudio = 0;
-			goto LContinue;
-			}
-		if (fSoundIn)
-			{
-			if ( (err = snd_pcm_record_info(pcm_handle_read, &rinfo )) < 0 )
-				{
-				fprintf(stderr, "vss error: record info error: %s\n",
-					snd_strerror(err));
-				}
-
-	/*
-		printf("\n\nplayback info flags %x\n", pinfo.flags);
-		printf("\n\nrecord   info flags %x\n", rinfo.flags);
-	*/
-	/*
-		printf("\n\nplayback frag bounds: %d %d, align %d\n\n",
-			pinfo.min_fragment_size,
-			pinfo.max_fragment_size,
-			pinfo.fragment_align);;
-
-		printf("\n\nrecord frag bounds: %d %d, align %d\n\n",
-			rinfo.min_fragment_size,
-			rinfo.max_fragment_size,
-			rinfo.fragment_align);;
-	*/
-
-			}
-
-		// Set up playback format.
-#ifdef VSS_LINUX_20ALSA
-		memset( &pformat, 0, sizeof( pformat ) );
-		pformat.format = SND_PCM_SFMT_S16_LE;
-		pformat.rate = (unsigned int)srate;
-		pformat.channels = nchans;
-	//	printf("playing %i Hz, %i channels\n", pformat.rate, pformat.channels);
-		if (snd_pcm_playback_format(pcm_handle_write, &pformat) < 0)
-			{
-			fprintf(stderr, "vss error: unable to set playback format %iHz, %i channels\n",
-				pformat.rate, pformat.channels);
-			}
-		struct snd_pcm_playback_params pparams;
-		memset( &pparams, 0, sizeof( pparams ) );
-		pparams.fragment_size = 256; // 16-bit, mono.
-		pparams.fragments_max = 8; //;; was 1, then was 3
-		pparams.fragments_room = 8; //;; was 1, then was 3
-		// we need 4 not 1 (well, maybe 3) to accommodate HidimMapper.
-		if ( snd_pcm_playback_params(pcm_handle_write, &pparams ) < 0 )
-			{
-			fprintf(stderr, "vss error: unable to set playback params\n");
-			liveaudio = 0;
-			goto LContinue;
-			}
-#else // VSS_LINUX_21ALSA
-		snd_pcm_channel_params_t params;
-		memset(&params, 0, sizeof(params));
-		params.channel = SND_PCM_CHANNEL_PLAYBACK;
-		params.buf.block.frag_size = 256; // 16-bit, mono.
-		params.buf.block.frags_max = 3;
-		params.buf.block.frags_min = 3;
-		memset( &pformat, 0, sizeof( pformat ) );
-		pformat.format = SND_PCM_SFMT_S16_LE;
-		pformat.rate = (int)srate;
-		pformat.voices = nchans;
-		pformat.interleave = 1;
-		memcpy(&params.format, &pformat, sizeof(pformat));
-
-		if ((err = snd_pcm_channel_params(pcm_handle_write, &params) < 0))
-			{
-			fprintf(stderr, "vss error: unable to set playback format %iHz, %i channels\n\t\"%s\"\n",
-				pformat.rate, pformat.voices, snd_strerror(err));
-			liveaudio = 0;
-			goto LContinue;
-			}
-		printf("playing %i Hz, %i channels\n", pformat.rate, pformat.voices);
-#endif // VSS_LINUX_21ALSA
-
-		if (fSoundIn)
-			{
-			globs.nchansIn = nchansIn = nchansInArg;
-			if (nchansIn == 0)
-				fprintf(stderr, "vss warning: input has 0 channels.\n");
-#ifdef VSS_LINUX_20ALSA
-			memset( &rformat, 0, sizeof( rformat ) );
-			rformat.format = SND_PCM_SFMT_S16_LE;
-			rformat.rate = (unsigned int)srate;
-			rformat.channels = nchansIn;
-			if (snd_pcm_record_format(pcm_handle_read, &rformat ) < 0 )
-				{
-				fprintf(stderr, "vss error: unable to set record format %i Hz, %i channels\n",
-					rformat.rate, rformat.channels);
-				liveaudio = 0;
-				goto LContinue;
-				}
-		//	printf("recording %i Hz, %i channels\n", rformat.rate, rformat.channels);
-			struct snd_pcm_record_params rparams = {0};
-			rparams.fragment_size = 256; // 16-bit, mono.
-			rparams.fragments_min = 8; //;; was 1, then was 2.
-			if (snd_pcm_record_params(pcm_handle_read, &rparams ) < 0 )
-				fprintf(stderr, "vss error: unable to set record params\n");
-#else // VSS_LINUX_21ALSA
-			snd_pcm_channel_params_t params;
-			memset(&params, 0, sizeof(params));
-			params.channel = SND_PCM_CHANNEL_CAPTURE;
-			params.buf.block.frag_size = 256; // 16-bit, mono.
-			params.buf.block.frags_max = 3;
-			params.buf.block.frags_min = 3;
-			memset( &rformat, 0, sizeof( rformat ) );
-			rformat.format = SND_PCM_SFMT_S16_LE;
-			rformat.rate = (int)srate;
-			rformat.voices = nchansIn;
-			rformat.interleave = 1;
-			memcpy(&params.format, &rformat, sizeof(rformat));
-
-			if ((err = snd_pcm_channel_params(pcm_handle_read, &params) < 0))
-				{
-				fprintf(stderr, "vss error: unable to set record format %i Hz, %i channels\n",      
-					rformat.rate, rformat.voices);
-				liveaudio = 0;
-				goto LContinue;
-				}
-			printf("recording %i Hz, %i channels\n", rformat.rate, rformat.voices);       
-
-#endif // VSS_LINUX_21ALSA
-			}
-#ifdef VSS_LINUX_20ALSA
-		fdDAC = snd_pcm_file_descriptor(pcm_handle_write);
-#else
-		fdDAC = snd_pcm_file_descriptor(pcm_handle_write, SND_PCM_CHANNEL_PLAYBACK);
-#endif
-#endif // VSS_LINUX_ALSA
-
 #ifdef VSS_WINDOWS
 		if (vfMMIO)
 			{
@@ -798,19 +601,6 @@ void VSS_ResyncHardware()
 	if (pcm_handle_write)
 		snd_pcm_drain(pcm_handle_write);
 #endif
-#ifdef VSS_LINUX_ALSA
-#ifdef VSS_LINUX_20ALSA
-	if (pcm_handle_read)
-		snd_pcm_flush_record(pcm_handle_read);
-	if (pcm_handle_write)
-		snd_pcm_drain_playback(pcm_handle_write);
-#else // VSS_LINUX_21ALSA
-	if (pcm_handle_read)
-		snd_pcm_capture_flush(pcm_handle_read);
-	if (pcm_handle_write)
-		snd_pcm_playback_drain(pcm_handle_write);
-#endif // VSS_LINUX_21ALSA
-#endif // VSS_LINUX_ALSA
 }
 
 // How many samples can we compute without getting too far ahead?
@@ -818,8 +608,6 @@ int Scount()
 {
 #ifdef VSS_IRIX
 	return alGetFilled(alp);
-#elif defined VSS_LINUX_ALSA
-	return MaxSampsPerBuffer; // lie, always return MaxSampsPerBuffer, just to get it running!
 #elif defined VSS_LINUX_UBUNTU
 	// # frames ready to capture or play (how far from xrun): snd_pcm_avail(), or cheap approximate snd_pcm_avail_update().
 	return pcm_handle_write ? snd_pcm_avail_update(pcm_handle_write) : 0;
@@ -856,11 +644,6 @@ void Closesynth()
 			snd_pcm_drain(pcm_handle_read);
 			snd_pcm_close(pcm_handle_read);
 		}
-#elif defined VSS_LINUX_ALSA
-		if (pcm_handle_write)
-			snd_pcm_close(pcm_handle_write);
-		if (pcm_handle_read)
-			snd_pcm_close(pcm_handle_read);
 #elif defined VSS_WINDOWS
 		if (vfCalledback)
 			{
@@ -937,9 +720,7 @@ int Synth(int n, int nchans)
 	int i,j;
 	if (liveaudio && fSoundIn)
 		{
-#ifdef VSS_LINUX_ALSA
-		(void)snd_pcm_read(pcm_handle_read, ibuf, n * nchansIn * sizeof(short));
-#elif defined VSS_LINUX_UBUNTU
+#ifdef VSS_LINUX_UBUNTU
 		const int rc = snd_pcm_readi(pcm_handle_read, ibuf, n);
 		if (rc == -EPIPE) {
 			fprintf(stderr, "vss: input overrun.\n");
@@ -1134,9 +915,7 @@ int Synth(int n, int nchans)
 		int samps = ssp - sampbuff;
 		if (liveaudio)
 			{
-#ifdef VSS_LINUX_ALSA
-			(void)snd_pcm_write(pcm_handle_write, sampbuff, samps*sizeof(short));
-#elif defined VSS_IRIX
+#ifdef VSS_IRIX
 			alWriteFrames(alp, sampbuff, samps/nchans);
 			alSetFillPoint(alp, (long)(qsize-latency));
 #elif defined VSS_WINDOWS

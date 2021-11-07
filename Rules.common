@@ -18,16 +18,10 @@ endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
   PLATFORMBASE := VSS_IRIX
 endif
-ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
-  PLATFORMBASE := VSS_LINUX
-endif
 ifeq "$(PLATFORM)" "VSS_REDHAT7"
   PLATFORMBASE := VSS_LINUX
 endif
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
-  PLATFORMBASE := VSS_LINUX
-endif
-ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
   PLATFORMBASE := VSS_LINUX
 endif
 ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
@@ -56,47 +50,29 @@ CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
 LDFLAGS :=
 
 ifeq "$(PLATFORM)" "VSS_IRIX_53"
-  CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include
-  CcFLAGS += -mips2
+  CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include -mips2
   CFLAGS := $(CcFLAGS)
-  cFLAGS := $(CcFLAGS)
   LDFLAGS += -L/usr/local/gnu/lib		# to find libstdc++.a
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_62"
   CFLAGS := $(CcFLAGS)
-  cFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
   CcFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
   CFLAGS := $(CcFLAGS)
-  cFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_63"
   CcFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
   CFLAGS := $(CcFLAGS)
-  cFLAGS := $(CcFLAGS)
 endif
 
-# -march=pentiumpro
-ifeq "$(PLATFORM)" "VSS_LINUX_20ALSA"
-    #CcFLAGS += -DREDHAT52 -malign-double
-    CFLAGS = $(CcFLAGS) -fno-exceptions
-    cFLAGS = $(CcFLAGS)
-	LDFLAGS := -lasound
-endif
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
-    CFLAGS = $(CcFLAGS) -fno-exceptions
-    cFLAGS = $(CcFLAGS)
-	LDFLAGS := -lasound
+  CFLAGS := $(CcFLAGS) -fno-exceptions
+  LDFLAGS := -lasound
 endif
-ifeq "$(PLATFORM)" "VSS_LINUX_21ALSA"
-    #CcFLAGS += -g -DREDHAT52 -malign-double
-    CFLAGS = $(CcFLAGS) -fno-exceptions
-    cFLAGS = $(CcFLAGS)
-	LDFLAGS := -lasound
-endif
+
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 # VSS_CYGWIN32_NT40
 	CcFLAGS += -malign-double
@@ -106,9 +82,10 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 		# maybe do a full build now.  also remove -ldsound and -lwinmm.
 	CYG=/cygdrive/d/cygwin
 	LDFLAGS := -L $(CYG)/lib -L /usr/local/lib -ldsound -lwinmm -lole32
-	CFLAGS = $(CcFLAGS) -fno-exceptions
-	cFLAGS = $(CcFLAGS)
+	CFLAGS := $(CcFLAGS) -fno-exceptions
 endif
+
+cFLAGS := $(CcFLAGS)
 
 # Optional file containing debugging options for CcFLAGS, LDFLAGS, etc.
 -include Rules.debug

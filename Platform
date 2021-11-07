@@ -5,8 +5,6 @@ uname := $(shell sh -c 'uname -s 2>/dev/null')
 
 ifeq ($(uname),Linux)
   PLATFORM := VSS_LINUX_UBUNTU
-# PLATFORM := VSS_LINUX_21ALSA
-# PLATFORM := VSS_LINUX_20ALSA
   # To detect WSL, try uname -r.
 endif
 

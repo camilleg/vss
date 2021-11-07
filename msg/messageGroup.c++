@@ -20,7 +20,7 @@ const char MessageGroup::HandleDelim = '?';
 //		construction
 //
 MessageGroup::MessageGroup() :
-#ifdef VSS_LINUX_20ALSA
+#ifdef VSS_MATH_HACK
 	fMathHack(0),
 #endif
 	recentHandle( hNil )
