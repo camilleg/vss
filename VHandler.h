@@ -78,6 +78,8 @@ class VFloatArray : public VModulator
 public:
 	VFloatArray(int sizeArg, const float* oldVals, const float* newVals, float modTime);
 	~VFloatArray();
+	VFloatArray(const VFloatArray&) = delete;
+    VFloatArray& operator=(const VFloatArray&) = delete;
 	int SetAttribute(VHandler*, IParam);
 };
 
@@ -147,6 +149,7 @@ public:
 	VHandler(VAlgorithm* const);
 	virtual	~VHandler();
 	VHandler() = delete;
+	VHandler(const VHandler&) = delete;
 	VHandler& operator=(const VHandler&) = delete;
 
 	void setInputGain(float, float time = timeDefault);

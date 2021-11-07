@@ -47,6 +47,8 @@ public:
 
 	VSSglobals();
 	~VSSglobals();
+	VSSglobals(const VSSglobals&) = delete;
+	VSSglobals& operator=(const VSSglobals&) = delete;
 };
 
 //;; These public members should be hidden behind set/get function calls,
