@@ -127,8 +127,8 @@ public:
 	HandlerListIterator(const HandlerListIterator &hli) : it(hli.it) {}
 	~HandlerListIterator() 	{}
 
-	HandlerListIterator & operator ++() 	{ it++; return *this; }
-	HandlerListIterator & operator ++(int) 	{ it++; return *this; }
+	HandlerListIterator & operator ++() 	{ ++it; return *this; }
+	HandlerListIterator & operator ++(int) 	{ ++it; return *this; }
 	HandlerListIterator & operator=( HandlerList::iterator i ) 
 											{ it = i; return *this; }
 

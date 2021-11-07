@@ -2,6 +2,8 @@
 #pragma once
 #include "VModulator.h"
 
+// Included only by stk4/stk.h.
+
 // 	Class FloatParam updates a smoothly (linearly) modulating float 
 //	parameter. FloatParam should be set inactive whenever the slope 
 //	is zero.
@@ -41,6 +43,8 @@ public:
 	void init(VHandler* p) { pparent = p; }
 
 	~FloatParam() 	{}
+	~FloatParam(const ~FloatParam&) = delete;
+    ~FloatParam& operator=(const ~FloatParam&) = delete;
 
 //	Return the current value of the modulation.
 	float currentValue(void);

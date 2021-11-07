@@ -75,31 +75,6 @@ VAlgorithm::VAlgorithm(void) :
 	hpf_d.setHiAllLopassGain(1., 0., 0.);
 }
 
-//===========================================================================
-//     VAlgorithm copy constructor
-//
-//	The buffer should not be shared, and the
-//	new object needs its own place in the Generators
-//	list. Don't copy amp modulation either.
-//	;; Probably bugs in here, but it's not called as far as I can tell.
-//
-VAlgorithm::VAlgorithm(VAlgorithm& alg) :
-	mute(alg.mute),
-	pause(alg.pause),
-	pan(alg.pan),
-	elev(alg.elev),
-	modGain(0L),
-	modScale(0L),
-	modPan(0L),
-	modElev(0L),
-	fLinearEnv(0)
-{
-	position = Generators.insert( Generators.end(), this );
-	setGain(alg.getGain());
-	scaleGain(alg.getGainScale());
-	setInputGain(alg.getInputGain());
-}
-
 VAlgorithm::~VAlgorithm()
 {
 // remove the dead generator from the list
@@ -110,10 +85,6 @@ void VAlgorithm::invertAmp(int fInvert)
 {
 	fInvertAmp = fInvert;
 }
-
-//===========================================================================
-//		setAmps
-//
 
 void VAlgorithm::setAmp(float a, float t)
 {
@@ -613,9 +584,7 @@ VAlgorithm::updateDistance(void)
 }
 
 //===========================================================================
-//===========================================================================
 //=====================  The final mixing bus of VSS ========================
-//===========================================================================
 //===========================================================================
 
 //	FOutputSamples 1,2
@@ -847,7 +816,6 @@ VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, i
 //	for copying and scaling their samples into putEmHere[]).
 //
 //	Update amplitudes every sample.
-//
 void
 VAlgorithm::outputSamples( int howMany, float* putEmHere, int nchans )
 {
@@ -866,8 +834,4 @@ VAlgorithm::outputSamples( int howMany, float* putEmHere, int nchans )
 	// Also pan with data provided by SetPan(), SetElev(), SetDistance().
 	// Store the result in the output buffer putEmHere[].
 	OutputSamples3(howMany, putEmHere, nchans);
-}
-
-void VAlgorithm::generateSamples(int)
-{
 }

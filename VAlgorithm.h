@@ -32,8 +32,6 @@ using VAlgorithmList = std::set<VAlgorithm*>;
 //	in VSS. All other synthesis algorithms must be derived from VAlgorithm.
 class VAlgorithm
 {
-//	internal parameters (all private, only accessible thru access members)
-private:
 // 	If mute is true, this instance is _not_ directly contributing to output.
 	int		mute;	
 
@@ -161,13 +159,12 @@ private:
 public:
 	virtual void outputSamples(int howMany, float* putEmHere, int nchans);
 
-// 	generateSamples() should be overridden by all derived algorithms
-//	that do not override outputSamples(). generateSamples() computes 
-//	samples and stuffs them in the local circular buffer. If a derived 
-//	algorithm class overrides outputSamples(), then it may not use/need
-//	a generateSamples() member. Otherwise we would make it pure virtual.
 protected:
-	virtual	void generateSamples(int);
+	// generateSamples() must be overridden by any class that does
+	// not override outputSamples().  It computes samples and stuffs
+	// them in the local circular buffer. If a derived class overrides
+	// outputSamples(), then it may not need a generateSamples().
+	virtual	void generateSamples(int) {}
 
 //	Flag and utility functions called by the default implementation of outputSamples()
 //	If outputSamples() must be overridden by the algorithm, the author may choose to use
@@ -189,9 +186,10 @@ private:
 	inline void setDistanceImmediately(void);
 
 public:
-		VAlgorithm(void);	
-		VAlgorithm(VAlgorithm&);
-		virtual ~VAlgorithm();				
+	VAlgorithm();
+	VAlgorithm(const VAlgorithm&) = delete;
+	VAlgorithm& operator=(const VAlgorithm&) = delete;
+	virtual ~VAlgorithm();				
 
 // "buffer" is private, not protected... derived classes get at it through
 // ZeroBuf(), Input(), Output(), operator[](), etc.
@@ -222,5 +220,4 @@ public:
 		{ bufDst = buffer; // Copy samples from *this to bufDst.
 		  bufDst.Map(howMany, nchansAlg, nchansDst); // Transform the samples.
 		}
-
 };
