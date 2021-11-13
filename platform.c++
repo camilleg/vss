@@ -99,103 +99,91 @@ LPrepare:
     return err;
 }
 
-static int set_hwparams(snd_pcm_t* handle, snd_pcm_hw_params_t* params, int nchans)
+int set_hwparams(snd_pcm_t* handle, snd_pcm_hw_params_t* params, int nchans)
 {
-    auto err = snd_pcm_hw_params_any(handle, params);
-    if (err < 0) {
-        printf("No configurations for playback: %s\n", snd_strerror(err));
-        return err;
+    int rc;
+    if ((rc = snd_pcm_hw_params_any(handle, params)) < 0) {
+        cerr << "No configurations for playback: " << snd_strerror(rc) << "\n";
+        return rc;
     }
-    err = snd_pcm_hw_params_set_rate_resample(handle, params, 1);
-    if (err < 0) {
-        printf("Hardware resampling failed for playback: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_rate_resample(handle, params, 1)) < 0) {
+        cerr << "Hardware resampling failed for playback: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     // set the interleaved read/write format
-    err = snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-    if (err < 0) {
-        printf("Access type unavailable for playback: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
+        cerr << "Access type unavailable for playback: " << snd_strerror(rc) << "\n";
+        return rc;
     }
-    err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16_LE);
-    if (err < 0) {
-        printf("Sample format not available for playback: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16_LE)) < 0) {
+        cerr << "Sample format not available for playback: " << snd_strerror(rc) << "\n";
+        return rc;
     }
-    err = snd_pcm_hw_params_set_channels(handle, params, nchans);
-    if (err < 0) {
-        printf("Failed to play %i channels: %s\n", nchans, snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_channels(handle, params, nchans)) < 0) {
+        cerr << "Failed to play " << nchans << " channels: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     const unsigned int rate = globs.SampleRate;
     unsigned int rrate = rate;
-    err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
-    if (err < 0) {
-        printf("Failed to play at %i Hz: %s\n", rate, snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0)) < 0) {
+        cerr << "Failed to play at " << rate << " Hz: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     if (rrate != rate) {
-        printf("Requested rate %i Hz != actual rate %i Hz\n", rate, rrate);
+        cerr << "Requested rate " << rate << " Hz != actual rate " << rrate << " Hz\n";
         return -EINVAL;
     }
     auto dir = 1;
 	auto usec_buffer = 10000u;
-    err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &usec_buffer, &dir);
-    if (err < 0) {
-        printf("Failed to play with ring buffer of %i usec: %s\n", usec_buffer, snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_buffer_time_near(handle, params, &usec_buffer, &dir)) < 0) {
+        cerr << "Failed to play with ring buffer of " << usec_buffer << " usec: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     snd_pcm_uframes_t size;
-    err = snd_pcm_hw_params_get_buffer_size(params, &size);
-    if (err < 0) {
-        printf("Failed to get playback buffer size: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_get_buffer_size(params, &size)) < 0) {
+        cerr << "Failed to get playback buffer size: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     buffer_size = size;
 	auto usec_period = 3000u; // As low as 500 might work, or even 32.
-    err = snd_pcm_hw_params_set_period_time_near(handle, params, &usec_period, &dir);
-    if (err < 0) {
-        printf("Failed to play at period of %i usec: %s\n", usec_period, snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_set_period_time_near(handle, params, &usec_period, &dir)) < 0) {
+        cerr << "Failed to play at period of " << usec_period << " usec: " << snd_strerror(rc) << "\n";
+        return rc;
     }
-    err = snd_pcm_hw_params_get_period_size(params, &size, &dir);
-    if (err < 0) {
-        printf("Failed to get playback period size: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params_get_period_size(params, &size, &dir)) < 0) {
+        cerr << "Failed to get playback period size: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     period_size = size;
-    err = snd_pcm_hw_params(handle, params);
-    if (err < 0) {
-        printf("Failed to set playback hw params: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_hw_params(handle, params)) < 0) {
+        cerr << "Failed to set playback hw params: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     //printf("\nSR = %d Hz.\n%d channels.\nLatency = %.1f ms.\n\n", rate, nchans, float(period_size)/rate * 1000.0);
     return 0;
 }
-static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
+
+int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 {
-    int err = snd_pcm_sw_params_current(handle, swparams);
-    if (err < 0) {
-        printf("Failed to get playback swparams: %s\n", snd_strerror(err));
-        return err;
+    int rc;
+    if ((rc = snd_pcm_sw_params_current(handle, swparams)) < 0) {
+        cerr << "Failed to get playback swparams: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     /* start the transfer when the buffer is almost full: */
     /* (buffer_size / avail_min) * avail_min */
-    err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size);
-    if (err < 0) {
-        printf("Failed to set playback start threshold: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size)) < 0) {
+        cerr << "Failed to set playback start threshold: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     /* allow the transfer when at least period_size samples can be processed */
-    err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
-    if (err < 0) {
-        printf("Failed to set playback available min: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size)) < 0) {
+        cerr << "Failed to set playback available min: " << snd_strerror(rc) << "\n";
+        return rc;
     }
-    err = snd_pcm_sw_params(handle, swparams);
-    if (err < 0) {
-        printf("Failed to set playback sw params: %s\n", snd_strerror(err));
-        return err;
+    if ((rc = snd_pcm_sw_params(handle, swparams)) < 0) {
+        cerr << "Failed to set playback sw params: " << snd_strerror(rc) << "\n";
+        return rc;
     }
     return 0;
 }
@@ -408,42 +396,39 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 #endif // VSS_IRIX
 
 #ifdef VSS_LINUX_UBUNTU
-		int err;
-		if ((err = snd_pcm_open(&pcm_handle_write, "default" /* or e.g. "hw:0,0" */, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
-		      {
-			  // ALSA prints a dozen errors first, even without snd_output_stdio_attach().
-		      fprintf(stderr, "vss: no audio out: %s\n", snd_strerror(err));
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
+		int rc;
+		if ((rc = snd_pcm_open(&pcm_handle_write, "default" /* or e.g. "hw:0,0" */, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
+			// ALSA prints a dozen errors first, even without snd_output_stdio_attach().
+			cerr << "vss: no audio out: " << snd_strerror(rc) << "\n";
+			liveaudio = 0;
+			goto LContinue;
+		}
 		snd_pcm_hw_params_t* hwparams;
 		snd_pcm_hw_params_alloca(&hwparams);
-		if ((err = set_hwparams(pcm_handle_write, hwparams, NchansOut())) < 0)
-		      {
-		      // set_hwparams already complained.
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
+		if ((rc = set_hwparams(pcm_handle_write, hwparams, NchansOut())) < 0) {
+			// set_hwparams already complained.
+			liveaudio = 0;
+			goto LContinue;
+		}
 		snd_pcm_sw_params_t* swparams;
 		snd_pcm_sw_params_alloca(&swparams);
-		if ((err = set_swparams(pcm_handle_write, swparams)) < 0)
-		      {
-		      fprintf(stderr, "vss failed to set swparams: %s\n", snd_strerror(err));
-		      liveaudio = 0;
-		      goto LContinue;
-		      }
+		if ((rc = set_swparams(pcm_handle_write, swparams)) < 0) {
+			cerr << "vss failed to set swparams: " << snd_strerror(rc) << "\n";
+			liveaudio = 0;
+			goto LContinue;
+		}
 		if (fSoundIn) {
-			if ((err = snd_pcm_open(&pcm_handle_read, "default", SND_PCM_STREAM_CAPTURE, 0)) < 0) {
-				fprintf(stderr, "vss: no audio in: %s\n", snd_strerror(err));
+			if ((rc = snd_pcm_open(&pcm_handle_read, "default", SND_PCM_STREAM_CAPTURE, 0)) < 0) {
+				cerr << "vss: no audio in: " << snd_strerror(rc) << "\n";
 				liveaudio = 0;
 				goto LContinue;
 			}
-			if ((err = set_hwparams(pcm_handle_read, hwparams, nchansInArg)) < 0) {
+			if ((rc = set_hwparams(pcm_handle_read, hwparams, nchansInArg)) < 0) {
 				// set_hwparams already complained.
 				fSoundIn = false;
 		    }
-			if ((err = set_swparams(pcm_handle_read, swparams)) < 0) {
-				fprintf(stderr, "vss failed to set input swparams: %s\n", snd_strerror(err));
+			if ((rc = set_swparams(pcm_handle_read, swparams)) < 0) {
+				cerr << "vss failed to set input swparams: " << snd_strerror(rc) << "\n";
 				fSoundIn = false;
 		    }
 			globs.nchansIn = nchansIn = nchansInArg;
