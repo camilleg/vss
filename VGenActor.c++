@@ -19,10 +19,7 @@ VGeneratorActor::VGeneratorActor(void):
 VGeneratorActor::~VGeneratorActor()
 {
   	fDying = true; // Prevent removeChild from updating children, which would invalidate our HandlerListIterator (2011).
-	for (HandlerListIterator<VHandler> it = children.begin(); it != children.end(); it++)
-		if (*it) {
-		  delete *it;
-		}
+	for (auto child: children) delete child;
 }
 
 //	When a child is created a a result of a BeginSound message being received, 
@@ -413,10 +410,7 @@ void VGeneratorActor::setLinear(int fLin)
 	fLinearEnv = fLin;
 }
 
-#define LoopHandlers(statement) \
-	HandlerListIterator< VHandler > it; \
-	for (it = children.begin(); it != children.end(); it++) \
-		(*it)->statement
+#define LoopHandlers(statement) for (auto child: children) child->statement
 
 void VGeneratorActor::setAllInputAmp(float a, float t)
 {
