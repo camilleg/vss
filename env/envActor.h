@@ -19,7 +19,6 @@ public:
 //	An EnvelopeActor stores a breakpoint envelope and a list of parameter
 //	update messages which it sends with the appropriate destination values 
 //	and modulation times for each segment of the envelope.
-//
 class EnvelopeActor : public VActor	
 {
 public:
@@ -29,7 +28,7 @@ public:
 	int receiveMessage(const char*);
 
 	// Keeps track of time, and thus must track being made (in)active.
-	void setActive(const int);
+	void setActive(bool);
 	
 	void addMessage(char*, float scale = 1., float offset = 0.);
 	void deleteReceivers();
@@ -49,7 +48,6 @@ protected:
 		float destVal;
 		float segDur;
 	} EnvSeg;
-
 	using SegDeque = std::list<EnvSeg>;
 	SegDeque segmentList;
 	
