@@ -1,14 +1,5 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "seqActor.h"
-
 ACTOR_SETUP(SeqActor, SeqActor)
-
-//===========================================================================
-//		construction
-//
 
 SeqActor::SeqActor(SeqActor& seq) :
 	myStartTime(seq.startTime()),
@@ -34,164 +25,99 @@ SeqActor::SeqActor() :
 	myIter = myList.begin();
 }
 
-//===========================================================================
-//		destruction
-//
-SeqActor::~SeqActor()
-{
-	myList.clear();
-}
-
-void SeqActor::addMessage(const float when, Event& anEvent)
-{
-	// Keep the list sorted by time.
-	SeqList::iterator it;
-	for (it = myList.begin(); it != myList.end(); it++)
-		{
-		if ((*it).when > when)
-			{
-			// Could possibly have an off-by-one error here!
-			// What does list<>::insert() really do? ;;
-	//		printf("\tgonna insert, when = %.3g!\n", when);;
-			myList.insert(it, anEvent);
+void SeqActor::addMessage(const Event& e) {
+	// Put anEvent in myList, keeping it sorted by time.
+	for (auto it = myList.begin(); it != myList.end(); ++it) {
+		if (it->when > e.when) {
+			myList.insert(it, e);
 			goto LDone;
-			}
 		}
-	//;; handle inserting after last event correctly, too!
-//	printf("\tgonna insert #2, when = %.3g!\n", when);;
-	myList.insert(it, anEvent);
-
+	}
+	myList.insert(myList.end(), e);
 LDone:
+	// todo: assert that myList is sorted by time.
 	if (myIter == myList.end())
 		jumpTo(myNowBeat);
 }
 
-void SeqActor::addMessage(const float when, char* msg)
-{
-	float aHandle = -1.;
-//	printf("msg is <%s>\n", msg);;
-	if (1 != sscanf(msg, "%*s %f", &aHandle))
-		{
-		cerr << "SeqActor::addMessage: garbled message " << msg
-			 << ": missing actor handle?" << endl;
+void SeqActor::addMessage(float when, const char* msg) {
+	auto h = hNil;
+	if (1 != sscanf(msg, "%*s %f", &h)) {
+		cerr << "SeqActor::addMessage: garbled message " << msg << ": missing actor handle?" << endl;
 		return;
-		}
-
-	VActor* anActor = getByHandle(aHandle);
-	if (!anActor)
-		{
-		cerr << "SeqActor::addMessage's message sent to nonexistent actor with handle "
-			<< aHandle << endl;
+	}
+	const auto anActor = getByHandle(h);
+	if (!anActor) {
+		cerr << "SeqActor::addMessage: no actor has handle " << h << endl;
 		return;
-		}
-
-	Event newEvent;
-	newEvent.actor = anActor;
-	newEvent.when = when;
-	strcpy( newEvent.msg, msg);
-	addMessage(when, newEvent);
+	}
+	addMessage(Event(*anActor, when, msg));
 }
-
-
 
 #ifdef UNDER_CONSTRUCTION
-void SeqActor::deleteEvent(Event *anEvent)
-{
-	myList.erase(anEvent);
+void SeqActor::deleteEvent(Event* e) {
+	myList.erase(e);
 }
 
-void SeqActor::deleteEvent(const float when)
-{
-	for (SeqList::iterator it = myList.begin(); it != myList.end(); it++)
-		{
-		if (when == it->key)
-			myList.erase(it->handle);
-		}
+void SeqActor::deleteEvent(float when) {
+	for (auto e: myList)
+		if (when == e.key)
+			myList.erase(e.myActorHandle);
 }
 
-void SeqActor::deleteEvent(const float when, const float aHandle)
-{
-	VActor* anActor = getByHandle(aHandle);
-	if (!anActor)
+void SeqActor::deleteEvent(float when, float aHandle) {
+	VActor* a = getByHandle(aHandle);
+	if (!a)
 		return;
-
-	for (SeqList::iterator it = myList.begin(); it != myList.end(); it++)
-		{
-		if (anActor == it->contents->actor() && when == it->key)
-			myList.erase(it->handle);
-		}
+	for (auto e: myList)
+		if (a == e.contents->actor() && when == e.key)
+			myList.erase(e.myActorHandle);
 }
 
-void SeqActor::deleteAllEventsBefore(const float when)
-{
-	for (SeqList::iterator it = myList.begin(); it != myList.end(); it++)
-		{
-		if (it->key < when)
-			myList.erase(it->handle);
-		}
+void SeqActor::deleteAllEventsBefore(float when) {
+	for (auto e: myList)
+		if (e.key < when)
+			myList.erase(e.myActorHandle);
 }
 
-void SeqActor::deleteAllEventsAfter(const float when)
-{
-	for (SeqList::iterator it = myList.begin(); it != myList.end(); it++)
-		{
-		if (it->key >= when)
-			myList.erase(it->handle);
-		}
+void SeqActor::deleteAllEventsAfter(float when) {
+	for (auto e: myList)
+		if (e.key >= when)
+			myList.erase(e.myActorHandle);
 }
 
-void SeqActor::deleteAll(void)
-{
+void SeqActor::deleteAll() {
 	myList.clear();
 }
 #endif // UNDER_CONSTRUCTION
 
-
-
-void SeqActor::setActive(const int f)
-{
-	// When reactivating, update myStartTime so we start playing
-	// where we left off.
+void SeqActor::setActive(int f) {
+	// When reactivating, update myStartTime to start playing where we left off.
 	if (f && !isActive())
 		myStartTime = currentTime() - myNowBeat*myBeatLength;
-
 	VActor::setActive(f);
 }
 
-void SeqActor::rewind(float when)
-{
+void SeqActor::rewind(float when) {
 	myNowBeat = when;
-//	printf("rewind: list size = %d\n", myList.size());;
-
 	// Skip events before myNowBeat
-	myIter = myList.begin();
-	while (myIter != myList.end() && myNowBeat > (*myIter).when_beat)
-		{
-//		printf("\trewind skipping time %.3f\n", (*myIter).when_beat);;
-		myIter++;
-		}
+	for (myIter = myList.begin(); myIter != myList.end() && myNowBeat > myIter->when_beat; ++myIter);
 
 	// Set the start time to myNowBeat
-	myStartTime = currentTime() - myNowBeat*myBeatLength;
-//	printf("\trewind found: time = %.3f, myStartTime = %.3f\n",
-//		(*myIter).when_beat, myStartTime);;
+	myStartTime = currentTime() - myNowBeat * myBeatLength;
 }
 
-void SeqActor::act(void)
-{
+void SeqActor::act() {
 	VActor::act();
-
 	myNowBeat = (currentTime() - myStartTime) / myBeatLength;
-
-	if (myList.size() <= 0)
+	if (myList.empty())
 		return;
 
 	// Only check the list if we're looping or if there are events left to play
-	if (!myNumLoops /*&& myIter == myList.end() ;;;;*/)
-		{
+	if (!myNumLoops /*&& myIter == myList.end() ;;;;*/) {
 		// printf("loops = %d, atEnd = %d\n", myNumLoops, myIter==myList.end()?1:0);
 		return;
-		}
+	}
 
 //	printf("seqactor time %.3f + %.3f   beat %.3f \n", myStartTime, currentTime() - myStartTime, myNowBeat);
 
@@ -200,84 +126,62 @@ void SeqActor::act(void)
 //	printf("\t\t\txxx1 myNowBeat %.3g >=? myIter %.3g\n", // -- %x %x
 //		myNowBeat, (*myIter).when_beat
 //		/* , (int)myIter.node, (int)endguy.node*/);;
-	while (myIter != myList.end() && myNowBeat >= (*myIter).when_beat)
-		{
+	for (; myIter != myList.end() && myNowBeat >= myIter->when_beat; ++myIter) {
 //		printf("\t\t\txxx2 myNowBeat %.3g >=? myIter %.3g\n",
 //			myNowBeat, (*myIter).when_beat);;
-		if (myNumLoops && (*myIter).when_beat >= myLoopEnd)
+		if (myNumLoops && myIter->when_beat >= myLoopEnd)
 			break;
 //		printf("seqactor happen\n");
-		(*myIter).actor->receiveMessage( (*myIter).msg );
-		myIter++;
-		}
+		myIter->actor.receiveMessage(myIter->msg);
+	}
 
 	// loop if needed
-	if (myNumLoops && myNowBeat >= myLoopEnd)
-		{
-		float spillover = (myNowBeat-myLoopEnd)*myBeatLength;
-		myNumLoops--;                   // one less time to play
-		myStartTime = currentTime()-spillover - myLoopStart;      // set new start time (should correct here)
+	if (myNumLoops && myNowBeat >= myLoopEnd) {
+		const auto spillover = (myNowBeat-myLoopEnd) * myBeatLength;
+		--myNumLoops; // one less time to play
+		myStartTime = currentTime()-spillover - myLoopStart; // set new start time (should correct here)
 
-		for (myIter = myList.begin();
-			myIter != myList.end() && (*myIter).when_beat < myLoopStart;
-			myIter++)
-			;
+		for (myIter = myList.begin(); myIter != myList.end() && myIter->when_beat < myLoopStart; ++myIter);
 
 		// Get any events at the start of loop
 		myNowBeat = (currentTime() - myStartTime) / myBeatLength;
-		while (myIter != myList.end() && myNowBeat >= (*myIter).when_beat)
-			{
+		for (; myIter != myList.end() && myNowBeat >= myIter->when_beat; ++myIter) {
 			if (myNumLoops && (*myIter).when_beat >= myLoopEnd)
 				break;
 //			printf("seqactor happen #2\n");
-			(*myIter).actor->receiveMessage( (*myIter).msg );
-			myIter++;
-			}
+			myIter->actor.receiveMessage(myIter->msg);
 		}
+	}
 
 	// no loops left, end
-	if (!myNumLoops && myIter == myList.end() && myLoopEnd >= 0.0)
-		{
+	if (!myNumLoops && myIter == myList.end() && myLoopEnd >= 0.0) {
 	//	printf("seqactor deactivating (#loops = %d atEnd = %d)\n", 
 	//		myNumLoops, myIter == myList.end() ? 1 : 0);
 		setActive(0);
 		rewind();
-		}
+	}
 }
 
-void SeqActor::jumpTo(float when)
-{
+void SeqActor::jumpTo(float when) {
 	myNowBeat = when;
-	myIter = myList.begin();
-	while (myIter != myList.end() && myNowBeat < when)
-		myIter++;
-
+	for (myIter = myList.begin(); myIter != myList.end() && myNowBeat < when; ++myIter);
 	// reset start time so we are there
 	myStartTime = currentTime() - myNowBeat*myBeatLength;
 }
 
-void SeqActor::skipEvents(float howMany)
-{
-	if (howMany > 0)
-		{
+void SeqActor::skipEvents(float howMany) {
+	if (howMany > 0) {
 		while (howMany-- > 0 && myIter != myList.end())
-			myIter++;
-		}
-	else
-		{
+			++myIter;
+	} else {
 		printf("SeqActor can't yet skipEvents backwards.  Need reverseiterator.\n");
 		// This probably won't work.
 		while (howMany++ < 0 && myIter != myList.begin())
-			myIter--;
-		}
-
+			--myIter;
+	}
 }
 
-//===========================================================================
-//		receiveMessage
-//
-int SeqActor::receiveMessage(const char* Message)
-{
+int SeqActor::receiveMessage(const char* Message) {
 	CommandFromMessage(Message);
 
 	if (CommandIs("JumpTo"))
@@ -304,9 +208,7 @@ int SeqActor::receiveMessage(const char* Message)
 		return Uncatch();
 	}
 
-
 #ifdef UNDER_CONSTRUCTION
-
 	if (CommandIs("DeleteEvent"))
 	{
 		ifFF( z1, z2, deleteEvent(z1, z2) );
@@ -326,22 +228,18 @@ int SeqActor::receiveMessage(const char* Message)
 		return Uncatch();
 	}
 
-#endif // UNDER_CONSTRUCTION
-
-
-	if (CommandIs("AddMessage"))
-	{
-		ifFM( z, m, addMessage(z, m) );
-		return Uncatch();
-	}
-
-#ifdef UNDER_CONSTRUCTION
 	if (CommandIs("AddMessageRet"))
 	{
 		ifFFM( z1, z2, m, addMessage(z1, z2, m) );
 		return Uncatch();
 	}
 #endif
+
+	if (CommandIs("AddMessage"))
+	{
+		ifFM( z, m, addMessage(z, m) );
+		return Uncatch();
+	}
 
 	if (CommandIs("SetNumLoops"))
 	{
@@ -370,26 +268,14 @@ int SeqActor::receiveMessage(const char* Message)
 	return VActor::receiveMessage(Message);
 }
 
-ostream& SeqActor::dump(ostream &os, int tabs)
-{
-	VActor::dump(os, tabs);     // do inherited stuff
-
+ostream& SeqActor::dump(ostream &os, int tabs) {
+	VActor::dump(os, tabs);
     indent(os, tabs) << "Tempo:      " << bpm() << endl;
     indent(os, tabs) << "StartTime:  " << myStartTime << endl;
     indent(os, tabs) << "CurrentTime: " << myNowBeat << endl;
     indent(os, tabs) << "NumLoops:   " << myNumLoops << endl;
     indent(os, tabs) << "LoopStart:  " << myLoopStart << endl;
     indent(os, tabs) << "LoopEnd:    " << myLoopEnd << endl;
-
-/*** Write out the event list ***/
-
-#if 0
-    SeqList::iterator it;
-    for (it = myList.begin(); it != myList.end(); it++)
-    {
-        (*it)->dump();
-    }
-#endif
-
+    //for (auto event: myList) event.dump();
 	return os;
 }
