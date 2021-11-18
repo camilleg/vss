@@ -29,7 +29,6 @@ public:
 	bool	unused() const { return userCount == 0; }
 
 	sfile(char*, char*);
-	sfile() = delete;
 	~sfile();
 
 	int	equDirFile(const char* dName, const char* fName) const
