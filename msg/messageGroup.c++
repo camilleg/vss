@@ -26,13 +26,7 @@ MessageGroup::MessageGroup() :
 
 MessageGroup::~MessageGroup()
 {
-	DelayedDataList::iterator it;
-	for (it = dataList.begin(); it != dataList.end(); it++)
-	//	{
-	//	printf("\t%x <= %x <= %x\n",
-	//		(int)&(*(dataList.begin())), (int)&(*it), (int)&(*(dataList.end())));
-		delete (*it);
-	//	}
+	for (const auto d: dataList) delete d;
 }
 
 //	For each parameterized message in the messageList, build up a real
@@ -100,30 +94,24 @@ void MessageGroup::receiveData(float* data, int dataSize)
 		}
 #endif
 
-	{
 	//printf("\n\n\t\t\t\tsecret ninja: %d floats\n\n\n", dataSize);;
 	// Stuff data array into a secret ninja global array vrgzMG,
 	// so other things like thresholdactors can use
 	// "*4" to get at these values.
-	memcpy(VrgzMG(), data, dataSize * sizeof(float));
-	}
+	FloatCopy(VrgzMG(), data, dataSize);
 
-	char * message;
-	ParamMsgList::iterator it;
-	for (it = messageList.begin(); it != messageList.end(); it++)
-	{
-		if (NULL == (message = buildMessage((*it).msg, data, dataSize)))
-		{
+	for (const auto& m: messageList) {
+		const char* message = buildMessage(m.msg, data, dataSize);
+		if (!message) {
 			printf("vss error: MessageGroup failed to build a message.\n");
 			continue;
 		}
- //printf("\tMessageGroup sending <%s>\n", message);		
-		actorMessageHandler( message );
+		actorMessageHandler(message);
 		delete [] message;
 		
-//	look for a new handle
-		float hTmp = ClientReturnVal();
-		if ( hNil != hTmp )
+		// Look for a new handle.
+		const auto hTmp = ClientReturnVal();
+		if (hTmp != hNil)
 		{
 #ifdef _extremely_verbose_
 			printf("MessageGroup saving handle: %f\n", hTmp);
@@ -132,7 +120,6 @@ void MessageGroup::receiveData(float* data, int dataSize)
 			*PvzMessageGroupRecentHandle() = recentHandle; // for passing back to ... to AUDupdate() on the client side.
 		}
 	}
-	
 	recentHandle = hNil;
 }
 
@@ -142,8 +129,7 @@ void MessageGroup::receiveData(float* data, int dataSize)
 //	Build up a message by replacing these indices with data from the
 //	array. If an index exceeds the size of the data, complain bitterly, 
 //	and don't send the message. 
-char *
-MessageGroup::buildMessage(const char * pmsg, float * data, int dataSize)
+char* MessageGroup::buildMessage(const char* pmsg, float* data, int dataSize)
 {
 	char copy[5000], szT[5000];
 	static char message[5000];
@@ -154,7 +140,7 @@ MessageGroup::buildMessage(const char * pmsg, float * data, int dataSize)
 
 //	find the first token and write it into the message
 //	the first token is everything before a delimiter
-	char * ch = strtok(copy, IndexDelimStr);
+	char* ch = strtok(copy, IndexDelimStr);
 	
 //	a null char has been inserted into copy at the position
 //	of the delimiter, so ch points to a terminated string of 
@@ -315,8 +301,7 @@ LGotIndexLast:
 //	but parseSchedule is the gross part, and should not need to be 
 //	overridden. Try overriding the other members (startReceiveSchedule,
 //	receiveScheduledData, endReceiveSchedule) first.
-int
-MessageGroup::parseSchedule(char* arrays)
+int MessageGroup::parseSchedule(char* arrays)
 {
 // printf("\n\tparseSchedule received %s\n", arrays);
 
@@ -383,8 +368,7 @@ MessageGroup::parseSchedule(char* arrays)
 //	Add an array of data with a time offset to the dataList, to be 
 //	handled later. Derived classes may override this member to perform
 //	data filtering or editing.
-void
-MessageGroup::receiveScheduledData(float time, float * data, int size)
+void MessageGroup::receiveScheduledData(float time, float * data, int size)
 {
 	const auto dd = new DelayedData(time + currentTime(), data, size);
 #ifdef DEBUG
@@ -393,12 +377,9 @@ MessageGroup::receiveScheduledData(float time, float * data, int size)
 	dataList.push_back(dd);
 }
 
-//	Add a new message to our list.
-void 
-MessageGroup::addMessage(char* message)
+void MessageGroup::addMessage(char* message)
 {
-	ParamMsg pm(message);
-	messageList.push_back(pm);
+	messageList.push_back(ParamMsg(message));
 }
 
 #ifdef VSS_MATH_HACK
@@ -409,8 +390,7 @@ void MessageGroup::addMathPrefix(const char* sz)
 }
 #endif
 
-int 
-MessageGroup::receiveMessage(const char* Message)
+int MessageGroup::receiveMessage(const char* Message)
 {
 	CommandFromMessage(Message);
 
@@ -451,18 +431,15 @@ MessageGroup::receiveMessage(const char* Message)
 	return VActor::receiveMessage(Message);
 }
 
-//	Send and delete all delayed data arrays whose time has come.
-void 
-MessageGroup::act()
+// Process and delete all delayed data arrays whose time has come.
+void MessageGroup::act()
 {
 	VActor::act();
-	const float now = currentTime();
-	for (auto it = dataList.begin(); it != dataList.end(); ++it)
-	{
-		if (now >= (*it)->time)
-		{
-			receiveData( (*it)->data, (*it)->size );
-			dataList.erase( it-- );
+	const auto now = currentTime();
+	for (auto it = dataList.begin(); it != dataList.end(); ++it) {
+		if (now >= (*it)->time) {
+			receiveData((*it)->data, (*it)->size);
+			dataList.erase(it--);
 		}
 	}
 }
