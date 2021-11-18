@@ -1,12 +1,11 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "threshActor.h"
+#include <limits>
+
+constexpr auto floatmax = std::numeric_limits<float>::max();
 
 ThresholdActor::ThresholdActor() :
-	timeSent(-1e9),
-	timeWait(-1e9),
+	timeSent(-floatmax),
+	timeWait(-floatmax),
 	prevTestVal(0.0),
 	crossSwitch(true),
 	fNoRedundancies(true),
@@ -16,95 +15,52 @@ ThresholdActor::ThresholdActor() :
 	setTypeName("ThresholdActor");
 }
 
-//===========================================================================
-//		destruction
-//
 //	The threshList stores pointers to ThreshTestNmsg, because
 //	each one contains a messageGroup, and I don't want to waste
 //	time creating lots of those when adding to the list. So, this
 //	means that I have to go through and explcitly delete all the 
 //	items in the threshList.
-//
-ThresholdActor::~ThresholdActor()
-{
-	ThreshDeque::iterator it;
-	for(it = threshList.begin(); it != threshList.end(); it++ )
-		delete *it;
+ThresholdActor::~ThresholdActor() {
+	for (const auto t: threshList) delete t;
 }
 
-//===========================================================================
-//		addThreshold
-//
-//	Add a new threshold to our list, but first make sure that we don't
-//	already have that threshold.
-//
-void 
-ThresholdActor::addThreshold(float thresh, ThreshTest test, char* message)
-{
-	ThreshDeque::iterator it;
-	for (it = threshList.begin(); it != threshList.end(); it++)
-	{
-		if ( (*it)->thresh == thresh && (*it)->test == test )
-		{
-			(*it)->msg.addMessage( message );
+// Add a new threshold to our list, unless it's already there.
+void ThresholdActor::addThreshold(float thresh, ThreshTest test, char* message) {
+	for (const auto t: threshList) {
+		if (t->thresh == thresh && t->test == test) {
+			t->msg.addMessage(message);
             return;
         }
 	}
-
-	//	if we didn't find it, make a new one
-	ThreshTestNmsg * newOne = new ThreshTestNmsg( thresh, test, message );
-    threshList.push_back( newOne );
+    threshList.push_back(new ThreshTestNmsg(thresh, test, message));
 }
 
-//===========================================================================
-//		addSymmetricalThreshold
-//
 //	Add a message to be sent whenever a threshold is crossed in either
 //	direction: make two thresholds, one <= and one >=.
-void
-ThresholdActor::addSymmetricalThreshold(float thresh, char * message)
-{
+void ThresholdActor::addSymmetricalThreshold(float thresh, char* message) {
 	addThreshold(thresh, ThreshGtEq, message);
 	addThreshold(thresh, ThreshLtEq, message);
 }
 
-//===========================================================================
-//		setInitialVal
-//
-//	Set the initialVal for the actor. This is the same as sending it a new
-//	value (testThresholds) except that no data is sent and no thresholds are
-//	tested with this value.
-//
-void
-ThresholdActor::setInitialVal(float init)
-{
+// This is the same as sending it a new value (testThresholds) except
+// that no data is sent and no thresholds are tested at this time.
+
+void ThresholdActor::setInitialVal(float init) {
 	prevTestVal = init;
 }
 
-
-//===========================================================================
-//		act
 //	Send any messages that are pending.
-//
-void
-ThresholdActor::act()
-{
+void ThresholdActor::act() {
 	VActor::act();
-	if (pmsgPending && (currentTime() > timePending))
-		{
-		// ok, NOW we send it.
-	//	printf("%g > %g\n", currentTime(), timePending);
-		msgPrefix.receiveData( NULL, 0 );
+	if (pmsgPending && (currentTime() > timePending)) {
+		msgPrefix.receiveData(nullptr, 0);
 		pmsgPending->receiveData(rgzPending, czPending);
 		pmsgPending = nullptr;
-		msgSuffix.receiveData( NULL, 0 );
+		msgSuffix.receiveData(nullptr, 0);
 		timeSent = currentTime();
-		}
+	}
 }
 
-//===========================================================================
-//		testThresholds
-//
 //	Run through the list of thresholds. For any threshold whose test the
 //	new value passes and the previous value does not, send the data array
 //	to its MessageGroup, triggering the message sends.
@@ -113,83 +69,60 @@ ThresholdActor::act()
 //	all messages.  In particular, of the ones which would have been sent,
 //	send only the "last" one in the sense of whether newTestVal is > or <
 //	than prevTestVal.
-//
-void
-ThresholdActor::testThresholds(float newTestVal, float * dataArray, int size)
-{
-	ThreshDeque::iterator it;
-	int fFoundone = 0;
-	if (!fNoRedundancies)
-		{
-		for ( it = threshList.begin(); it != threshList.end(); it++ )
-			{
-			float val = (*it)->thresh;
-			if ( (*it)->test( val, newTestVal) &&
-					  (!crossSwitch || !(*it)->test(val, prevTestVal)) )
-				{
-				if (!fFoundone)
-					{
-					fFoundone = 1;
-					msgPrefix.receiveData( NULL, 0 );
-					}
-				(*it)->msg.receiveData( dataArray, size );
+void ThresholdActor::testThresholds(float newTestVal, float* dataArray, int size) {
+	bool fFoundone = false;
+	if (!fNoRedundancies) {
+		for (const auto t: threshList) {
+			auto val = t->thresh;
+			if (t->test(val, newTestVal) && (!crossSwitch || !t->test(val, prevTestVal))) {
+				if (!fFoundone) {
+					fFoundone = true;
+					msgPrefix.receiveData(nullptr, 0);
 				}
+				t->msg.receiveData(dataArray, size);
 			}
-		if (fFoundone)
-			msgSuffix.receiveData( NULL, 0 );
 		}
-	else
-		{
-		float valMin =  1e20;
-		float valMax = -1e20;
-		MessageGroup* pmsgMin = NULL;
-		MessageGroup* pmsgMax = NULL;
-
-		for ( it = threshList.begin(); it != threshList.end(); it++ )
-			{
-			float val = (*it)->thresh;
-			if ( (*it)->test( val, newTestVal) &&
-					  (!crossSwitch || !(*it)->test(val, prevTestVal)) )
-				{
-				fFoundone = 1;
+		if (fFoundone)
+			msgSuffix.receiveData(nullptr, 0);
+	} else {
+		auto valMin = floatmax;
+		auto valMax = -floatmax;
+		MessageGroup* pmsgMin = nullptr;
+		MessageGroup* pmsgMax = nullptr;
+		for (const auto t: threshList) {
+			auto val = t->thresh;
+			if (t->test(val, newTestVal) && (!crossSwitch || !t->test(val, prevTestVal))) {
+				fFoundone = true;
 				// Don't send it, just record its value for now.
 				// We may send it down below.
-				if (val < valMin)
-					{
+				if (val < valMin) {
 					valMin = val;
-					pmsgMin = &(*it)->msg;
-					}
-				if (val > valMax)
-					{
+					pmsgMin = &t->msg;
+				}
+				if (val > valMax) {
 					valMax = val;
-					pmsgMax = &(*it)->msg;
-					}
+					pmsgMax = &t->msg;
 				}
 			}
-		if (fFoundone)
-			{
-			MessageGroup* pmsgLast =
-				prevTestVal<newTestVal ? pmsgMax : pmsgMin;
-
-			if (currentTime() < timeSent + timeWait)
-				{
+		}
+		if (fFoundone) {
+			const auto pmsgLast = prevTestVal < newTestVal ? pmsgMax : pmsgMin;
+			if (currentTime() < timeSent + timeWait) {
 				timePending = timeSent + timeWait;
 			//	printf("waiting: %g + %g < %g\n",
 			//		timeSent, timeWait, currentTime());
 			//	printf("timePending = %g\n",
 			//		timePending);
 				pmsgPending = pmsgLast;
-				FloatCopy(rgzPending, dataArray, size );
-				}
-			else
-				{
-				msgPrefix.receiveData( NULL, 0 );
-				pmsgLast->receiveData( dataArray, size );
-				msgSuffix.receiveData( NULL, 0 );
+				FloatCopy(rgzPending, dataArray, size);
+			} else {
+				msgPrefix.receiveData(nullptr, 0);
+				pmsgLast->receiveData(dataArray, size);
+				msgSuffix.receiveData(nullptr, 0);
 				timeSent = currentTime();
-				}
 			}
 		}
+	}
 	prevTestVal = newTestVal;
 }
 
