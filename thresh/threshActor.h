@@ -25,14 +25,14 @@ static	int	ThreshLt( float thresh, float val ) { return thresh > val; }
 static	int	ThreshGtEq( float thresh, float val ) { return thresh <= val; }
 static	int	ThreshLtEq( float thresh, float val ) { return thresh >= val; }
 
-	using ThreshTest = int (*)(float, float);
+	using ThreshTest = int(*)(float, float);
 	
 //	for adding a new threshold
-	void addThreshold(float, ThreshTest, char *);
-	void addSymmetricalThreshold(float, char *);
+	void addThreshold(float, ThreshTest, char*);
+	void addSymmetricalThreshold(float, char*);
 	
 //	receiving test data
-	void testThresholds(float, float *, int);
+	void testThresholds(float, float*, int);
 
 //	initializing 
 	void setInitialVal(float);
@@ -92,13 +92,10 @@ protected:
 class ThreshTestNmsg
 {
 public:
-	float	thresh;
-	ThresholdActor::ThreshTest	test;
-	MessageGroup	msg;
+	float thresh;
+	ThresholdActor::ThreshTest test;
+	MessageGroup msg;
 
-private:
-	ThreshTestNmsg() {}
-public:
 	ThreshTestNmsg(float th, ThresholdActor::ThreshTest tst, char* m) :
 		thresh(th), test(tst) { msg.addMessage(m); }
 	~ThreshTestNmsg() {}
