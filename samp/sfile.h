@@ -1,56 +1,39 @@
-#ifndef _SFILE_H_
-#define _SFILE_H_
-
+#pragma once
 #include "vssSrv.h"
 #include <cstring>
 
-//===========================================================================
-//		Sfile 
-//
-//	class Sfile holds data for an AIFF samples file. 
-//
+// Data for an AIFF audio file.
 class sfile
 {
-private:
-	void *	sampleData;		//	interleaved samples
+	void*	sampleData;		//	interleaved samples
 	char	fileName[180];
 	char	dirName[180];
-	float	fileSRate;		//	sample rate of the file
-	ulong	fileNumFrames;	//	total sample frame count for the file
-	int		fileNumChans;	//	number of audio channels in the file
-	int		fileSampSize;	//	size in bits of the samples, 8 or 16
+	float	fileSRate;		//	sample rate
+	ulong	fileNumFrames;
+	int		fileNumChans;
+	int		fileSampSize;	//	sample size in bits, 8 or 16
 	int		fWAV;			//	true iff it's a (little endian) .WAV file
+	int		userCount;		// how many algorithms are using this
 	 
 public:
-	char * 	name(void)			{ return fileName; }
-	char *	directory(void)		{ return dirName; }
-	ulong	numFrames(void)		{ return fileNumFrames; }
-	int		numChannels(void)	{ return fileNumChans; }
-	float	sampleRate(void)	{ return fileSRate; }
-	int		sampleSize(void)	{ return fileSampSize; }
-	void *	samples(void)		{ return sampleData; }
+	char* 	name() { return fileName; }
+	char*	directory() { return dirName; }
+	ulong	numFrames() const { return fileNumFrames; }
+	int		numChannels() const { return fileNumChans; }
+	float	sampleRate() const { return fileSRate; }
+	int		sampleSize() const { return fileSampSize; }
+	void*	samples() const { return sampleData; }
 	
-//	keep track of how many algorithms are using this sfile.
-private:
-	int		userCount;
-public:
-	void	addUser(void *)		{ userCount++; }
-	void	removeUser(void *)	{ userCount--; }
-	int		numUsers(void)		{ return userCount; }
+	void	addUser(void*) { ++userCount; }
+	void	removeUser(void*) { --userCount; }
+	bool	unused() const { return userCount == 0; }
 
-//	construction
-		sfile(char *, char *);
-	 	~sfile();
-	 	
-//	comparing
-	int	equDirFile(const char * dirName, const char * fName)
-			{ return !strcmp(name(), fName) && !strcmp(directory(), dirName); }
-	 	
-private:
-		sfile(void);	//	not allowed
-	
-};	// end of class Sfile
+	sfile(char*, char*);
+	sfile() = delete;
+	~sfile();
+
+	int	equDirFile(const char* dName, const char* fName) const
+		{ return !strcmp(dirName, dName) && !strcmp(fileName, fName); }
+};
 
 extern FILE* inf;
-
-#endif	// ndef _SFILE_H_
