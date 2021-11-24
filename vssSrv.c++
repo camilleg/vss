@@ -33,8 +33,6 @@
 
 #include <climits>
 
-static OBJ udpDescObj = nullptr;
-
 VSSglobals globs;
 
 using std::cerr;
@@ -80,7 +78,7 @@ void PingServer(struct sockaddr_in *cl_addr)
 	cerr << "vss: ping from " << (strcmp(addr, "127.0.0.1") ? addr : "local client") << "\n";
 #endif
 	sprintf(mmT.rgch, "AckNoteMsg %f", hNil);
-	MsgsendObj(udpDescObj, cl_addr, &mmT);
+	Msgsend(cl_addr, &mmT);
 }
 
 void FlushServer()
@@ -160,9 +158,7 @@ int VSS_main(int argc,char *argv[])
 	ParseArgs(argc, argv, &globs.udp_port, &globs.liveaudio,
 		&globs.SampleRate, &globs.nchansVSS, &globs.nchansIn, &globs.nchansOut, &globs.hog, &globs.lwm, &globs.hwm, globs.ofile);
 	globs.OneOverSR = 1.0 / globs.SampleRate;
-	udpDescObj = BgnMsgsend(globs.hostname, globs.udp_port);
-	if (!udpDescObj)
-		return -1;
+	BgnMsgsend(globs.hostname, globs.udp_port);
 
 	fprintf(stderr, 
 		"%s, built %s\n  (C) 2021 U. of Illinois Board of Trustees\n  github.com/camilleg/vss\n",
@@ -260,15 +256,14 @@ void ReturnFloatMsgToClient(float z, const char* msg)
 			}
 
 		// Encode the midi data as an ascii string.
-		MsgsendObj(udpDescObj, vcl_addr, &mmT);
-		//;; is this ok instead? MsgsendObj(NULL, &mmT);
+		Msgsend(vcl_addr, &mmT);
 #endif
 		}
 	else if (!strcmp(msg, "AckNoteMsg"))
 		{
 		sprintf(mmT.rgch, "%s %f", msg, z);
 		//printf("replying on port=%d\n", ((struct sockaddr_in *)vcl_addr)->sin_port );;
-		MsgsendObj(udpDescObj, vcl_addr, &mmT);
+		Msgsend(vcl_addr, &mmT);
 		}
 	else
 		cerr << "vss: ignored ReturnFloatMsgToClient with unexpected args: " << msg << "\n";
@@ -279,7 +274,7 @@ void ReturnSzMsgToClient(const char* sz, const char* msg)
 	mm mmT;
 	mmT.fRetval = 0;
 	sprintf(mmT.rgch, "%s %s", msg, sz);
-	MsgsendObj(udpDescObj, vcl_addr, &mmT);
+	Msgsend(vcl_addr, &mmT);
 }
 
 // Called by scheduler.

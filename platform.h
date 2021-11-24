@@ -65,14 +65,5 @@ void schedulerMain();
 extern int Scount();
 extern void SetMidiFunction(int (*vpfnMidiArg)(int));
 
-typedef void* OBJ;
-OBJ BgnMsgsend(const char *szHostname, int channel);
-void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, void* pv);
-
-typedef struct
-{
-	struct sockaddr_in addr;
-	int len;
-	int sockfd;
-	int channel;
-} desc;
+void BgnMsgsend(const char* host, int port);
+void Msgsend(struct sockaddr_in*, mm*);

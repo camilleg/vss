@@ -8,37 +8,39 @@ using std::cerr;
 
 // Create a socket for sending msgs back to clients.
 
-extern OBJ BgnMsgsend(const char *szHostname, int channel)
-{
-	desc* o = (desc*)malloc(sizeof(desc));
-	if (!o)
-		return nullptr;
+using desc = struct {
+	struct sockaddr_in addr;
+	int len;
+	int sockfd;
+	int port;
+};
+static desc udpDesc = {};
+// Set by BgnMsgsend().  Used by Msgsend().
 
-	o->channel = channel;
-	memset(&o->addr, 0, sizeof o->addr);
-	o->addr.sin_family = AF_INET;
-	o->addr.sin_addr.s_addr = inet_addr(szHostname);
-	o->addr.sin_port = htons(channel);
-	const auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sockfd < 0) {
-		printf("failed to make socket\n");
-		return nullptr;
+void BgnMsgsend(const char *hostname, int port) {
+	udpDesc.port = port;
+	memset(&udpDesc.addr, 0, sizeof udpDesc.addr);
+	udpDesc.addr.sin_family = AF_INET;
+	udpDesc.addr.sin_addr.s_addr = inet_addr(hostname);
+	udpDesc.addr.sin_port = htons(port);
+	udpDesc.sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (udpDesc.sockfd < 0) {
+		cerr << "failed to make socket\n";
+		return;
 	}
 
-	struct sockaddr_in cl_addr;
-	memset(&cl_addr, 0, sizeof cl_addr);
+	struct sockaddr_in cl_addr = {};
 	cl_addr.sin_family = AF_INET;
 	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	cl_addr.sin_port = htons(0);
-	if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
+	if (bind(udpDesc.sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
 		perror("failed to bind");
-		close(sockfd);
-		return nullptr;
+		close(udpDesc.sockfd);
+		udpDesc.sockfd = -1;
+		return;
 	}
-	o->sockfd = sockfd;
-	o->len = sizeof o->addr;
-	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking.
-	return o;
+	udpDesc.len = sizeof udpDesc.addr;
+	fcntl(udpDesc.sockfd, F_SETFL, FNDELAY); // Non-blocking.
 }
 
 #if defined VSS_LINUX || defined VSS_CYGWIN32_NT40
@@ -46,32 +48,25 @@ extern OBJ BgnMsgsend(const char *szHostname, int channel)
 #else
 #define SPOOGE
 #endif
-static bool sendudp(const struct sockaddr_in *sp, int sockfd, long count, void *b)
+static bool sendudp(const struct sockaddr_in* sp, int sockfd, long count, mm* pmm)
 {
-	if (sendto(sockfd, b, count, 0, SPOOGE sp, sizeof *sp) != count)
+	if (sendto(sockfd, pmm, count, 0, SPOOGE sp, sizeof *sp) != count)
 		return false;
 #ifdef NOISY
-	printf("sendto \"%s\", fd=%d, cb=%d,\t\t",
-		((mm*)b)->rgch, sockfd, count);
-	/* sockaddr_in defined in /usr/include/netinet/in.h */
-	printf("port=%d, ipaddr=%x\n",
-		(int)sp->sin_port,
-		(int)sp->sin_addr.s_addr);
+	printf("sendto %x:%d \"%s\", fd=%d, cb=%ld.",
+		sp->sin_addr.s_addr, sp->sin_port,
+		pmm->rgch, sockfd, count);
 #endif
 	return true;
 }
 #undef SPOOGE
 
-extern void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, void* pv)
-{
-	// obj is always udpDescObj, what BgnMsgsend returned.
-	if (!obj)
+void Msgsend(struct sockaddr_in* addr /*always vcl_addr*/, mm* pmm) {
+	if (udpDesc.sockfd < 0)
 		return;
-	mm* pmm = (mm*)pv;
-	desc* o = (desc*)obj;
-	if (!paddr)
-		paddr = &o->addr;
-	if(!sendudp(paddr, o->sockfd, strlen(pmm->rgch)+1+1, pmm))
+	if (!addr)
+		addr = &udpDesc.addr; // Why would this be useful?
+	if(!sendudp(addr, udpDesc.sockfd, strlen(pmm->rgch)+1+1, pmm))
 		// extra +1 for fRetval field.
 		printf("send failed\n");
 }
