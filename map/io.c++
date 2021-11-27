@@ -1,6 +1,5 @@
 /* io.c : input-output */
 
-
 /*
  * Ken Clarkson wrote this.  Copyright (c) 1995 by AT&T..
  * Permission to use, copy, modify, and distribute this software for any
@@ -59,10 +58,7 @@ FILE* epopen(char *com, char *mode) {
 }
 #endif
 
-
-
 void print_neighbor_snum(FILE* F, neighbor *n){
-
 	assert(site_num!=NULL);
 	if (n->vert)
 		fprintf(F, "%ld ", (*site_num)(n->vert));
@@ -88,7 +84,6 @@ void print_simplex_num(FILE *F, simplex *s) {
 }
 
 void print_neighbor_full(FILE *F, neighbor *n){
-
 	if (!n) {fprintf(F, "null neighbor\n");return;}
 
 	print_simplex_num(F, n->simp);
@@ -114,11 +109,7 @@ simplex *print_facet(FILE *F, simplex *s, print_neighbor_f *pnfin) {
 	return NULL;
 }
 
-
-
-
 simplex *print_simplex_f(simplex *s, FILE *F, print_neighbor_f *pnfin){
-
 	static print_neighbor_f *pnf;
 
 	if (pnfin) {pnf=pnfin; if (!s) return NULL;}
@@ -136,11 +127,8 @@ simplex *print_simplex(simplex *s, void *Fin) {
 	static FILE *F;
 
 	if (Fin) {F=(FILE*)Fin; if (!s) return NULL;}
-
 	return print_simplex_f(s, F, 0);
-
 }
-
 
 void print_triang(simplex *root, FILE *F, print_neighbor_f *pnf) {
 	print_simplex(0,F);
@@ -150,10 +138,7 @@ void print_triang(simplex *root, FILE *F, print_neighbor_f *pnf) {
 
 void *p_peak_test(simplex *s) {return (s->peak.vert==hull_p) ? (void*)s : (void*)NULL;}
 
-
-
 simplex *check_simplex(simplex *s, void *){
-
 	int i,j,k,l;
 	neighbor *sn, *snn, *sn2;
 	simplex *sns;
@@ -205,12 +190,7 @@ void check_triang(simplex *root){visit_triang(root, &check_simplex);}
 
 void check_new_triangs(simplex *s){visit_triang_gen(s, check_simplex, p_neight);}
 
-
-
-
-
 /* outfuncs: given a list of points, output in a given format */
-
 
 //  CG  ///////////////////////////////////////////////////
 
@@ -223,7 +203,6 @@ extern int iH;
 // Stuff vpH[i][j] and vpT[i][j].
 // Lines containing a -1 are triangular faces on the complex's hull (vpH).
 // Lines not containing a -1 are tetrahedra (simplices) of the complex (vpT).
-
 void CG_vlist_out(point *v, int vdim, FILE *, int)
 {
 	if (!v)
@@ -283,192 +262,11 @@ void CG_vlist_out(point *v, int vdim, FILE *, int)
 		iT++;
 		}
 }
-
 //  CG  ///////////////////////////////////////////////////
-
-
-
-#ifdef UNUSED
-
-void vlist_out(point *v, int vdim, FILE *Fin, int)
-{
-	static FILE *F;
-	int j;
-	if (Fin)
-		{F=Fin; if (!v) return;}
-	for (j=0;j<vdim;j++)
-		fprintf(F, "%d ", (site_num)(v[j]));
-	fprintf(F,"\n");
-}
-
-void off_out(point *v, int vdim, FILE *Fin, int amble) {
-
-	static FILE *F, *G;
-	static FILE *OFFFILE;
-	static char offfilenam[L_tmpnam];
-	char comst[100], buf[200];
-	int j,i;
-
-	if (Fin) {F=Fin;}
-
-	if (pdim!=3) { hullwarning(-10, off apparently for 3d points only); return;}
-
-	if (amble==0) {
-		for (i=0;i<vdim;i++) if (v[i]==infinityPoint) return;
-		fprintf(OFFFILE, "%d ", vdim);
-		for (j=0;j<vdim;j++) fprintf(OFFFILE, "%d ", (site_num)(v[j]));
-		fprintf(OFFFILE,"\n");
-	} else if (amble==-1) {
-		OFFFILE = efopen(tmpnam(offfilenam), "w");
-	} else {
-		fclose(OFFFILE);
-
-		fprintf(F, "	OFF\n");
-	
-		sprintf(comst, "wc %s", tmpfilenam);
-		G = epopen(comst, "r");
-		fscanf(G, "%d", &i);
-		fprintf(F, " %d", i);
-		pclose(G);
-	
-		sprintf(comst, "wc %s", offfilenam);
-		G = epopen(comst, "r");
-		fscanf(G, "%d", &i);
-		fprintf(F, " %d", i);
-		pclose(G);
-	
-		fprintf (F, " 0\n");
-	
-		G = efopen(tmpfilenam, "r");
-		while (fgets(buf, sizeof(buf), G)) fprintf(F, "%s", buf);
-		fclose(G);
-	
-		G = efopen(offfilenam, "r");
-	
-	
-		while (fgets(buf, sizeof(buf), G)) fprintf(F, "%s", buf);
-		fclose(G);
-	}
-
-}
-
-
-
-void mp_out(point *v, int vdim, FILE *Fin, int amble) {
-
-
-/* should fix scaling */
-
-	static int figno=1;
-	static FILE *F;
-
-	if (Fin) {F=Fin;}
-
-	if (pdim!=2) { hullwarning(-10, mp for planar points only); return;}
-	if (amble==0) {
-		int i;
-		if (!v) return;
-		for (i=0;i<vdim;i++) if (v[i]==infinityPoint) {
-			point t=v[i];
-			v[i]=v[vdim-1];
-			v[vdim-1] = t;
-			vdim--;
-			break;
-		}
-		fprintf(F, "draw ");
-		for (i=0;i<vdim;i++) 
-			fprintf(F,
-				(i+1<vdim) ? "(%Gu,%Gu)--" : "(%Gu,%Gu);\n",
-				v[i][0]/mult_up,v[i][1]/mult_up
-			);
-	} else if (amble==-1) {
-		if (figno==1) fprintf(F, "u=1pt;\n");
-		fprintf(F , "beginfig(%d);\n",figno++);
-	} else if (amble==1) {
-		fprintf(F , "endfig;\n");
-	}
-}
-
-
-void ps_out(point *v, int vdim, FILE *Fin, int amble) {
-
-	static FILE *F;
-	static double scaler;
-
-	if (Fin) {F=Fin;}
-
-	if (pdim!=2) { hullwarning(-10, ps for planar points only); return;}
-
-	if (amble==0) {
-		int i;
-		if (!v) return;
-		for (i=0;i<vdim;i++) if (v[i]==infinityPoint) {
-			point t=v[i];
-			v[i]=v[vdim-1];
-			v[vdim-1] = t;
-			vdim--;
-			break;
-		}
-		fprintf(F,
-			"newpath %G %G moveto\n",
-			v[0][0]*scaler,v[0][1]*scaler);
-		for (i=1;i<vdim;i++) 
-			fprintf(F,
-				"%G %G lineto\n",
-				v[i][0]*scaler,v[i][1]*scaler
-			);
-		fprintf(F, "stroke\n");
-	} else if (amble==-1) {
-		float len[2], maxlen;
-		fprintf(F, "%%!PS\n");
-		len[0] = maxs[0]-mins[0]; len[1] = maxs[1]-mins[1];
-		maxlen = (len[0]>len[1]) ? len[0] : len[1];
-		scaler = 216/maxlen;
-	
-		fprintf(F, "%%%%BoundingBox: %G %G %G %G \n",
-			mins[0]*scaler,
-			mins[1]*scaler,
-			maxs[0]*scaler,
-			maxs[1]*scaler);
-		fprintf(F, "%%%%Creator: hull program\n");
-		fprintf(F, "%%%%Pages: 1\n");
-		fprintf(F, "%%%%EndProlog\n");
-		fprintf(F, "%%%%Page: 1 1\n");
-		fprintf(F, " 0.5 setlinewidth [] 0 setdash\n");
-		fprintf(F, " 1 setlinecap 1 setlinejoin 10 setmiterlimit\n");
-	} else if (amble==1) {
-		fprintf(F , "showpage\n %%%%EOF\n");
-	}
-}
-
-void cpr_out(point *v, int vdim, FILE *Fin, int) {
-
-	static FILE *F;
-	int i;
-
-	if (Fin) {F=Fin; if (!v) return;}
-
-	if (pdim!=3) { hullwarning(-10, cpr for 3d points only); return;}
-	
-	for (i=0;i<vdim;i++) if (v[i]==infinityPoint) return;
-
-	fprintf(F, "t %G %G %G %G %G %G %G %G %G 3 128\n",
-		v[0][0]/mult_up,v[0][1]/mult_up,v[0][2]/mult_up,
-		v[1][0]/mult_up,v[1][1]/mult_up,v[1][2]/mult_up,
-		v[2][0]/mult_up,v[2][1]/mult_up,v[2][2]/mult_up
-	);
-}
-
-#endif // UNUSED
 
 /* vist_funcs for different kinds of output: facets, alpha shapes, etc. */
 
-
-
-
-
 simplex *facets_print(simplex *s, void *p) {
-
 	static out_func *out_func_here;
 	point v[MAXDIM];
 	int j;
@@ -476,15 +274,11 @@ simplex *facets_print(simplex *s, void *p) {
 	if (p) {out_func_here = (out_func*)p; if (!s) return NULL;}
 
 	for (j=0;j<cdim;j++) v[j] = s->neigh[j].vert;
-
 	out_func_here(v,cdim,0,0);
-
 	return NULL;
 }
 
-
 simplex *ridges_print(simplex *s, void *p) {
-
 	static out_func *out_func_here;
 	point v[MAXDIM];
 	int j,k,vnum;
@@ -502,10 +296,7 @@ simplex *ridges_print(simplex *s, void *p) {
 	return NULL;
 }
 
-
-
 simplex *afacets_print(simplex *s, void *p) {
-
 	static out_func *out_func_here;
 	point v[MAXDIM];
 	int j,k,vnum;
