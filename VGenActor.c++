@@ -22,10 +22,8 @@ VGeneratorActor::~VGeneratorActor()
 	for (auto child: children) delete child;
 }
 
-//	When a child is created a a result of a BeginSound message being received, 
-//	newHandler() is called, and if it returns successfully, the new child 
-//	(handler) is added to this generator actor's list of progeny using 
-//	addChild().
+// When a child is created a a result of a BeginSound message being received, a new
+// handler (from newHandler()) is added to this actor's list of progeny using addChild().
 void
 VGeneratorActor::addChild(VHandler* h)
 {
@@ -37,17 +35,15 @@ VGeneratorActor::addChild(VHandler* h)
 //  When a handler is deleted, it informs the parent generator actor so 
 //  that the latter's children list can be kept up to date.
 void
-VGeneratorActor::removeChild(VHandler * h)
+VGeneratorActor::removeChild(VHandler* h)
 {
 	if (fDying)
 		return;
-//  if the child is found in the list of children (and
-//  it had better be), remove it from the list.
 	const auto it = children.find(h);
 	if (it == children.end())
 		std::cerr << "vss internal error: VGeneratorActor::removeChild() failed.\n";
 	else
-		children.erase( it );
+		children.erase(it);
 }
 
 //	Derived classes that have parameters of their own should override
