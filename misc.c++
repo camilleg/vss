@@ -78,6 +78,39 @@ extern int vfSoftClip;
 extern int vfLimitClip;
 extern void SetSoundIn(int fSoundIn);
 
+// For parsing numbers from argv[] in ParseArgs(),
+// more robustly than atoi() and atof().
+// On error, simply exit(1).
+int parseInt(const char* s)
+{
+	const auto saved = errno;
+	errno = 0;
+	char* tmp;
+	const auto val = strtol(s, &tmp, 0);
+	if (tmp == s || *tmp != '\0' || errno == ERANGE || errno == EINVAL) {
+		std::cerr << "Failed to parse int from '" << s << "'.\n";
+		exit(1);
+	}
+	if (errno == 0)
+		errno = saved;
+	return int(val);
+}
+
+double parseFloat(const char* s)
+{
+	const auto saved = errno;
+	errno = 0;
+	char* tmp;
+	const auto val = strtod(s, &tmp);
+	if (tmp == s || *tmp != '\0' || errno == ERANGE || errno == EINVAL) {
+		std::cerr << "Failed to parse float from '" << s << "'.\n";
+		exit(1);
+	}
+	if (errno == 0)
+		errno = saved;
+	return val;
+}
+
 void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	float *sample_rate, int *nchansVSS, int *nchansIn, int *nchansOut, int *hog, int * /*lwm*/, int * /*hwm*/, char* ofile)
 {
@@ -92,9 +125,10 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     	if(strcmp(*argv, "-srate")==0)
     	{
     		argc--; argv++;++nargs;
-    		if(argc>0)
-    		{
-    			*sample_rate = atof(*argv);
+			if (argc <= 0)
+				cerr << "vss: ignoring -srate with missing value.\n";
+			else {
+				*sample_rate = parseFloat(*argv);
 				if (*sample_rate < 8000.)
 				{
 					cerr << "vss: boosting sampling rate to 8000 from " << *sample_rate << "\n";
@@ -111,9 +145,10 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-hog")==0)
     	{
     		argc--; argv++;++nargs;
-    		if(argc>0)
-    		{
-    			*hog = atoi(*argv);
+			if (argc <= 0)
+				cerr << "vss: ignoring -hog with missing value.\n";
+			else {
+				*hog = parseInt(*argv);
  	     		argc--; argv++;++nargs;
   			}
     	}
@@ -144,9 +179,10 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-port")==0)
     	{
     		argc--; argv++;++nargs;
-			if(argc>0)
-				{
-				globs.udp_port = atoi(*argv);
+			if (argc <= 0)
+				cerr << "vss: ignoring -port with missing value.\n";
+			else {
+				globs.udp_port = parseInt(*argv);
 				if (globs.udp_port < 1000 || globs.udp_port > 65535)
 					{
 					cerr << "vss: port number " << globs.udp_port << " out of range [1000, 65535].  Using default 7999.\n";
@@ -154,8 +190,6 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 					}
 				argc--; argv++;++nargs;
 				}
-			else
-				cerr << "vss: ignoring -port with missing number.\n";
     	}
 	    else	if(strcmp(*argv, "-soft")==0)
     	{
@@ -173,9 +207,9 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     		argc--; argv++;++nargs;
 			if(argc>1)
 				{
-				int lwm = atoi(*argv);
+				const auto lwm = parseInt(*argv);
 				argc--; argv++;++nargs;
-				int hwm = atoi(*argv);
+				const auto hwm = parseInt(*argv);
 				argc--; argv++;++nargs;
 				if (0 < lwm && lwm < hwm)
 					{
@@ -187,7 +221,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 				}
 			else
 				{
-				cerr << "vss: ignoring -latency with missing numbers.\n";
+				cerr << "vss: ignoring -latency with missing values.\n";
 				if (argc>0)
 					{
 					argc--; argv++;++nargs;
@@ -197,9 +231,10 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-antidropout")==0)
 		{
     		argc--; argv++;++nargs;
-    		if(argc>0)
-    		{
-    			float msec = atof(*argv);
+			if (argc <= 0)
+				cerr << "vss: ignoring -antidropout with missing value.\n";
+			else {
+				const auto msec = parseFloat(*argv);
 				if (msec > 0.)
 					globs.msecAntidropout = msec;
 				else
@@ -211,9 +246,10 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     	{
     		argc--; argv++;++nargs;
 			SetSoundIn(true);
-			if (argc>0)
-				{
-				const auto w = atoi(*argv);
+			if (argc <= 0)
+				cerr << "vss: ignoring -input with missing value.\n";
+			else {
+				const auto w = parseInt(*argv);
 				if (w > 0)
 					{
 					// it really was "-input 4", not "-input -graphoutput" (for example).
@@ -225,8 +261,9 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-ofile")==0)
     	{
     		argc--; argv++;++nargs;
-    		if(argc>0)
-    		{
+			if (argc <= 0)
+				cerr << "vss: ignoring -ofile with missing value.\n";
+			else {
 		  strcpy(ofile, *argv);
  	     		argc--; argv++;++nargs;
 		}
@@ -234,8 +271,9 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
 	    else	if(strcmp(*argv, "-chans")==0)
     	{
     		argc--; argv++;++nargs;
-    		if(argc>0)
-				{
+			if (argc <= 0)
+				cerr << "vss: ignoring -chans with missing value.\n";
+			else {
 				if (strstr(*argv, "into"))
 					{
 					// Fancy "-chans 8into4:0,1,2,3" parsing.
@@ -275,7 +313,7 @@ LDoneChans:;
 				else
 					{
 					// Simple case "-chans x".
-					*nchansVSS = *nchansOut = atoi(*argv);
+					*nchansVSS = *nchansOut = parseInt(*argv);
 					globs.fRemappedOutput = 0;
 					}
  	     		argc--; argv++;++nargs;
