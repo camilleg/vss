@@ -27,6 +27,9 @@ endif
 ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   PLATFORMBASE := VSS_WINDOWS
 endif
+ifeq "$(PLATFORM)" "VSS_MACOS"
+  PLATFORMBASE := VSS_MAC
+endif
 
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
   VSSLIBS := -laudio -lmd -ldmedia
@@ -42,53 +45,44 @@ CC := g++
 
 INC := -I$(TOPDIR)
 
-CcFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
+cFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
 # -maccumulate-outgoing-args -malign-double -fomit-frame-pointer
 
 # VSS-specific
-# CcFLAGS += -DVERBOSE
+# cFLAGS += -DVERBOSE
 LDFLAGS :=
 
 ifeq "$(PLATFORM)" "VSS_IRIX_53"
-  CcFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include -mips2
-  CFLAGS := $(CcFLAGS)
+  cFLAGS += -I/usr/local/gnu/include/g++ -I/usr/local/gnu/mips-sgi-irix5.3/include -mips2
   LDFLAGS += -L/usr/local/gnu/lib		# to find libstdc++.a
 endif
-ifeq "$(PLATFORM)" "VSS_IRIX_62"
-  CFLAGS := $(CcFLAGS)
-endif
 ifeq "$(PLATFORM)" "VSS_IRIX_65"
-  CcFLAGS += -DVSS_IRIX_63PLUS
+  cFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
-  CFLAGS := $(CcFLAGS)
 endif
 ifeq "$(PLATFORM)" "VSS_IRIX_63"
-  CcFLAGS += -DVSS_IRIX_63PLUS
+  cFLAGS += -DVSS_IRIX_63PLUS
   # -mips3 or -mips4 cause compile errors in STL.
-  CFLAGS := $(CcFLAGS)
 endif
 
 ifeq "$(PLATFORM)" "VSS_LINUX_UBUNTU"
-  CFLAGS := $(CcFLAGS) -fno-exceptions
   LDFLAGS := -lasound
 endif
 
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 # VSS_CYGWIN32_NT40
-	CcFLAGS += -malign-double
-#	CcFLAGS += -I/usr/local/include
+	cFLAGS += -malign-double
+#	cFLAGS += -I/usr/local/include
 		# -I/usr/local/include makes vss crash (exception thrown before main()).
 		# i'm going to remove -mwindows
 		# maybe do a full build now.  also remove -ldsound and -lwinmm.
 	CYG=/cygdrive/d/cygwin
 	LDFLAGS := -L $(CYG)/lib -L /usr/local/lib -ldsound -lwinmm -lole32
-	CFLAGS := $(CcFLAGS) -fno-exceptions
 endif
 
-cFLAGS := $(CcFLAGS)
-CFLAGS += -std=c++17
+CFLAGS := $(cFLAGS) -std=c++17 -fno-exceptions
 
-# Optional file containing debugging options for CcFLAGS, LDFLAGS, etc.
+# Optional file containing debugging options for CFLAGS, LDFLAGS, etc.
 -include Rules.debug
 
 AUDTEST  = $(TOPDIR)/../util/audtest # Not yet in this repo.

@@ -440,10 +440,9 @@ void VHandler::setXYZ(float x, float y, float z, float time)
 	else
 		myPan = atan2(x, -z) / M_PI;
 	setPan(myPan, time);
-	// Kinda bogus: can't distinguish elevations > .61 radians
-	// (atan(1/sqrt(2)).
-	const auto elevT = std::clamp(atan2(y, hypot(x, z)), -0.61548, 0.61548) / 0.61548;
-	setElev(elevT, time);
+	// Kinda bogus: can't distinguish elevations > .61 radians (atan(1/sqrt(2)).
+	const auto e = std::clamp(atan2(double(y), double(hypot(x, z))), -0.61548, 0.61548) / 0.61548;
+	setElev(e, time);
 	setDistance(fsqrt(x*x + y*y + z*z), time);
 }
 

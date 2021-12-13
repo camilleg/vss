@@ -15,10 +15,10 @@
   Define common memory behavior classes.
    */
 
-#ifndef _cxMem_h
-#define _cxMem_h
-
+#pragma once
+#ifndef VSS_MAC
 #include <malloc.h>
+#endif
 
 class cxBaseMB
 {
@@ -99,6 +99,3 @@ void cxAllocBlock(void*& p, size_t sz)
 }
 
 #endif
-
-#endif /* _cxMem_h */
-

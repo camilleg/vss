@@ -1,3 +1,5 @@
+#ifndef VSS_MAC // Porting this Intel-specific code might be hard.
+
 #include "ledActor.h"
 
 #include <assert.h>
@@ -205,3 +207,4 @@ int LedActor::receiveMessage(const char* Message)
 
 	return VActor::receiveMessage(Message);
 }
+#endif

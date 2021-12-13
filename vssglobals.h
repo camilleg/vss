@@ -5,17 +5,12 @@
 // MaxNumChannels may be any positive number, but it's typically 2, 4, or 8.
 // MaxSampsPerBuffer must be a power of two, typically 128 to 4096.
 // For both, smaller values conserve RAM and run faster.
-
-#define MaxNumChannels          ((int) 8)
-
-#ifdef VSS_IRIX
-#define MaxSampsPerBuffer       ((int) 128)
-#endif
-#ifdef VSS_LINUX
-#define MaxSampsPerBuffer       ((int) 128)
-#endif
-#ifdef VSS_WINDOWS
-#define MaxSampsPerBuffer       ((int) /*8192*/4096)
+constexpr auto MaxNumChannels = 8;
+constexpr auto MaxSampsPerBuffer =
+#if defined VSS_IRIX || defined VSS_LINUX || defined VSS_MAC
+  128;
+#elif defined VSS_WINDOWS
+  /*8192*/4096;
 #endif
 
 class VSSglobals

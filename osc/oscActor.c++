@@ -16,13 +16,12 @@
 #include <sys/time.h>
 #endif
 
-using namespace std;
+using std::string;
 
-const int cbBuf = 5000;
+constexpr auto cbBuf = 5000;
 
 class OSCActor : public VActor
 {
-private:
 	OSCbuf buf;
 	OSCbuf* pbuf;
 	char* pbBuf;
@@ -58,15 +57,14 @@ public:
 	void term();
 };
 
-#ifdef VSS_LINUX
+#if defined VSS_LINUX || defined VSS_MAC
 	typedef unsigned clilenType;
 #else
 	typedef int clilenType;
 #endif
 
-class ClientAddr
+struct ClientAddr
 {
-public:
 	struct sockaddr_in cl_addr;
 	clilenType clilen;
 	int sockfd;
@@ -106,12 +104,10 @@ public:
 		  return c=='I'?0 : c=='F'?1 : c=='S'?2 : -1; }
 };
 
-typedef map<string, CmdActor*> Dict;
+using Dict = std::map<string, CmdActor*>;
 
 class OSCServer : public VActor
 {
-	private:
-		int udp_port;
 		int m_sockfd;
 		clilenType clilen;
 		struct sockaddr_in cl_addr;
@@ -131,7 +127,6 @@ class OSCServer : public VActor
 	public:
 		OSCServer() :
 			VActor(),
-			udp_port(-1),
 			m_sockfd(-1),
 			clilen(maxclilen)
 			{ *szMsgAddr = *szMsg = *mbuf = '\0'; }
@@ -392,8 +387,6 @@ int OSCActor::receiveMessage(const char* Message)
 	return VActor::receiveMessage(Message);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//
 // OSCServer is derived from Matt Wright's dumpOSC.c
 
 void OSCServer::init(int port)

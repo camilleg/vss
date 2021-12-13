@@ -43,11 +43,12 @@ void BgnMsgsend(const char *hostname, int port) {
 	fcntl(udpDesc.sockfd, F_SETFL, FNDELAY); // Non-blocking.
 }
 
-#if defined VSS_LINUX || defined VSS_CYGWIN32_NT40
+#if defined VSS_LINUX || defined VSS_CYGWIN32_NT40 || defined VSS_MAC
 #define SPOOGE (const struct sockaddr*)
 #else
 #define SPOOGE
 #endif
+
 static bool sendudp(const struct sockaddr_in* sp, int sockfd, long count, mm* pmm)
 {
 	if (sendto(sockfd, pmm, count, 0, SPOOGE sp, sizeof *sp) != count)

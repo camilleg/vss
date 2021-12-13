@@ -234,13 +234,11 @@ static auto vfDie = false; // Set to true when vss is dying.
 
 int vfSoftClip = FALSE;
 int vfLimitClip = FALSE;
-int vwAntidropout = 1; // # of extra 128-byte buffers of resistance to dropouts
-static const int vwAntidropoutMax = 64; // at 44kHz, that's 185 msec latency.
 
 constexpr auto NSAMPS = MaxSampsPerBuffer * MaxNumChannels; /* or even more! */
 short sampbuff[NSAMPS] = {0};
 
-#define wSoftclipLim 50000	/* start clipping at +-25000 (about -3 dB) */
+constexpr auto wSoftclipLim = 50000; // Start clipping at +-25000, about -3 dB.
 static int rgwSoftclip[wSoftclipLim + 1] = {0};
 
 static short *ssp; /* sample pointer */
@@ -532,8 +530,9 @@ LFailed:
 		liveaudio = 0;
 #endif // VSS_WINDOWS
 		}
-
+#ifndef VSS_MAC
 LContinue:
+#endif
 	{
 	const double Cdelt = 2./(double)wSoftclipLim;
 	const double Cdelt2 = Cdelt*Cdelt;
@@ -573,7 +572,7 @@ LContinue:
 #endif
 #elif defined VSS_IRIX
 	return liveaudio ? alGetFD(alp) : -1;
-#elif defined VSS_WINDOWS
+#elif defined VSS_WINDOWS || defined VSS_MAC
 	return liveaudio ? 0 : -1;
 #endif
 }
@@ -597,6 +596,8 @@ int Scount()
 	// # frames ready to capture or play (how far from xrun): snd_pcm_avail(), or cheap approximate snd_pcm_avail_update().
 	return pcm_handle_write ? snd_pcm_avail_update(pcm_handle_write) : 0;
 #elif defined VSS_WINDOWS
+	return MaxSampsPerBuffer; // wild guess
+#elif defined VSS_MAC
 	return MaxSampsPerBuffer; // wild guess
 #endif
 }
@@ -928,7 +929,7 @@ int Synth(int n, int nchans)
 				}
 			}
 #else
-			#error "$(PLATFORM) has not implemented audio output."
+			#error "Audio output unimplemented for this platform."
 #endif // many platforms
 			}
 		if (globs.fdOfile >= 0 && globs.ofile_enabled)
@@ -995,7 +996,7 @@ static void closeudp(int sockfd)
 char mbuf[MAXMESG];
 int caught_sigint = 0;
 
-#if defined VSS_IRIX_63_MIPS3 || defined VSS_LINUX || defined VSS_REDHAT7 || defined VSS_WINDOWS
+#if defined VSS_IRIX_63_MIPS3 || defined VSS_LINUX || defined VSS_REDHAT7 || defined VSS_WINDOWS || defined VSS_MAC
 	#define SignalHandlerType int
 #else
 	#define SignalHandlerType ...
@@ -1299,7 +1300,7 @@ static int LiveTick(int sockfd)
 #ifdef VSS_IRIX
 	struct sockaddr_in cl_addr;
 	int clilen;
-#elif defined VSS_LINUX
+#elif defined VSS_LINUX || defined VSS_MAC
 	struct sockaddr cl_addr;
 	unsigned int clilen;
 #elif defined VSS_WINDOWS
@@ -1389,7 +1390,7 @@ static int BatchTick(int sockfd)
 #ifdef VSS_IRIX
 	struct sockaddr_in cl_addr;
 	int clilen;
-#elif defined VSS_LINUX
+#elif defined VSS_LINUX || defined VSS_MAC
 	struct sockaddr cl_addr;
 	unsigned int clilen;
 #elif defined VSS_WINDOWS

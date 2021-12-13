@@ -128,7 +128,6 @@ inline void cxBitCopyRange(T* dst, T* src, int start, int end)
  */
 class cxBaseAB
 {
-  int dummy;
 public:
   cxBaseAB()	{}
   // this function should return non-zero if the destructor should be called.
@@ -1072,7 +1071,7 @@ template <class T,class AB> cxArrayIterB<T,AB>::cxArrayIterB(cxArrayB<T,AB> & v,
 							     int startIdx)
   : vec(v)
 {
-  int count = vec.count();
+  (void)vec.count();
   initIdx(startIdx);
 }
 
