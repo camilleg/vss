@@ -68,18 +68,15 @@ void CrowdActor::setMaxSimultaneous(int c)
 {
 	if (c > iSndMax)
 		{
-		fprintf(stderr, "vss warning: setMaxSimultaneous rounded down to %d\n",
-			iSndMax);
+		fprintf(stderr, "vss warning: setMaxSimultaneous rounded down to %d\n", iSndMax);
 		c = iSndMax;
 		}
 	ihMax = c;
 }
 
-
-inline float sq(float _) { return _*_; }
+static float sq(float _) { return _*_; }
 static const XYZ xyzListener = { -1.,   0.,5.,0. }; // center of cave
-inline float DistSquaredXYZ(const XYZ* p1, const XYZ* p2 = &xyzListener)
-{
+static float DistSquaredXYZ(const XYZ* p1, const XYZ* p2 = &xyzListener) {
 	return sq(p1->x-p2->x) + sq(p1->y-p2->y) + sq(p1->z-p2->z);
 }
 
@@ -97,7 +94,7 @@ float& CrowdActor::PhFromId(float id)
 // The return value may be modified.
 XYZ& CrowdActor::XYZFromId(float id)
 {
-	static /*const*/ XYZ _ = { -1., 0.,0.,0. };
+	static XYZ _ = { -1., 0.,0.,0. };
 	for (int i=0; i<cxyz; i++)
 		if (id == rgxyz[i].id)
 			return rgxyz[i];
@@ -238,9 +235,9 @@ for (i=0; i<ihMax; i++)
 
 int CompareXYZ(const void* pv1, const void* pv2)
 {
-	// For comparing distances, don't need to take the square root.
-	const float d1 = DistSquaredXYZ((const XYZ*)pv1);
-	const float d2 = DistSquaredXYZ((const XYZ*)pv2);
+	// For qsort to compare distances, don't need to take the square root.
+	const auto d1 = DistSquaredXYZ((const XYZ*)pv1);
+	const auto d2 = DistSquaredXYZ((const XYZ*)pv2);
 	return d1<d2 ? -1 : d1>d2 ? 1 : 0;
 }
 
@@ -403,7 +400,6 @@ for (i=0; i<ihMax; i++)
 /*
 void CrowdActor::act()
 {
-//	don't forget to call parent's act()
 	VActor::act();
 //;;	float now = currentTime();
 	// Maybe use this to send SetXYZ's to sounds when frame of reference changes.

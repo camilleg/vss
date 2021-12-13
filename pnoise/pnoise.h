@@ -23,7 +23,7 @@ class pnoiseAlg : public VAlgorithm
 	float sampValue, sampValuePrev;
 	float mod, modPrev;
 
-	inline float SRandom();
+	float SRandom();
 	float Lerp(float a, float b, float t) { return a * (1.0-t) + b * t; }
 
 public:

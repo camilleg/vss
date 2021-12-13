@@ -1,6 +1,3 @@
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//	Turned into multichannel by Camille Goudeseune and Carlos Ricci, 1998.
-
 #pragma once
 #include "vssSrv.h"
 
@@ -10,7 +7,6 @@ class Sample
 {
 	friend class VCircularBuffer;
 
-private:
 	// As this is all the state we have, we don't need
 	// an explicit copy constructor or assignment operator.
 	float x[MaxNumChannels];
@@ -19,7 +15,6 @@ public:
 	float& operator[](int i) { return x[i]; }
 	void Clear() { ZeroFloats(x, MaxNumChannels); }
 
-	/* inlines */
 	void Map1To2() { x[1] = x[0]; }
 	void Map2To1() { x[0] = (x[0] +x[1]) * .5f; }
 
@@ -38,8 +33,6 @@ public:
 	void Map4To8() { x[4]=x[0]; x[5]=x[1]; x[6]=x[2]; x[7]=x[3]; }
 	void Map8To4() { x[0]=(x[0]+x[4])*.5f; x[1]=(x[1]+x[5])*.5f;
 					 x[2]=(x[2]+x[6])*.5f; x[3]=(x[3]+x[7])*.5f; }
-
-public:
 
 /*
  * channel order (placement of speakers):
@@ -100,17 +93,13 @@ public:
 // BufferLength is fixed at 128, no longer a template.  It's too much of
 // a pain, and no benefit since the template's instantiated only once.
 
-// should be public const int VCircularBuffer::BufferLength,
-// but windows doesn't like that.
-static const int BufferLength = MaxSampsPerBuffer;
-
 class VCircularBuffer
 {
-private:
+	static constexpr int BufferLength = MaxSampsPerBuffer;
 	Sample buffer[BufferLength];
 
-	ulong IbufFromI(ulong i)
-		{ return (SamplesToDate() + i) & ((ulong)BufferLength-1); }
+	unsigned IbufFromI(unsigned i)
+		{ return (SamplesToDate() + i) & (unsigned(BufferLength-1)); }
 
 	void ClearInterval(int iMin, int iMax)
 		{ memset(&buffer[iMin], 0, (iMax-iMin) * sizeof(Sample)); }
@@ -156,7 +145,7 @@ private:
 		}
 
 public:
-	VCircularBuffer(void) { memset(buffer, 0, sizeof(buffer)); }
+	VCircularBuffer() { memset(buffer, 0, sizeof(buffer)); }
 
 	Sample& operator[](int i) { return buffer[IbufFromI(i)]; }
 
@@ -164,15 +153,13 @@ public:
 		{
 		if (howMany == BufferLength)
 			{
-			// Hey, it works out to the same thing
-			// since it's the whole buffer anyways.
 			// We expect this to be the most common case.
 			ClearInterval(0, BufferLength);
 			return;
 			}
 
-		int iMin = (int)IbufFromI(0);
-		int iMax = (int)IbufFromI(howMany);
+		const auto iMin = IbufFromI(0);
+		const auto iMax = IbufFromI(howMany);
 		if (iMin <= iMax)
 			{
 			// Contiguous interval.
@@ -190,21 +177,17 @@ public:
 		{
 		if (howMany == BufferLength)
 			{
-			// Again, we can do it all in one shot if it's the whole buffer.
 			MapInterval(0, BufferLength, nchansAlgorithm, nchans);
 			return;
 			}
-
-		int iMin = (int)IbufFromI(0);
-		int iMax = (int)IbufFromI(howMany);
+		const auto iMin = IbufFromI(0);
+		const auto iMax = IbufFromI(howMany);
 		if (iMin <= iMax)
 			{
-			// Contiguous interval.
 			MapInterval(iMin, iMax, nchansAlgorithm, nchans);
 			}
 		else
 			{
-			// Two intervals, "wrapping around the end of the circle".
 			MapInterval(0, iMax, nchansAlgorithm, nchans);
 			MapInterval(iMin, BufferLength, nchansAlgorithm, nchans);
 			}

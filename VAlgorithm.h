@@ -3,11 +3,8 @@
 #include "filter.h" // for distance cues
 #include <set>
 
-//==== dB to linear scalar conversion functions. ==========================
-
 // Convert dB value to (positive) scalar, relative to reference level.
 // dB's at or below -100dB are taken to mean -infinity.
-
 inline double ScalarFromdB(double number /*, double ref = 1.0*/)
 {
 	return number <= -99. ?
@@ -16,7 +13,6 @@ inline double ScalarFromdB(double number /*, double ref = 1.0*/)
 }
 
 // Convert linear scalar to dB value, relative to reference.
-
 inline double dBFromScalar(double number /*, double ref = 1.0*/)
 {
 	// ref and number can't be zero; number and ref must have the same sign.
@@ -28,15 +24,11 @@ inline double dBFromScalar(double number /*, double ref = 1.0*/)
 class VAlgorithm;
 using VAlgorithmList = std::set<VAlgorithm*>;
 
-//	Class VAlgorithm is an abstract base class for synthesis algorithms 
-//	in VSS. All other synthesis algorithms must be derived from VAlgorithm.
+// Abstract base class for synthesis algorithms.
 class VAlgorithm
 {
-// 	If mute is true, this instance is _not_ directly contributing to output.
-	int		mute;	
-
-// 	If pause is true, this instance is not generating any new samples.
-	int 	pause;
+	int mute;  // Not directly contributing to output.
+	int pause; // Not generating samples.
 
 //	number of channels actually computed by the algorithm. 
 //	nchan = the number of active channels going into the buffer, so that
@@ -176,14 +168,14 @@ protected:
 	virtual int	FOutputSamples2(int howMany, int nchans);
 //
 private:
-	inline void OutputSamples3(int howMany, float* putEmHere, int nchans);
-	inline void OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg);
-	inline void updateAmps(int nchans);
+	void OutputSamples3(int howMany, float* putEmHere, int nchans);
+	void OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer&);
+	void updateAmps(int nchans);
 
-	inline void updateDistance(void);
-	inline void setPanImmediately(int nchans);
-	inline void setElevImmediately(int nchans);
-	inline void setDistanceImmediately(void);
+	void updateDistance();
+	void setPanImmediately(int nchans);
+	void setElevImmediately(int nchans);
+	void setDistanceImmediately();
 
 public:
 	VAlgorithm();

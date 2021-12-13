@@ -1,9 +1,9 @@
 #include "pnoise.h"
 
 // Precomputed table of noise uniformly distributed over [-0.5, 0.5).
-const auto czRand = 26177; // prime number
-float rgzRand[czRand];
-bool fInitRgzRand = false;
+static constexpr auto czRand = 26177; // prime number
+static float rgzRand[czRand];
+static bool fInitRgzRand = false;
 
 pnoiseAlg::pnoiseAlg():
 	VAlgorithm(),
@@ -29,8 +29,7 @@ pnoiseAlg::pnoiseAlg():
 }
 
 // Table lookup.
-inline float pnoiseAlg::SRandom()
-{
+float pnoiseAlg::SRandom() {
 	return rgzRand[++iRand %= czRand];
 }
 

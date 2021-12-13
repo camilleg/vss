@@ -1,23 +1,12 @@
-//===========================================================================
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//===========================================================================
-
 #include "fmm.h"
 
-//===========================================================================
 //	for wavetable computation
-//
 #include <cmath>
 #define SINTABSZ 512
 float	FMMsintab[SINTABSZ+1];
 int	flagFMMsintab = 0;
 
-//===========================================================================
-//	fmmAlg constructor
-//
-//	Besides other inits, also initialize the lookup wavetable, if not already
-//
-fmmAlg::fmmAlg(void) :
+fmmAlg::fmmAlg() :
 	VAlgorithm(),
 	ccRatio(1.), 
 	ccModIndex(1.),
@@ -35,18 +24,13 @@ fmmAlg::fmmAlg(void) :
 	hipass.setHiAllLopassGain(0., 0., 1.);
 }
 
-//===========================================================================
-//	fmmAlg initialize static wavetable
-//
-void
-fmmAlg::InitFMMsintab(void)
-{
+// initialize static wavetable
+void fmmAlg::InitFMMsintab() {
 	for (int i = 0; i <= SINTABSZ; i++)
 		FMMsintab[i] = sinf(i * 2.0f * (float)(M_PI / SINTABSZ));
 	flagFMMsintab = 1;
 }
 
-//===========================================================================
 //	fmmAlg wrap phase accumulator, and separate into wrapped integer and fractional parts
 //
 //	float	Phase	Phase accumulator is wrapped, in=place, to int table size STABSZ
@@ -56,10 +40,7 @@ fmmAlg::InitFMMsintab(void)
 //
 //	Integer and fractional parts are separated out for direct use by Lerp() table 
 //	lookups. Wrapped total phase is reconstructed and put back into Phase.
-//
-inline void 
-fmmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
-{
+void fmmAlg::WrapAccSep(float& Phase, int& iPhase, float& fPhase) {
 	iPhase = (int)Phase;		// extract integer floor of Phase
 	Phase -= (float)iPhase;		// strip off int part, leave fractional part
 
@@ -68,17 +49,11 @@ fmmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 	Phase += (float)iPhase;		// reconstruct and store the whole wrapped phase
 }
 
-//===========================================================================
 //	fmmAlg wrap phase accumulator
-//
 //	Argument float Phase is wrapped, in-place, to int table size STABSZ, 
 //	preserving fractional part of argument
-//
-inline void 
-fmmAlg::WrapAcc(float &Phase)
-{
+void fmmAlg::WrapAcc(float& Phase) {
 	int iPhase = (int)Phase;	// extract integer floor of Phase
-
 	Phase -= (float)iPhase;		// strip off int part, leave fractional part
 	iPhase &= (SINTABSZ-1);		// wrap integer part
 	Phase += (float)iPhase;		// reconstruct the whole wrapped phase
@@ -96,9 +71,7 @@ fmmAlg::WrapAcc(float &Phase)
 //	lookups. Case (Phase < 0.0) is tested and separation adjusted to always yield 
 //	(fPhase > 0.0).
 //
-inline void 
-fmmAlg::WrapTot(float Phase, int &iPhase, float &fPhase)
-{
+void fmmAlg::WrapTot(float Phase, int& iPhase, float& fPhase) {
 	// extract unidirectional integer floor of Phase
 	iPhase = (Phase < 0.0f) ? ((int)Phase - 1) : (int)Phase;
 
@@ -106,12 +79,7 @@ fmmAlg::WrapTot(float Phase, int &iPhase, float &fPhase)
 	iPhase &= (SINTABSZ-1);			// wrap integer part
 } 
 
-//===========================================================================
-//	fmmAlg generateSamples
-//
-void
-fmmAlg::generateSamples(int howMany)
-{
+void fmmAlg::generateSamples(int howMany) {
 	float totPhase;		// total phase summer (TPS), in units of samples
 	float fTotPhase;	// fractional part of TPS
 	int iTotPhase;		// integer part of TPS
@@ -179,14 +147,10 @@ fmmAlg::generateSamples(int howMany)
 		}
 }
 
-//===========================================================================
-//	Utilities for scaling frequency and phase offsets
-//
-//	scale natural frequency in Hz to units of "samples"
-static inline 	float 	freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ ; } 
-
-//	scale modulation phase offset to units of "samples"
-static inline 	float 	modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0f * M_PI) ; } 
+// Scale natural frequency in Hz to units of "samples."
+static float freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; }
+// Scale modulation phase offset to units of "samples."
+static float modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0*M_PI); }
 
 void fmmAlg::set2CCratio(float newCC)
 {
@@ -223,7 +187,6 @@ void fmmAlg::setHighpassGain(float z)
 	hipass.setHighpassGain(z);
 }
 
-//===========================================================================
 //	fmOperator member functions
 
 void fmOperator::setCarrierFreq(float car)

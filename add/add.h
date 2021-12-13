@@ -37,7 +37,7 @@ public:
 //	utility members
  	float 	Lerp(float a, float b, float t) { return a*(1.0f-t) + b*t ; }
  	float 	Lerp(int i, float a, float *tab) { return (1.0f-a)*tab[i] + a*tab[i+1]; }
-inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
+	void 	WrapAccSep(float& Phase, int& iPhase, float& fPhase);
 
 	void	generateSamples(int);
 
@@ -97,7 +97,7 @@ public:
 	int receiveMessage(const char * Message);
 };
 
-//	class addActor is a generator actor class for addAlg
+// generator actor for addAlg
 class addActor : public VGeneratorActor
 {
 public:
@@ -125,6 +125,6 @@ protected:
 	ostream &dump(ostream &os, int tabs);
 };
 
-	static	inline int CheckFreq(float f) { return f >= 0. && f <= 24000.; }
-	static	inline int CheckAmpl(float f) { return f>=0. && f <= 10.; }
-	static	inline int CheckFD(float f) { return f>=-1. && f <= 1.; }
+static inline int CheckFreq(float f) { return f >= 0. && f <= 24000.; }
+static inline int CheckAmpl(float f) { return f>=0. && f <= 10.; }
+static inline int CheckFD(float f)   { return f>=-1. && f <= 1.; }

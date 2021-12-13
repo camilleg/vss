@@ -65,5 +65,4 @@ public:
 	ostream &dump(ostream &os, int tabs);
 };
 
-static inline int CheckRate(float z)
-	{ return z >= 0. && z < 100000.; }
+static inline int CheckRate(float z) { return z >= 0. && z < 100000.; }

@@ -684,7 +684,7 @@ void WantToResetsynth()
 	fWantToResetsynth = 1;
 }
 
-static inline void MaybeResetsynth()
+static void MaybeResetsynth()
 {
 	if (!fWantToResetsynth)
 		return;
@@ -962,17 +962,6 @@ int main(int argc,char *argv[])
 }
 #endif
 
-#ifdef VSS_IRIX
-int mdClosePortInput(MDport port)
-{
-	return mdClosePort(port);
-}
-int mdClosePortOutput(MDport port)
-{
-	return mdClosePort(port);
-}
-#endif
-
 // If caller passes in 0, *vpfnMidi should return an int filehandle
 // corresponding to the midi port to read from.
 // Otherwise, *vpfnMidi should read all pending incoming midi messages
@@ -983,21 +972,7 @@ void SetMidiFunction(int (*vpfnMidiArg)(int))
 	vpfnMidi = vpfnMidiArg;
 }
 
-static inline void mdSchedule(int hog)
-{
-#ifdef VSS_IRIX
-	if(hog>0)
-		{
-		if(hog>1)
-			if (schedctl (NDPRI,getpid(), NDPHIMIN) < 0)
-				perror ("schedctl NDPNORMMIN");
-		plock(PROCLOCK);
-		setuid(getuid());
-		}
-#endif
-}
-
-static inline int initudp(int chan)
+static int initudp(int chan)
 {
 	const auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0)
@@ -1011,7 +986,7 @@ static inline int initudp(int chan)
 	fcntl(sockfd, F_SETFL, FNDELAY);
 	return sockfd;
 }
-static inline void closeudp(int sockfd)
+static void closeudp(int sockfd)
 {
 	close(sockfd);
 }
@@ -1051,10 +1026,8 @@ const float* VssInputBuffer();
 
 static int viGear = 1;
 enum { prndl_parked=0, prndl_low, prndl_drive }; // for viGear
-
-inline int FParked() { return viGear == prndl_parked; }
-inline int FDrive()  { return viGear == prndl_drive; }
-
+bool FParked() { return viGear == prndl_parked; }
+bool FDrive()  { return viGear == prndl_drive; }
 void VSS_SetGear(int iGear)
 {
 	if (iGear != prndl_parked && iGear != prndl_low && iGear != prndl_drive)
@@ -1411,7 +1384,7 @@ static int LiveTick(int sockfd)
 	return 1;
 }
 
-static inline int BatchTick(int sockfd)
+static int BatchTick(int sockfd)
 {
 #ifdef VSS_IRIX
 	struct sockaddr_in cl_addr;
@@ -1452,28 +1425,23 @@ void flushme_();
 
 void schedulerMain()
 {
-	int sockfd;
-	liveaudio = globs.liveaudio;
-
-	mdSchedule(globs.hog);
-
-#ifdef VSS_WINDOWS
-LAgain:
+#ifdef VSS_IRIX
+	if (globs.hog > 0) {
+		if (globs.hog > 1 && schedctl(NDPRI,getpid(), NDPHIMIN) < 0)
+			perror("schedctl NDPNORMMIN");
+		plock(PROCLOCK);
+		setuid(getuid());
+	}
 #endif
-	if ((sockfd = initudp(globs.udp_port)) <= 0)
-		{
+	const auto sockfd = initudp(globs.udp_port);
+	if (sockfd <= 0) {
 		perror("Another copy of vss may be running on this machine");
 		fprintf(stderr, " (port %d)\n", globs.udp_port);
-#ifdef VSS_WINDOWS
-		fprintf(stderr, "HACK: trying next lower port.\n");
-		globs.udp_port--;
-		goto LAgain;
-#else
 		fprintf(stderr, "\nIf so, type \"vsskill\" or \"kill -9 <processid>\" to kill it.\n");
-#endif
 		return;
-		}
+	}
 
+	liveaudio = globs.liveaudio;
 	globs.dacfd = Initsynth(globs.udp_port, globs.SampleRate, globs.nchansVSS,
 		globs.nchansIn, liveaudio, globs.lwm, globs.hwm);
 

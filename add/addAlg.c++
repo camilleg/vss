@@ -8,12 +8,7 @@
 float	AddSintab[SINTABSZ+1];
 int	flagAddSintab = 0;
 
-//===========================================================================
-//	addAlg constructor
-//
-addAlg::addAlg(void) :
-	VAlgorithm()
-{
+addAlg::addAlg() : VAlgorithm() {
 	if (!flagAddSintab)
 		InitAddSintab();
 	ZeroFloats(rgzAmpl, cPartial);
@@ -22,19 +17,9 @@ addAlg::addAlg(void) :
 	ZeroFloats(rgzfd, cPartial);
 }
 
-//===========================================================================
-//	addAlg destructor
-//
-addAlg::~addAlg()
-{
-}
+addAlg::~addAlg() {}
 
-//===========================================================================
-//	addAlg initialize static wavetable
-//
-void
-addAlg::InitAddSintab(void)
-{
+void addAlg::InitAddSintab() {
 	for (int i = 0; i <= SINTABSZ; i++)
 		AddSintab[i] = sinf(i * 2.0f * (float)(M_PI / SINTABSZ));
 	flagAddSintab = 1;
@@ -51,9 +36,7 @@ addAlg::InitAddSintab(void)
 //	Integer and fractional parts are separated out for direct use by Lerp() table 
 //	lookups. Wrapped total phase is reconstructed and put back into Phase.
 //
-inline void 
-addAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
-{
+void addAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase) {
 	iPhase = (int)Phase;		// extract integer floor of Phase
 	Phase -= (float)iPhase;		// strip off int part, leave fractional part
 
@@ -62,12 +45,7 @@ addAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 	Phase += (float)iPhase;		// reconstruct and store the whole wrapped phase
 }
 
-//===========================================================================
-//	addAlg generateSamples
-//
-void
-addAlg::generateSamples(int howMany)
-{
+void addAlg::generateSamples(int howMany) {
 	// find the highest nonzero partial, to skip partials after that.
 	int iMax = 0;
 	for (int i=cPartial; i>0; i--)
@@ -117,11 +95,9 @@ printf("\n");
 //	Utilities for scaling frequency and phase offsets
 //
 //	scale natural frequency in Hz to units of "samples"
-static inline 	float 	freqToDSamples(float fHz) { return fHz * globs.OneOverSR * SINTABSZ ; } 
-
+static float freqToDSamples(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; }
 //	scale phase offset to units of "samples"
-// static inline 	float 	offsetToSamples(float phi) { return phi * SINTABSZ / (2.0f * M_PI) ; } 
-
+// static float offsetToSamples(float phi) { return phi * SINTABSZ / (2.0*M_PI); }
 
 void addAlg::setFreq(float fHz)
 {

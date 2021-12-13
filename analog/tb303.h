@@ -89,7 +89,6 @@ public:
 
 protected:
 	float defaultFreq, defaultFilterCutoff, defaultResonance, defaultEnvMod, defaultEnvDecay;
-
 	ostream &dump(ostream &, int);
 };
 

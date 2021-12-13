@@ -50,10 +50,7 @@ void fmAlg::InitFMsintab()
 //
 //	Integer and fractional parts are separated out for direct use by Lerp() table 
 //	lookups. Wrapped total phase is reconstructed and put back into Phase.
-//
-inline void 
-fmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
-{
+void fmAlg::WrapAccSep(float& Phase, int& iPhase, float& fPhase) {
 	iPhase = Phase;			// extract integer floor of Phase
 	Phase -= iPhase;		// strip off int part, leave fractional part
 
@@ -67,10 +64,7 @@ fmAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 //
 //	Argument float Phase is wrapped, in-place, to int table size STABSZ, 
 //	preserving fractional part of argument
-//
-inline void 
-fmAlg::WrapAcc(float &Phase)
-{
+void fmAlg::WrapAcc(float& Phase) {
 	int iPhase = Phase;		// integer floor
 	Phase -= iPhase;		// strip off int part, leave fractional part
 	iPhase &= SINTABSZ-1;	// wrap integer part
@@ -88,10 +82,7 @@ fmAlg::WrapAcc(float &Phase)
 //	Integer and fractional parts are separated out for direct use by Lerp() table 
 //	lookups. Case (Phase < 0.0) is tested and separation adjusted to always yield 
 //	(fPhase > 0.0).
-//
-inline void 
-fmAlg::WrapTot(float Phase, int &iPhase, float &fPhase)
-{
+void fmAlg::WrapTot(float Phase, int& iPhase, float& fPhase) {
 	// unidirectional integer floor
 	iPhase = Phase < 0.0 ? Phase-1 : Phase;
 	fPhase = Phase - iPhase;		// strip off int part, get fractional part
@@ -157,14 +148,10 @@ void fmAlg::generateSamples(int howMany)
 	}
 }
 
-//===========================================================================
-//	Utilities for scaling frequency and phase offsets
-//
-//	scale natural frequency in Hz to units of "samples"
-static inline float freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; } 
-
-//	scale modulation phase offset to units of "samples"
-static inline float modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0*M_PI); } 
+// Scale natural frequency in Hz to units of "samples."
+static float freqToDPhase(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; }
+// Scale modulation phase offset to units of "samples."
+static float modIToOPhase(float Xind) { return Xind * SINTABSZ / (2.0*M_PI); }
 
 void fmAlg::setCarrierFreq(float car)
 {

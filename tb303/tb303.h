@@ -88,7 +88,7 @@ protected:
 static inline int CheckFreq(float f) { return f >= 0.01 && f <= globs.SampleRate; }
 
 // clamping, with no error messages
-inline void Clamp(float& z, float zmin=0., float zmax=1.)
+static inline void Clamp(float& z, float zmin=0., float zmax=1.)
 	{ if (z<zmin) z=zmin; else if (z>zmax) z=zmax; }
 static inline int CheckFilterCutoff(float& f) { Clamp(f); return 1; }
 static inline int CheckResonance(float& f) { Clamp(f); return 1; }

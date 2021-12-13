@@ -1,6 +1,7 @@
 #include "VAlgorithm.h"
 
 // #define NDEBUG // Disable assert().
+#include <algorithm>
 #include <cassert>
 
 #ifdef VSS_WINDOWS
@@ -19,7 +20,7 @@
 // Instances of algorithms.
 VAlgorithmList VAlgorithm::Generators;
 
-VAlgorithm::VAlgorithm(void) :
+VAlgorithm::VAlgorithm() :
 	mute(false),
 	pause(false),
 	nchan(1),
@@ -75,19 +76,16 @@ VAlgorithm::VAlgorithm(void) :
 	hpf_d.setHiAllLopassGain(1., 0., 0.);
 }
 
-VAlgorithm::~VAlgorithm()
-{
+VAlgorithm::~VAlgorithm() {
 // remove the dead generator from the list
 	Generators.erase(position);
 }
 
-void VAlgorithm::invertAmp(int fInvert)
-{
+void VAlgorithm::invertAmp(int fInvert) {
 	fInvertAmp = fInvert;
 }
 
-void VAlgorithm::setAmp(float a, float t)
-{
+void VAlgorithm::setAmp(float a, float t) {
 	if (!fLinearEnv)
 		{
 		setGain(dBFromScalar(a), t);
@@ -111,9 +109,7 @@ void VAlgorithm::setAmp(float a, float t)
 		}
 }
 
-void
-VAlgorithm::setGain(float a, float t)
-{
+void VAlgorithm::setGain(float a, float t) {
 	if (fLinearEnv)
 		{
 		setAmp(ScalarFromdB(a), t);
@@ -137,8 +133,7 @@ VAlgorithm::setGain(float a, float t)
 		}
 }
 
-void VAlgorithm::scaleAmp(float a, float t)
-{
+void VAlgorithm::scaleAmp(float a, float t) {
 	if (!fLinearEnv)
 		{
 		scaleGain(dBFromScalar(a), t);
@@ -160,9 +155,7 @@ void VAlgorithm::scaleAmp(float a, float t)
 		}
 }
 
-void
-VAlgorithm::scaleGain(float a, float t)
-{
+void VAlgorithm::scaleGain(float a, float t) {
 	if (fLinearEnv)
 		{
 		scaleAmp(ScalarFromdB(a), t);
@@ -184,8 +177,7 @@ VAlgorithm::scaleGain(float a, float t)
 		}
 }
 
-void VAlgorithm::setInputAmp(float a, float t)
-{
+void VAlgorithm::setInputAmp(float a, float t) {
 	if (!fLinearEnv)
 		{
 		setInputGain(dBFromScalar(a), t);
@@ -206,8 +198,7 @@ void VAlgorithm::setInputAmp(float a, float t)
 		}
 }
 
-void VAlgorithm::setInputGain(float a, float t)
-{
+void VAlgorithm::setInputGain(float a, float t) {
 	if (fLinearEnv)
 		{
 		setInputAmp(ScalarFromdB(a), t);
@@ -229,12 +220,11 @@ void VAlgorithm::setInputGain(float a, float t)
 		}
 }
 
-static inline float NormalizePan(float a)
-{
-	float _ = fmod(a, 2.0f);	// 0 to 1.999 if a>0, -1.999 to 0 if a<0.
-
-	return globs.nchansVSS<4?(a<-1.?-1.:a>1.?1.:a):(_<-1.?_+2.:_>1.?_-2.:_);
-	// Real programmers can write APL in *any* language.
+static double NormalizePan(double a) {
+	if (globs.nchansVSS < 4)
+		return std::clamp(a, -1.0, 1.0);
+	const auto _ = fmod(a, 2.0); // 0 to 1.999 if a>0, -1.999 to 0 if a<0.
+	return _<-1.0 ? _+2.0 : _>1.0 ? _-2.0 : _;
 }
 
 // Quad: -1 to 1 is left-rear through left, front, right, right-rear.
@@ -244,21 +234,18 @@ static inline float NormalizePan(float a)
 // (thanks to Carlos Ricci for the sqrt idea).
 // Compute the sqrt lazily (don't bother, if we were going to return 0 anyway).
 
-static inline float PanIt(float _, float __)
-{
-	float x = 1. - 2.*fabs(NormalizePan(_) - __);
-	return x > 0. ? fsqrt(x) : 0.;
+static double PanIt(double _, double __) {
+	const auto x = 1.0 - 2.0*fabs(NormalizePan(_) - __);
+	return x > 0.0 ? sqrt(x) : 0.0;
 }
-
-static inline float PanFL(float _) { return PanIt(_, -.25); }
-static inline float PanFR(float _) { return PanIt(_,  .25); }
-static inline float PanRL(float _) { return PanIt(_, -.75) + PanIt(_,  1.25); }
-static inline float PanRR(float _) { return PanIt(_,  .75) + PanIt(_, -1.25); }
+static double PanFL(double _) { return PanIt(_, -.25); }
+static double PanFR(double _) { return PanIt(_,  .25); }
+static double PanRL(double _) { return PanIt(_, -.75) + PanIt(_,  1.25); }
+static double PanRR(double _) { return PanIt(_,  .75) + PanIt(_, -1.25); }
 // the 2 cases for RL and RR are to handle both sheets of the multiple covering
 
 // Set panAmps[] from pan.
-inline void VAlgorithm::setPanImmediately(int nchans)
-{
+void VAlgorithm::setPanImmediately(int nchans) {
 	if (fSetAmplsDirectly)
 		return;
 
@@ -287,39 +274,31 @@ inline void VAlgorithm::setPanImmediately(int nchans)
 		}
 }
 
-inline void VAlgorithm::setElevImmediately(int nchans)
-{
-	if (fSetAmplsDirectly)
+void VAlgorithm::setElevImmediately(int nchans) {
+	if (fSetAmplsDirectly || nchans != 8)
 		return;
 
-	if (nchans == 8)
-		{
-		// Like Quad, where pan is azimuth, and elev is elevation.
+	// Like Quad, where pan is azimuth, and elev is elevation.
+	const auto FL = PanFL(pan);
+	const auto FR = PanFR(pan);
+	const auto RL = PanRL(pan);
+	const auto RR = PanRR(pan);
 
-		float FL = PanFL(pan);
-		float FR = PanFR(pan);
-		float RL = PanRL(pan);
-		float RR = PanRR(pan);
+	const auto elevBot = fabs(elev - 1) * 0.5;
+	const auto elevTop = 1.0 - elevBot;
 
-		float elevBot = fabs(elev - 1) * .5f;
-		float elevTop = 1.f - elevBot;
-
-		panAmps[0] = FL * elevTop;
-		panAmps[1] = FR * elevTop;
-		panAmps[2] = RL * elevTop;
-		panAmps[3] = RR * elevTop;
-		panAmps[4] = FL * elevBot;
-		panAmps[5] = FR * elevBot;
-		panAmps[6] = RL * elevBot;
-		panAmps[7] = RR * elevBot;
-		}
+	panAmps[0] = FL * elevTop;
+	panAmps[1] = FR * elevTop;
+	panAmps[2] = RL * elevTop;
+	panAmps[3] = RR * elevTop;
+	panAmps[4] = FL * elevBot;
+	panAmps[5] = FR * elevBot;
+	panAmps[6] = RL * elevBot;
+	panAmps[7] = RR * elevBot;
 }
 
-inline void VAlgorithm::setDistanceImmediately(void)
-{
-	dist01 = distance / distanceHorizon;
-	if (dist01 < 0.)
-		dist01 = 0.;
+void VAlgorithm::setDistanceImmediately() {
+	dist01 = std::max(0.0f, distance / distanceHorizon);
 
 #ifdef ONE_WAY_TO_DO_IT
 	// inverse-1.2 law
@@ -360,9 +339,7 @@ inline void VAlgorithm::setDistanceImmediately(void)
 	hpf_d.setFrequency(10.0 * pow(2.0, 4.0*dist01));
 }
 
-void
-VAlgorithm::setPan(float a, float t)
-{
+void VAlgorithm::setPan(float a, float t) {
 	if (fSetAmplsDirectly)
 		return;
 
@@ -410,9 +387,7 @@ VAlgorithm::setPan(float a, float t)
 		}
 }
 
-void
-VAlgorithm::setElev(float a, float t)
-{
+void VAlgorithm::setElev(float a, float t) {
 	if (fSetAmplsDirectly)
 		return;
 
@@ -432,8 +407,7 @@ VAlgorithm::setElev(float a, float t)
 		}
 }
 
-void VAlgorithm::setDistance(float a, float t)
-{
+void VAlgorithm::setDistance(float a, float t) {
 	if (fSetAmplsDirectly)
 		return;
 
@@ -453,20 +427,14 @@ void VAlgorithm::setDistance(float a, float t)
 		}
 }
 
-
-void VAlgorithm::setDistanceHorizon(float a)
-{
-	if (a < .0001)
-		a = .0001;
-	distanceHorizon = a;
+void VAlgorithm::setDistanceHorizon(float a) {
+	distanceHorizon = std::max(0.0001f, a);
 }
 
 
 //	Computes the new (modulated) amplitude values
 //	in place, and halts modulation if necessary.
-inline void
-VAlgorithm::updateAmps(int nchans)
-{
+void VAlgorithm::updateAmps(int nchans) {
 	assert(!getPause());
 
 	if (fLinearEnv)
@@ -570,9 +538,7 @@ VAlgorithm::updateAmps(int nchans)
 		}
 }
 
-inline void
-VAlgorithm::updateDistance(void)
-{
+void VAlgorithm::updateDistance() {
 	assert(!getPause());
 	if (modDistance > 0L)
 		{
@@ -591,9 +557,7 @@ VAlgorithm::updateDistance(void)
 // Utility functions to handle pause and mute states,
 // for classes with overridden outputSamples().
 // ProcessorActors commonly pass in (source != NULL) for fValidForOutput.
-int
-VAlgorithm::FOutputSamples1(int howMany, int fValidForOutput)
-{
+int VAlgorithm::FOutputSamples1(int howMany, int fValidForOutput) {
 	if (!fValidForOutput || getPause())
 		{	
 		// fill local buffer with zeros, in case anyone's listening
@@ -603,9 +567,7 @@ VAlgorithm::FOutputSamples1(int howMany, int fValidForOutput)
 	return 1;
 }
 
-int
-VAlgorithm::FOutputSamples2(int /*howMany*/, int nchans)
-{
+int VAlgorithm::FOutputSamples2(int /*howMany*/, int nchans) {
 	if (getMute() && !fSetAmplsDirectly)
 		{
 		for (int iChunk = 0; iChunk < cChunk; iChunk++)
@@ -621,9 +583,7 @@ VAlgorithm::FOutputSamples2(int /*howMany*/, int nchans)
 //	OutputSamples 3,4
 // Functions to map the computed buffer of samples to the vss output channels, 
 // then fade, scale, and pan the mapped result onto the vss output busses
-inline void
-VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans)
-{
+void VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans) {
 	VCircularBuffer* p;
 	int nchansAlgorithm = Nchan();
 	VCircularBuffer bufferMono;
@@ -711,9 +671,7 @@ VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans)
 //;;;; if (nothing's changing /*updateAmps isn't doing anything*/)
 //;;;;    { cChunk=1; csampChunk=howMany; }
 
-inline void
-VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg)
-{
+void VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg) {
 	assert(howMany == MaxSampsPerBuffer);
 	assert(howMany == cChunk * csampChunk);
 	assert(nchans == 1 || nchans == 2 || nchans == 4 || nchans == 8);
@@ -816,9 +774,7 @@ VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, i
 //	for copying and scaling their samples into putEmHere[]).
 //
 //	Update amplitudes every sample.
-void
-VAlgorithm::outputSamples( int howMany, float* putEmHere, int nchans )
-{
+void VAlgorithm::outputSamples(int howMany, float* putEmHere, int nchans) {
 	if (!FOutputSamples1(howMany, FValidForOutput()))
 		return;
 	

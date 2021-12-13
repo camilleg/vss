@@ -1,6 +1,6 @@
 #include "samp.h"
 
-sampAlg::sampAlg(void) :
+sampAlg::sampAlg() :
 	file( NULL ),
 	index( 0. ),
 	startAt( 0L ),
@@ -16,7 +16,7 @@ sampAlg::sampAlg(void) :
 {
 }
 
-sampAlg::~sampAlg(void)
+sampAlg::~sampAlg()
 {
 #if 0
 	// Too dangerous.  "file" may have been already deleted
@@ -27,45 +27,31 @@ sampAlg::~sampAlg(void)
 }
 
 // sampleData access.
-float
-sampAlg::get8bitSamp( ulong frame, int chan )
-{
-	return (float) (((unsigned char *)sampleData)[chan + (frame * fileNumChans)]-128);
+float sampAlg::get8bitSamp(ulong frame, int chan) {
+	return (((unsigned char *)sampleData)[chan + (frame * fileNumChans)]-128);
+}
+float sampAlg::get16bitSamp(ulong frame, int chan) {
+	return ((short *)sampleData)[chan + (frame * fileNumChans)];
 }
 
-float
-sampAlg::get16bitSamp( ulong frame, int chan )
-{
-	return (float) ((short *)sampleData)[chan + (frame * fileNumChans)];
-}
-
-inline float
-sampAlg::getSamp( ulong frame, int chan )
-{
+float sampAlg::getSamp(ulong frame, int chan) {
 #ifdef DEBUG
-	if ( getSampFn == NULL )
-	{
+	if (!getSampFn) {
 		printf("vss error: sampAlg has NULL getSampFn!!\n");
-		return 0.;
+		return 0.0;
 	}
-
-	if (chan > fileNumChans)
-	{
+	if (chan > fileNumChans) {
 		printf("vss error: SampleActor tried to access more channels than this file has.\n");
-		return 0.;
+		return 0.0;
 	}
 #endif
-
 	return (this->*getSampFn)(frame, chan);
 }
 
 //	Number of output channels is the width of the input file, so this could
 //	change during the life of a single actor if it loads different files.
-void
-sampAlg::generateSamples(int howMany)
-{
+void sampAlg::generateSamples(int howMany) {
 	Nchan(fileNumChans);
-
 	if (index > (float)endAt)
 		{
 		// Unless the file itself has a negative sample rate,
@@ -201,16 +187,13 @@ sampAlg::setBounds(float begin, float end)
 {
 	if (!file)
 		return;
-
 	if (begin >= end)
 	{
 		printf("vss error: SampleActor playback start cannot be the same as or later than end.\n");
 		return;
 	}
-	
 	startAt = std::max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
 	endAt = std::min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
-
 	//	if endAt has been set back to before current index, 
 	//	push index back to the end sample
 	if ((float)endAt < index)
@@ -223,14 +206,12 @@ sampAlg::setLoop(float begin, float end, int flag)
 {
 	if (!file)
 		return;
-
 	if (begin >= end)
 	{
 		printf("vss error: in SampleActor SetLoop, loop start (%g) cannot be the same as or later than loop end (%g).\n",
 			begin, end);
 		return;
 	}
-	
 	startLoopAt = std::max(0., (begin * file->sampleRate()) + 0.5 /* cheap rounding */);
 	endLoopAt = std::min(file->numFrames() - 1., (end * file->sampleRate()) + 0.5);
 	loop = flag;

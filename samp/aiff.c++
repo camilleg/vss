@@ -2,11 +2,9 @@
 
 /* general-purpose code for AIFF-based DSP; contains main(). */
 
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
 
 #include "sfile.h" // for declaration of inf
 #ifdef UNUSED
@@ -14,13 +12,6 @@ static FILE *ouf; /* input and output files */
 #endif
 #include "aiff.h"
 #include "type_conversion.h"
-
-#ifdef UNUSED
-
-#include "plugin_specific.h"
-#include "file_selection.h"
-
-#else
 
 int GETFSTR( char *s, int max_len )
 {
@@ -32,8 +23,6 @@ int GETFSTR( char *s, int max_len )
 	return 0;
 }
 
-#endif
-
 #define BUF_SIZ (1L << 10) /* buffer size, in frames */
 
 #define FREAD( dat ) fread( &(dat), sizeof (dat), 1, inf )
@@ -41,7 +30,6 @@ int GETFSTR( char *s, int max_len )
 #define SAMDAT( action, file ) \
    if (!f##action ( d, buflen*nh.framsiz, 1, file )) \
       err( #action"ing sample data" )
-
 
 typedef struct
 {
@@ -83,30 +71,23 @@ typedef struct
 }
 basicaiffbeg;  /* basic AIFF beginning: note that this structure allows storage of Common and Sound Data local chunk types only. */
 
-
 native_header nh;
 void *d; /* audio data buffer */
-
 
 static basicaiffbeg ba;
 
 /* oddpad() rounds up to nearest even number.  This function is needed because if chunk size is odd, there is an uncounted zero pad byte. */
-long oddpad( long x )
-{
+static long oddpad(long x) {
    return x + (x & 1); 
 }
 
-long min( long a, long b )
-{
+static long min(long a, long b) {
    return a < b ? a : b;
 }
 
-
-void open_inf( void )
-{
-#define INFSTR_LEN 300
+void open_inf() {
+   constexpr auto INFSTR_LEN = 300;
    char infstr[INFSTR_LEN];
-	
    if ( GETFSTR( infstr, INFSTR_LEN ) ) err( "getting input file name" );
    if ( !(inf = fopen( infstr, "rb" )) ) err( "opening input file" );
 }
@@ -136,26 +117,20 @@ void process_com( ckhd hd )
 long process_snd( ckhd hd )
 {
    long samdatpos;
-
    ba.sndhd = hd;
-
    if ( !FREAD( ba.snd ) ) err( "reading SSND chunk body" );
-
    if ( i4(ba.snd.bksi) || i4(ba.snd.offs) )
       warn( "blocksize and offset not supported by this program" );
-
    samdatpos = ftell( inf );
-
    if ( fseek( inf, oddpad(i4(hd.si)) - sizeof ba.snd, SEEK_CUR) )
       err( "seeking past sample data");
-
    return samdatpos;
 }
 
 /* prints information in a text chunk */
 void process_txt( ckhd hd )
 {
-#define TXTBUF_SIZ 80
+   constexpr auto TXTBUF_SIZ = 80;
    char s[TXTBUF_SIZ];
    long bufpos, cksi;
    int buflen = 0;
@@ -184,13 +159,12 @@ void process_ckhd( ckhd hd )
 
 #define ID_EQ( id0, id1 ) (!strncmp( (char *) id0, id1, 4 ))
 
-int scan_inf_wav(void);
+int scan_inf_wav();
 
 // scan_inf() scans inf, reading in essential header data and
 // finding sample data position (does not actually read sample data).
 // Returns true iff it's little-endian (a WAV file).
-int scan_inf ( void )
-{
+int scan_inf() {
    int comfound = 0, sndfound = 0;
    long frmck_endpos, samdatpos = 0;
    ckhd hd;
@@ -250,7 +224,7 @@ int scan_inf ( void )
 	return 0;
 }
 
-static inline int SwapInt(int wSrc)
+static int SwapInt(int wSrc)
 {
 #ifdef ENDIANNESS_NOT_INTEL
 	int wDst;
@@ -266,7 +240,7 @@ static inline int SwapInt(int wSrc)
 #endif
 }
 
-static inline int SwapShort(short sSrc)
+static int SwapShort(short sSrc)
 {
 #ifdef ENDIANNESS_NOT_INTEL
 	return ((sSrc & 0xff) << 8) | ((sSrc & 0xff00) >> 8);
@@ -275,7 +249,7 @@ static inline int SwapShort(short sSrc)
 #endif
 }
 
-int scan_inf_wav(void)
+int scan_inf_wav()
 {
 	// Maybe it's a .wav file instead?
 	char wave[4];

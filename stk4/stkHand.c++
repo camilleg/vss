@@ -89,12 +89,9 @@ char instruName[NUM_INSTRU][10] =  // the order has to be consistent with enum
    "DrumSynt"
   };
 
-static inline int CheckInstruNum(int i) { return i >= 0 && i < NUM_INSTRU; }
+static int CheckInstruNum(int i) { return i >= 0 && i < NUM_INSTRU; }
 
-//===========================================================================
-//		construction
-//
-stkHand::stkHand(stkAlg * alg) :
+stkHand::stkHand(stkAlg* alg) :
   VHandler(alg),
   fValue(alg, &stkAlg::setCtrlValue),
   instruNum(0),
@@ -109,9 +106,7 @@ stkHand::stkHand(stkAlg * alg) :
   // How can we guarantee that the tmpdir is destroyed?  man 3 atexit?
 }
 
-int
-stkHand::receiveMessage(const char * Message)
-{
+int stkHand::receiveMessage(const char* Message) {
   CommandFromMessage(Message);
 
   if (CommandIs("SetInstrument"))
@@ -127,7 +122,6 @@ stkHand::receiveMessage(const char * Message)
 
   if (CommandIs("SetControl"))
     {
-
       ifDFF(z, z1, z2, setControl(z, z1, z2) );
       ifDF(z, z1, setControl(z, z1) );
       return Uncatch();
@@ -144,9 +138,7 @@ stkHand::receiveMessage(const char * Message)
       ifNil(setNoteOff());
     }
 
-  //******************************************
-  // Physical Modeling family  messages
-  //******************************************
+  // Physical Modeling family
 
   if (CommandIs("SetBreathPressure"))
     {
@@ -169,9 +161,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Bowed messages
-  //*********************
+  // Bowed
 
   if (CommandIs("SetBowPressure"))
     {
@@ -187,9 +177,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // BowedBar messages
-  //*********************
+  // BowedBar
 
   if (CommandIs("SetBalance"))
     {
@@ -212,9 +200,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Mandolin messages
-  //*********************
+  // Mandolin
 
   if (CommandIs("SetBodySize"))
     {
@@ -258,9 +244,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Brass messages
-  //*********************
+  // Brass
 
   if (CommandIs("SetLipTension"))
     {
@@ -276,9 +260,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Clarinet messages
-  //*********************
+  // Clarinet
 
   if (CommandIs("SetReedStiffness"))
     {
@@ -294,9 +276,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Flute messages
-  //*********************
+  // Flute
 
   if (CommandIs("SetJetDelay"))
     {
@@ -312,9 +292,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Shakers messages
-  //*********************
+  // Shakers
 
   if (CommandIs("SetShakerType"))
     {
@@ -350,9 +328,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Modal family messages
-  //*********************
+  // Modal family
 
   if (CommandIs("SetStickHardness"))
     {
@@ -377,9 +353,7 @@ stkHand::receiveMessage(const char * Message)
 
   // SetVibFreq and SetVibGain are captured by the PhysModel family
 
-  //*********************
-  // VoicForm messages
-  //*********************
+  // VoicForm
 
   if (CommandIs("SetVoice"))
     {
@@ -402,9 +376,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // FMVoices messages
-  //*********************
+  // FMVoices
 
   if (CommandIs("SetGain"))
     {
@@ -441,9 +413,7 @@ stkHand::receiveMessage(const char * Message)
       return Uncatch();
     }
 
-  //*********************
-  // Moog1 messages
-  //*********************
+  // Moog1
 
   if (CommandIs("SetQ"))
     {

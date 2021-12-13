@@ -6,16 +6,6 @@
 
 //	sscanf-parsing stuff
 
-// Does "msg" start with command "cmd"?
-// A common thing to do in sscanf-style parsing.
-//;; only in messageGroup.c++.  use stuff below instead.
-static inline int SzStart(const char* msg, const char* cmd)
-{
-	int cch = strlen(cmd);
-	return (msg[cch] == ' ' || msg[cch] == '\0') &&
-		!strncmp(msg, cmd, cch);
-}
-
 float* VrgzMG();
 int SscanfFloats(int cz, float* rgz, const char* sz);
 int SscanfInts(int cw, int* rgw, const char* sz);

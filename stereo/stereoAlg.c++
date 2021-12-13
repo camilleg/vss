@@ -2,37 +2,25 @@
 #include <cmath>
 #include "stereo.h"
 
-//===========================================================================
-//	stereoAlg constructor
-//
-stereoAlg::stereoAlg(void) :
-	VAlgorithm(),
+stereoAlg::stereoAlg() : VAlgorithm(),
 	pan(1.)
 {
 	Nchan(2);
 }
 
-//===========================================================================
-//	stereoAlg destructor
-//
-stereoAlg::~stereoAlg()
-{
-}
+stereoAlg::~stereoAlg() {}
 
+// g() and f() are copied in shimmer/shimmerAlg.c++.
 // -1 to 0 to 1:
 // g(x) is .5, half cosine wave down to 0, stay at 0.
-
-inline float g(float x)
-{
+static float g(float x) {
 	return (-1. <= x && x < 0.) ?
 		(cos(M_PI * (x + 1.)) + 1.) / 4. :
 		0.;
 }
-
 // -1 to 0 to 1:
 // f(x) is .5, half cosine wave up to 1, quarter cosine wave down to 0.
-inline float f(float x)
-{
+static float f(float x) {
 	return (x <= 0) ?
 		1. - g(x) :
 		(x < 1) ?
@@ -41,16 +29,14 @@ inline float f(float x)
 }
 
 // This converts stereo samples to stereo samples.
-void
-stereoAlg::generateSamples(int howMany)
-{
-	const float f1p = f(-pan);
-	const float fp  = f(   pan);
-	const float g1p = g(-pan);
-	const float gp  = g(   pan);
+void stereoAlg::generateSamples(int howMany) {
+	const auto f1p = f(-pan);
+	const auto fp  = f(pan);
+	const auto g1p = g(-pan);
+	const auto gp  = g(pan);
 
-	int nchans = source->Nchan();
-	const int nchansAlgorithm = 2;
+	const auto nchans = source->Nchan();
+	constexpr int nchansAlgorithm = 2;
 
 	//;;;; There must be a way to unite the for-loop bodies into a function,
 	// and have the rest of this function belong to VAlgorithm.;;;;

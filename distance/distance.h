@@ -67,4 +67,4 @@ protected:
 	float	defaultDistance;
 };
 
-static inline int	CheckDist(float f) 	{ return (f >= 0.) && (f <= 3.0); }
+static inline int CheckDist(float f) { return f >= 0.0 && f <= 3.0; }

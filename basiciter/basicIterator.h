@@ -71,16 +71,3 @@ public:
 	void setSeed(int seed);	// randomiter
 	ostream& dump(ostream&, int);
 };
-
-static inline int Check_timeIncrement(float z)
-	{ return z >= -1e+09 && z < 1e+09; }
-static inline int Check_dataIncrement(float z)
-	{ return z >= -1e+09 && z < 1e+09; }
-static inline int Check_dataStart(float z)
-	{ return z >= -1e+09 && z < 1e+09; }
-static inline int Check_dataEnd(float z)
-	{ return z >= -1e+09 && z < 1e+09; }
-static inline int Check_data(float z)
-	{ return z >= -1e+09 && z < 1e+09; }
-static inline int Check_duration(float z)
-	{ return z >= -1e+09 && z < 1e+09; }

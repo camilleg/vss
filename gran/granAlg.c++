@@ -26,18 +26,15 @@ granAlg::~granAlg()
 		file->removeUser(this);
 }
 
-inline float granAlg::get8bitSamp(ulong frame, int chan)
-{
+float granAlg::get8bitSamp(ulong frame, int chan) {
 	return ((char*)sampleData)[chan + (frame * fileNumChans)];
 }
 
-inline float granAlg::get16bitSamp(ulong frame, int chan)
-{
+float granAlg::get16bitSamp(ulong frame, int chan) {
 	return ((short*)sampleData)[chan + (frame * fileNumChans)];
 }
 
-inline float granAlg::getSamp(ulong frame, int chan)
-{
+float granAlg::getSamp(ulong frame, int chan) {
 	if (!getSampFn) {
 		fprintf(stderr, "vss: granAlg's getSampFn is uninitialized.\n");
 		return 0.0;

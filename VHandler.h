@@ -200,13 +200,13 @@ public:
 	virtual void SetAttribute(IParam, const float* rgz);
 		// a whole array of floats.
 
-	inline void modulate(int iParam, float curVal, float newVal, float modTime = 0.)
+	void modulate(int iParam, float curVal, float newVal, float modTime = 0.0)
 		{ modpool.insert(*this, iParam, modTime, curVal, newVal); }
 
-	inline void modulate(int iParam, int iArray, float curVal, float newVal, float modTime = 0.)
+	void modulate(int iParam, int iArray, float curVal, float newVal, float modTime = 0.0)
 		{ modpool.insert(*this, iParam, modTime, iArray, curVal, newVal); }
 
-	inline void modulate(int iParam, int cz, float* curVal, float* newVal, float modTime = 0.)
+	void modulate(int iParam, int cz, float* curVal, float* newVal, float modTime = 0.0)
 		{ modpool.insert(*this, iParam, modTime, cz, curVal, newVal); }
 
 //	VActor behavior:

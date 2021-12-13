@@ -107,8 +107,6 @@ protected:
 	float	defaultFaderAmp;
 };
 
-static inline int	CheckFaderGain(float f) 	{ return f <= 42. || f == 1000.; }
-static inline int	CheckFaderAmp(float f)
-				{ return (f >= -128. && f <= 128.) || f == 1000.; }
-static inline int	CheckChannelNum(int f)
-			 	{ return (f >= 1 && f <= MaxNumInput) || f == -1;}
+static inline int CheckFaderGain(float f) { return f <= 42.0 || f == 1000.0; }
+static inline int CheckFaderAmp(float f) { return (f >= -128.0 && f <= 128.0) || f == 1000.0; }
+static inline int CheckChannelNum(int f) { return (f >= 1 && f <= MaxNumInput) || f == -1; }

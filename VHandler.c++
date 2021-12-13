@@ -1,5 +1,6 @@
 #include "VHandler.h"
 
+#include <algorithm>
 #include <vector>
 #include "VGenActor.h"
 
@@ -441,10 +442,7 @@ void VHandler::setXYZ(float x, float y, float z, float time)
 	setPan(myPan, time);
 	// Kinda bogus: can't distinguish elevations > .61 radians
 	// (atan(1/sqrt(2)).
-	float elevT = atan2(y, fhypot(x, z));
-	if (elevT > .61548) elevT = .61548;
-	else if (elevT < -.61548) elevT = -.61548;
-	elevT /= .61548;
+	const auto elevT = std::clamp(atan2(y, hypot(x, z)), -0.61548, 0.61548) / 0.61548;
 	setElev(elevT, time);
 	setDistance(fsqrt(x*x + y*y + z*z), time);
 }

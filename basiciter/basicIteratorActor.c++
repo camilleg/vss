@@ -2,7 +2,6 @@
 
 ACTOR_SETUP(iter1Actor, BasicIterator)
 
-// Constructor.
 iter1Actor::iter1Actor() :
 	VActor(),
 	timeIncrement(0),
@@ -25,6 +24,13 @@ iter1Actor::iter1Actor() :
 	*szMG = '\0';
 	randomSwitch = 0;	// randomiter
 }
+
+static int Check_timeIncrement(float z) { return z >= -1e+09 && z < 1e+09; }
+static int Check_dataIncrement(float z) { return z >= -1e+09 && z < 1e+09; }
+static int Check_dataStart(float z) { return z >= -1e+09 && z < 1e+09; }
+static int Check_dataEnd(float z) { return z >= -1e+09 && z < 1e+09; }
+static int Check_data(float z) { return z >= -1e+09 && z < 1e+09; }
+static int Check_duration(float z) { return z >= -1e+09 && z < 1e+09; }
 
 void iter1Actor::act()
 {

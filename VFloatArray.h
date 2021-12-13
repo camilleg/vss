@@ -11,7 +11,7 @@
 //	This class should look almost exactly like FloatParam.
 //
 template<int Size, class RcvrType> 
-class FloatArray : public VModulatorOld<float *, RcvrType>
+class FloatArray : public VModulatorOld<float*, RcvrType>
 {
 //	modulation parameters, like FloatParam, with arrays
 private:
@@ -24,27 +24,21 @@ private:
 	float	currVals[Size];
 
 public:
-//	Construction (all defined inline below)
-	FloatArray(void);
-	FloatArray(float * init);
+	FloatArray();
+	FloatArray(float* init);
 	typedef	void (RcvrType::*UpdtFn)(float*); //;;;; bielefeld
-	FloatArray(RcvrType * r, UpdtFn f) :
-		VModulatorOld<float *, RcvrType>(r, f),
-		dstSamp(0),
-		pparent(NULL)
+	FloatArray(RcvrType* r, UpdtFn f) :
+		VModulatorOld<float*, RcvrType>(r, f),
+		dstSamp(0L),
+		pparent(nullptr)
 		{
-		//	zero the arrays
 		ZeroFloats(dstVals, Size);
 		ZeroFloats(slopes, Size);
-		
-		//	for debugging, let 'em know who you are.
 		VActor::setTypeName("FloatArray");
-		
-		//	initially, be inactive	
 		VActor::setActive(0);
 		}
 
-	FloatArray(RcvrType * r, UpdtFn f, float * init);
+	FloatArray(RcvrType*, UpdtFn, float* init);
 
 //	For initiating modulation, or (if modTime is 0.) setting
 //	the value instantaneously.	
@@ -60,15 +54,14 @@ public:
 
 	~FloatArray() {} 
 
-//	Access the current modulation state.	
-virtual float *	currentValue(void);
+	virtual float* currentValue();
 };
 
 template<int Size, class RcvrType>
-FloatArray<Size, RcvrType>::FloatArray(void):
-	VModulatorOld<float *, RcvrType>(),
-	dstSamp(0),
-	pparent(NULL)
+FloatArray<Size, RcvrType>::FloatArray():
+	VModulatorOld<float*, RcvrType>(),
+	dstSamp(0L),
+	pparent(nullptr)
 {
 	ZeroFloats(dstVals, Size);
 	ZeroFloats(slopes, Size);
@@ -77,10 +70,10 @@ FloatArray<Size, RcvrType>::FloatArray(void):
 }
 
 template<int Size, class RcvrType>
-FloatArray<Size, RcvrType>::FloatArray(float * init):
-	VModulatorOld<float *, RcvrType>(),
-	dstSamp(0),        
-	pparent(NULL)
+FloatArray<Size, RcvrType>::FloatArray(float* init):
+	VModulatorOld<float*, RcvrType>(),
+	dstSamp(0L),
+	pparent(nullptr)
 {
 	FloatCopy(dstVals, init, Size);
 	ZeroFloats(slopes, Size);    
@@ -88,7 +81,7 @@ FloatArray<Size, RcvrType>::FloatArray(float * init):
 }
 
 template<int Size, class RcvrType>
-FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
+FloatArray<Size, RcvrType>::FloatArray(RcvrType* r, UpdtFn f, float* init):
 	VModulatorOld<float *, RcvrType>(r, f),
 	dstSamp(0),
 	pparent(NULL)
@@ -96,9 +89,9 @@ FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
 	FloatCopy(dstVals, init, Size);
 	ZeroFloats(slopes, Size);
 	
-//	send the initial values
-	if (VModulatorOld<float *, RcvrType>::receiver != NULL)
-		(VModulatorOld<float *, RcvrType>::receiver->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
+	// Send the initial values.
+	const auto rx = VModulatorOld<float*, RcvrType>::receiver;
+	if (rx) (rx->*VModulatorOld<float*, RcvrType>::updateFn)(dstVals);
 		
 	VActor::setTypeName("FloatArray");
 	VActor::setActive(0);
@@ -112,28 +105,22 @@ FloatArray<Size, RcvrType>::FloatArray(RcvrType * r, UpdtFn f, float * init):
 //	and the slopes.
 //
 template<int Size, class RcvrType>
-float *	
-FloatArray<Size, RcvrType>::currentValue(void)
+float* FloatArray<Size, RcvrType>::currentValue()
 {
-	// first update the activity status
-	VActor::setActive( dstSamp - globs.SampleCount > 0 );
+	// Update the activity status.
+	VActor::setActive(dstSamp - globs.SampleCount > 0);
 
-	//	check for active. If we have reached the dstVals, return them.
-	if ( VActor::isActive() )
-	{
-		for (int i = 0; i < Size; i++)
-			currVals[i] = dstVals[i] - 
-				((float)(dstSamp - globs.SampleCount) * slopes[i]);
-		return currVals;
-	}
-	else
+	if (!VActor::isActive())
 		return dstVals;
+
+	for (auto i = 0; i < Size; ++i)
+		currVals[i] = dstVals[i] - ((float)(dstSamp - globs.SampleCount) * slopes[i]);
+	return currVals;
 }
 
 //	member for beginning modulation to new values
 template<int Size, class RcvrType>
-void 
-FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
+void FloatArray<Size, RcvrType>::set(float* newVals, int numVals, float modTime)
 {
 	if (numVals < 0)
 		{
@@ -154,14 +141,14 @@ FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
 		FloatCopy(dstVals, newVals, numVals);
 		dstSamp = globs.SampleCount;
 		VActor::setActive( false );
-		if (VModulatorOld<float *, RcvrType>::receiver != NULL)
-			(VModulatorOld<float *, RcvrType>::receiver->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
+		const auto rx = VModulatorOld<float*, RcvrType>::receiver;
+		if (rx) (rx->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
 	}
 	else
 	{
 	// modulate over modTime
-		float modSamps = modTime * globs.SampleRate;
-		float * curr = currentValue();
+		const auto modSamps = modTime * globs.SampleRate;
+		const auto curr = currentValue();
 		for (int i = 0; i < numVals; i++) 
 		{
 			slopes[i] = (newVals[i] - curr[i]) / modSamps;
@@ -170,19 +157,15 @@ FloatArray<Size, RcvrType>::set(float * newVals, int numVals, float modTime)
 		dstSamp = globs.SampleCount + modSamps + 0.5;
 		VActor::setActive( true );
 	}
-}	// end of FloatArray::set()
+}
 
 // member for modulating only ONE value.
-
 template<int Size, class RcvrType>
-void 
-FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
+void FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 {
 	if (i<0 || i >= Size)
 		{
-		fprintf(stderr,
-			"FloatArray error: setting i'th value out of bounds (%d beyond %d)\n",
-			i, Size);
+		fprintf(stderr, "FloatArray error: setting i'th value out of bounds (%d beyond %d)\n", i, Size);
 		return;
 		}
 	if (modTime <= 0. || (pparent && pparent->getPause()))
@@ -195,15 +178,15 @@ FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 		// dstSamp = globs.SampleCount;
 		// setActive( false );
 
-		if (VModulatorOld<float *, RcvrType>::receiver != NULL)
-			(VModulatorOld<float *, RcvrType>::receiver->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
+		const auto rx = VModulatorOld<float*, RcvrType>::receiver;
+		if (rx) (rx->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
 			//;; I hope the other dstVals[] are still valid!
 	}
 	else
 	{
 	// modulate over modTime
-		float modSamps = modTime * globs.SampleRate;
-		float* curr = currentValue();
+		const auto modSamps = modTime * globs.SampleRate;
+		const auto curr = currentValue();
 		slopes[i] = (newVal - curr[i]) / modSamps;
 		dstVals[i] = newVal;
 

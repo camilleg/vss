@@ -18,13 +18,10 @@ public:
     void setModSource(VAlgorithm* alg) { modSource = alg; }
 
  	float 	Lerp(int i, float a, float *tab) { return (1.0f-a)*tab[i] + a*tab[i+1]; }
-	inline 	void 	WrapAccSep(float &Phase, int &iPhase, float &fPhase);
+	void 	WrapAccSep(float& Phase, int& iPhase, float& fPhase);
 
 	void generateSamples(int);
-
-	//	static wavetable initialization
 	void InitRingSintab();
-
 	ringmodAlg();
 	~ringmodAlg();
 };

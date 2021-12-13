@@ -12,14 +12,8 @@ typedef unsigned ActorHandle;
 class VHandler;
 class VGeneratorActor;
 
-//	Base class for all Actors.
-//
 //	Actors are automatically maintained in a map. They insert 
 //	themselves when created and remove themselves when deleted.
-//
-//	Copyright (C) Sumit Das, 1994                          
-//	Updated by Camille and Kelly 1996						
-//
 class VActor
 {
 	ActorHandle	myHandle;
@@ -76,10 +70,8 @@ public:
 	static void	allAct();
 	static void	allActCleanup();
 
-//	Message handling:
-//	Derived classes that receive messages should override receiveMessage().
-//	They should not fail to call their base class' receiveMessage() for 
-//	messages that they do not understand.
+	// A derived class's version must call the base class's
+	// version for messages that it does not recognize.
 	virtual	int receiveMessage(const char* Message);
 	
 //	Catch() and Uncatch() are used in message parsing.
@@ -87,8 +79,8 @@ public:
 //	when a message is caught, but handled unsuccessfully (i.e.
 //	has wrong number of arguments or something).
 protected:
-inline int Catch();
-inline int Uncatch();
+	int Catch();
+	int Uncatch();
 			
 //	Global VActor container access and maintenance.
 private:

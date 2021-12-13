@@ -99,18 +99,14 @@ public:
 //	utility members
  	float 	Lerp(float a, float b, float t) { return a*(1.0f-t) + b*t ; }
  	float 	Lerp(int i, float a, float *tab) { return (1.0f-a)*tab[i] + a*tab[i+1]; }
-  inline void WrapAccSep(float &Phase, int &iPhase, float &fPhase);
-  inline void WrapAcc(float &Phase);
-  inline void WrapTot(float Phase, int &iPhase, float &fPhase);
+	void WrapAccSep(float& Phase, int& iPhase, float& fPhase);
+	void WrapAcc(float& Phase);
+	void WrapTot(float Phase, int& iPhase, float& fPhase);
 
 	void generateSamples(int);
-
-//	static wavetable initialization
-	void	InitFMMsintab(void);
-
+	void InitFMMsintab();
 	fmmAlg();
 	~fmmAlg() {}
-
 };
 
 class fmmHand : public VHandler
@@ -276,7 +272,6 @@ protected:
 	float default2CCratio, default2CCModIndex;
 	float default2ModIndex, default2CarFeedback, default2ModFeedback;
 	float defaultLowpassGain, defaultHighpassGain;
-
 	ostream &dump(ostream &os, int tabs);
 };
 

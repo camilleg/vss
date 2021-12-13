@@ -4,20 +4,13 @@
 #define rint(_) (_)
 #endif
 
-//===========================================================================
-//	for wavetable computation
-//
+// wavetable
 #include <cmath>
 #define SINTABSZ 512
 float	ShimmerSintab[SINTABSZ+1];
 int	flagShimmerSintab = 0;
 
-//===========================================================================
-//	shimmerAlg constructor
-//
-shimmerAlg::shimmerAlg(void) :
-	VAlgorithm()
-{
+shimmerAlg::shimmerAlg() : VAlgorithm() {
 	if (flagShimmerSintab == 0)
 		InitShimmerSintab();
 	Nchan(2);
@@ -27,26 +20,15 @@ shimmerAlg::shimmerAlg(void) :
 		rgwalk[i] = drand48();
 }
 
-//===========================================================================
-//	shimmerAlg destructor
-//
-shimmerAlg::~shimmerAlg()
-{
-}
+shimmerAlg::~shimmerAlg() {}
 
-//===========================================================================
-//	shimmerAlg initialize static wavetable
-//
-void
-shimmerAlg::InitShimmerSintab(void)
-{
+void shimmerAlg::InitShimmerSintab() {
 	for (int i = 0; i <= SINTABSZ; i++)
-		ShimmerSintab[i] = sinf(i * 2.0f * (float)(M_PI / SINTABSZ));
+		ShimmerSintab[i] = sin(i * 2.0 * (M_PI / SINTABSZ));
 	flagShimmerSintab = 1;
 }
 
-//===========================================================================
-//	shimmerAlg wrap phase accumulator, and separate into wrapped integer and fractional parts
+//	wrap phase accumulator, and separate into wrapped integer and fractional parts
 //
 //	float	Phase	Phase accumulator is wrapped, in-place, to int table size SINTABSZ
 //
@@ -56,9 +38,7 @@ shimmerAlg::InitShimmerSintab(void)
 //	Integer and fractional parts are separated out for direct use by Lerp() table 
 //	lookups. Wrapped total phase is reconstructed and put back into Phase.
 //
-inline void 
-shimmerAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
-{
+void shimmerAlg::WrapAccSep(float& Phase, int& iPhase, float& fPhase) {
 	iPhase = (int)Phase;		// extract integer floor of Phase
 	Phase -= (float)iPhase;		// strip off int part, leave fractional part
 
@@ -67,39 +47,20 @@ shimmerAlg::WrapAccSep(float &Phase, int &iPhase, float &fPhase)
 	Phase += (float)iPhase;		// reconstruct and store the whole wrapped phase
 }
 
-//===========================================================================
-//	Utilities for scaling frequency and phase offsets
-//
-//	scale natural frequency in Hz to units of "samples"
-static inline 	float 	freqToDSamples(float fHz) { return fHz * globs.OneOverSR * SINTABSZ ; } 
+// Scale natural frequency in Hz to units of "samples."
+static float freqToDSamples(float fHz) { return fHz * globs.OneOverSR * SINTABSZ; }
 
-//	scale phase offset to units of "samples"
-// static inline 	float 	offsetToSamples(float phi) { return phi * SINTABSZ / (2.0f * M_PI) ; } 
-
-
-
-
-
-
-//===========================================================================
-//  f() and g() are for constant-power pan from -1 to 0 to 1,
-//  copied from stereoAlg.
-//
-
+//  f() and g() are for constant-power pan from -1 to 0 to 1, copied from stereoAlg.
 // -1 to 0 to 1:
 // g(x) is .5, half cosine wave down to 0, stay at 0.
-
-inline float g(float x)
-{
+static float g(float x) {
 	return (-1. <= x && x < 0.) ?
 		(cos(M_PI * (x + 1.)) + 1.) / 4. :
 		0.;
 }
-
 // -1 to 0 to 1:
 // f(x) is .5, half cosine wave up to 1, quarter cosine wave down to 0.
-inline float f(float x)
-{
+static float f(float x) {
 	return (x <= 0) ?
 		1. - g(x) :
 		(x < 1) ?
@@ -107,14 +68,9 @@ inline float f(float x)
 		0.;
 }
 
-//===========================================================================
-//	shimmerAlg ComputeMyNextSample
-//
-
 static float rgzComputeMyNextSample[MaxNumChannels] = {0};
 
-inline float* shimmerAlg::ComputeMyNextSample(void)
-{
+float* shimmerAlg::ComputeMyNextSample() {
 	float fPhase;
 	int   iPhase;
 
@@ -160,13 +116,7 @@ inline float* shimmerAlg::ComputeMyNextSample(void)
 	return rgzComputeMyNextSample;
 }
 
-//===========================================================================
-//	shimmerAlg generateSamples
-//
-
-void
-shimmerAlg::generateSamples(int howMany)
-{
+void shimmerAlg::generateSamples(int howMany) {
 	// First do some housekeeping.
 	{
 	ulong dt = (ulong)(walkspeed * globs.SampleRate);
@@ -213,38 +163,27 @@ shimmerAlg::generateSamples(int howMany)
 		}
 }
 
-
-//===========================================================================
-//	shimmerAlg setFreq
-//
-void
-shimmerAlg::setFreq(float fHz)
-{
+void shimmerAlg::setFreq(float fHz) {
 	freq = fHz;
 }
 
-void shimmerAlg::setNumPartials(int _)
-{
+void shimmerAlg::setNumPartials(int _) {
 	if (_ > cPartial)
 		return;
-
 	if (_ > cPartialCur)
 		for (int i=cPartialCur; i<_; i++)
 			rgwalk[i] = drand48();
 	cPartialCur = _;
 }
 
-void shimmerAlg::setWalkspeed(float _)
-{
+void shimmerAlg::setWalkspeed(float _) {
 	walkspeed = _;
 }
 
-void shimmerAlg::setAvgFreq(float _)
-{
+void shimmerAlg::setAvgFreq(float _) {
 	avgfreq = _;
 }
 
-void shimmerAlg::setRange(float _)
-{
+void shimmerAlg::setRange(float _) {
 	range = _;
 }

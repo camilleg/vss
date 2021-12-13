@@ -146,5 +146,4 @@ public:
 	void unloadAllFiles(int = 0);
 };
 
-static inline int	CheckSampleStep(float f) 	{ return ((f >-1000.0) &&
-                                                          (f < 1000.0)); }
+static inline int CheckSampleStep(float f) { return (f >-1000.0 && f < 1000.0); }

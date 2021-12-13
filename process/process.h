@@ -53,4 +53,4 @@ protected:
 	float	defaultModIndex;
 };
 
-static inline int	CheckModIndex(float f) 	{ return f >= 0.; }
+static inline int CheckModIndex(float f) { return f >= 0.0; }

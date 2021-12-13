@@ -78,5 +78,4 @@ public:
 	ostream &dump(ostream &, int);
 };
 
-static inline int CheckRateFiddle(float z)
-	{ return z >= 0. && z < 100000.; }
+static inline int CheckRateFiddle(float z) { return z >= 0. && z < 100000.; }
