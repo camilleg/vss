@@ -9,7 +9,7 @@ class analogAlg : public VAlgorithm
 	float vcf_cutoff, vcf_envmod, vcf_envdecay, vcf_reso, vcf_rescoeff;
 	float vcf_e0, vcf_e1;
 	float vcf_c0; // c0=e1 on retrigger, c0*=ed every sample
-	float vcf_a, vcf_b, vcf_c, vcf_d1, vcf_d2, vcf_envpos;
+	float vcf_a, vcf_b, vcf_c, vcf_d1, vcf_d2;
 	float balance;
 
 	void recalc();
