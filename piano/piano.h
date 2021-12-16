@@ -69,10 +69,10 @@ class pianoAlg : public VAlgorithm
   float tabsizef;
 
   // pointer to global data used in generateSamples()
-  float *wavetab, *gmag, *gmag1, *gmag2;
+  float *wavetab, *gmag1, *gmag2;
   int *offsetwave, *offsetgmag;
   float *attn, *rlsn;
-  float attndur, rlsndur; // this is actually local
+  float attndur; // this is actually local
 
   // local(notewise) data
   int noteOn, noteDone;
@@ -83,15 +83,13 @@ class pianoAlg : public VAlgorithm
 
   float gmax1[NGROUP], gmax2[NGROUP];
   float rlstime, rlsratesamp, rlsratesec;
-  int ngroup1, ngroup2;
+  int ngroup2;
   int npts1, npts2;
-  float dt1, dt2;
-  float fa1, fa2;
 
   /* tone parameters */
-  float dur, syndur, syndur1, smax;
-  float sr, sampperiod, maxfreq, freq, pitch, inhrange;
-  int key, midiKey, dyna, syndyna, octave, dynai, susPedal, softPedal;
+  float dur, smax;
+  float sr, sampperiod, freq, pitch, inhrange;
+  int key, midiKey, dyna, octave, softPedal;
 
   /* action noise */
   float attnamp, attnpretime;
@@ -105,11 +103,11 @@ class pianoAlg : public VAlgorithm
   float synmax, maxinhar;
   float frame1, frame2, ti[NGROUP], t, gmagsi1, gmagsi2;
   float fframe1, fframe2, ftime, tstep[NGROUP], fracfreq;
-  int iframe1, iframe2, itime, wi, counter, iInRls;
+  int iframe1, iframe2, itime, wi, iInRls;
 
   /* general purpose variables */
-  int h, i, j, k, tempi;
-  float frac, temp, sum, tempgmag1, tempgmag2;
+  int i, j, k, tempi;
+  float temp, sum, tempgmag1, tempgmag2;
 
   static inline float linterp(float f, float a, float b) { return f*(b-a) + a ; }
 

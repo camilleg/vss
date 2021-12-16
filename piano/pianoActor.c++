@@ -360,7 +360,7 @@ int PIANODATA::readpcm(const char *filename, float *data, int size)
 	}
 	fclose(fp);
 	printf("actual samples %d in %d.\n",i,size);
-	for (i=i;i<size;i++)
-		data[i] = 0.0;
+	while (i<size)
+		data[i++] = 0.0;
 	return 1;
 }
