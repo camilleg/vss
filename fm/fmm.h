@@ -68,7 +68,6 @@ class fmmAlg : public VAlgorithm
 	float ccRatio;		// ratio between op1's and op2's carrier freqs.
 	float ccModIndex;
 	float ccModIndOPhs;
-	float last12ModVal;	// modulator feedback signal: last modulator output value
 	filter dcBlock1;
 	filter dcBlock2;
 	filter lopass;

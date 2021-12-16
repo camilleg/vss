@@ -10,8 +10,7 @@ fmmAlg::fmmAlg() :
 	VAlgorithm(),
 	ccRatio(1.), 
 	ccModIndex(1.),
-	ccModIndOPhs(0.),
-	last12ModVal(1.)
+	ccModIndOPhs(0.0)
 {
 	if (flagFMMsintab == 0) InitFMMsintab();
 
