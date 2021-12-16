@@ -929,7 +929,7 @@ int Synth(int n, int nchans)
 				}
 			}
 #else
-			#error "Audio output unimplemented for this platform."
+			#warning "Audio output unimplemented for this platform."
 #endif // many platforms
 			}
 		if (globs.fdOfile >= 0 && globs.ofile_enabled)
