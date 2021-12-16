@@ -1,4 +1,8 @@
-#ifndef VSS_MAC // Porting this Intel-specific code might be hard.
+#ifdef VSS_MAC // Porting this Intel-specific code might be hard.
+#include "VActor.h"
+class LedActor: public VActor {};
+ACTOR_SETUP(LedActor, LedActor)
+#else
 
 #include "ledActor.h"
 
