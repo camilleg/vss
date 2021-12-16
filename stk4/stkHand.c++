@@ -1,4 +1,4 @@
-#include "stk.h"
+#include "stk-vss.h"
 #include "string.h"
 
 #include "SKINI.msg"  // for all the SKINI control names __SK_*

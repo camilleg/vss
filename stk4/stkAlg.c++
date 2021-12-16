@@ -1,4 +1,4 @@
-#include "stk.h"
+#include "stk-vss.h"
 
 stkAlg::stkAlg() :
   VAlgorithm(),
