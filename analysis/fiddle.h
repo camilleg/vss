@@ -8,10 +8,9 @@ class PitchAlg: public VAlgorithm
 {
 	int isamp;
 	int wDuration;
-	int iDuration;
+	// Unused, for SetRate.  // int iDuration;
 	float zUserFloat;
 	int fNoiseGate; // don't pass on too-quiet notes to szMG*
-	float zDisableElision;
 
 public:
 	enum { csamp = 512 };

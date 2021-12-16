@@ -1230,26 +1230,15 @@ int sigfiddle_doinit(t_sigfiddle *x, long npoints, long npitch,
     return (1);
 }
 
-
-
 // VSS-specific stuff.
-//
 //;;;; factor out commonalities between this and amplAnalyzer*.c++ into a base class.
 
-
-PitchAlg::PitchAlg(void) :
-	VAlgorithm(),
-	isamp(0),
-	wDuration(0),
-	iDuration(0),
-	fNoiseGate(0),
-	zDisableElision(0.)
+PitchAlg::PitchAlg() : VAlgorithm(), isamp(0), fNoiseGate(0)
 {
 	*szMGTransient = '\0';
 	*szMGAttack[0] = *szMGAttack[1] = *szMGAttack[2] = '\0';
 	*szMGTrack[0] = *szMGTrack[1] = *szMGTrack[2] = '\0';
 	*szMGRelease[0] = *szMGRelease[1] = *szMGRelease[2] = '\0';
-
 	sigfiddle_doinit(x, csamp*2, MAXNPITCH/*npitch*/, MAXPEAK, 0);
 }
 
