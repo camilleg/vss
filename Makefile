@@ -8,8 +8,6 @@ VERSION = 4.2.1
 
 TOPDIR = $(PWD)
 
-.PHONY: all clean sane
-
 include Rules.common
 
 ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
@@ -148,3 +146,5 @@ clean:
 	-rm -rf $(TARGET) *.o */*.o */*.a .depend */.depend
 
 -include $(patsubst %.o,.depend/%.d,$(OBJSRV))
+
+.PHONY: all clean sane $(SUBDIRS)
