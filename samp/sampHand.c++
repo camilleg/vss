@@ -205,15 +205,10 @@ void sampHand::SetAttribute(IParam iParam, float z)
 		printf("vss error: sampHand got bogus element-of-float-array-index %d.\n", iParam.i);
 }
 
-//===========================================================================
-//		restrike
-//
 //	In addition to calling VHandler's restrike, which resets the parameters,
 //	rewind the file, so that restriking without specifying a new file rewinds
 //	the current file.
-//
-void
-sampHand::restrike(char * inits_msg)
+void sampHand::restrike(const char* inits_msg)
 {
 	jumpTo( getStart() );
 	VHandler::restrike(inits_msg);

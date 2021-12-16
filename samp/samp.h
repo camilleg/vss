@@ -107,7 +107,7 @@ public:
 	int receiveMessage(const char*);
 	
 	// Rewind the file.
-	void restrike(char*);
+	void restrike(const char*);
 };
 
 class sampActor : public VGeneratorActor
