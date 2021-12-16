@@ -70,7 +70,7 @@ void EnvelopeActor::rewind()
 	lastActiveTime = nextSegStart = currentTime();
 }
 
-void EnvelopeActor::setActive(bool f)
+void EnvelopeActor::setActive(int f)
 {
 	if (f == isActive())
 		return;

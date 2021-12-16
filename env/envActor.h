@@ -28,7 +28,7 @@ public:
 	int receiveMessage(const char*);
 
 	// Keeps track of time, and thus must track being made (in)active.
-	void setActive(bool);
+	void setActive(int);
 	
 	void addMessage(char*, float scale = 1., float offset = 0.);
 	void deleteReceivers();
