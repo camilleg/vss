@@ -50,8 +50,6 @@ class mixerHand : public VHandler
 	FloatArray<MaxNumInput2, mixerAlg>	allMatrixAmp;
 	int	myChannelNum;
 	VHandler* myHandlers[MaxNumInput];
-	int	numInput;
-	bool matrix;
 	float faderm[MaxNumInput2];
 
 protected:

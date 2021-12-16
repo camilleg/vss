@@ -4,8 +4,7 @@ mixerHand::mixerHand(mixerAlg* alg):
 	VHandler( alg ),
 	allFaderAmp(alg, &mixerAlg::setAllFaderAmp ),
 	allMatrixAmp(alg, &mixerAlg::setMatrixAmp ),
-	myChannelNum(0),
-	matrix(false)
+	myChannelNum(0)
 { 
 	allFaderAmp.init(this);
 	for (int i=0; i<MaxNumInput; i++)
