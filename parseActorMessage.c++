@@ -45,25 +45,23 @@ void CommandFromMessage(const char* message, int fGenActor)
 //printf("\t\t\t\tmessage: \"%s\"\n", message /*, sscanf_msg*/);
 }
 
-// This gets stuffed by MessageGroup::receiveData.
+// This gets stuffed by MessageGroup::receiveData, and read by SscanfFloats.
 // Bogus indices into this are NOT tested for.
 // If you use "*4" peculiarly, you may get garbage data.  Caveat user.
-float vrgzMG[200];
+constexpr auto czMG = 200;
+float vrgzMG[czMG];
 float* VrgzMG()
 {
 	return vrgzMG;
 }
 
-// Match up to cz floats in sz.  Stuff them in rgz.
+// Match up to cz (possibly 0) floats in sz.  Stuff them in rgz.
 // Return # of floats matched, or -1 if none were.
-int SscanfFloats(int cz, float* rgz, const char* sz)
-{
+int SscanfFloats(int cz, float* rgz, const char* sz) {
 	char ch;
 	int cch;
-	
-	// Parse leading '['.
-	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != '[')
-	{
+	// Parse leading '['.  sscanf(" [%n") wouldn't distinguish a [ from a missing [.
+	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != '[') {
 		fprintf(stderr, "vss: ignoring message whose arguments lacks \"[x0 x1 ...]\": \"%s\"\n", sz);
 		return -1;
 	}
@@ -71,58 +69,49 @@ int SscanfFloats(int cz, float* rgz, const char* sz)
 	sz += cch;
 
 	// Parse cz floats.
-	int i;
-	for (i=0; i<cz; i++)
-	{
-		int w;
+	int i = 0;
+	for (; i < cz; ++i) {
 		if (1 == sscanf(sz, "%f %n", &rgz[i], &cch))
 			goto LContinue;
-		if (1 == sscanf(sz, "*%d %n", &w, &cch))
-			{
-			if (w < 0 || w > 200)
-				{
-				fprintf(stderr,
-					"out-of-range potential messagegroup index *%d\n", w);
+		int w;
+		if (1 == sscanf(sz, "*%d %n", &w, &cch)) {
+			if (w < 0 || w > czMG) {
+				fprintf(stderr, "out-of-range potential messagegroup index *%d\n", w);
 				rgz[i] = 0.;
-				}
-			else
-				{
+			} else {
 				rgz[i] = vrgzMG[w];
-				//printf("\n\t\t\t%d'th float in array is now vrgzMG[%d] == %f\n", i, w, vrgzMG[w]);;
-				}
+				//printf("\t%d'th float in array is now vrgzMG[%d] == %f\n", i, w, vrgzMG[w]);
+			}
 
 			// special test for "*4 to *9" or "*4 to *$"
 			int cch2;
-			if (1 == sscanf(sz, "to *%d %n", &w, &cch2))
-				{
+			if (1 == sscanf(sz, "to *%d %n", &w, &cch2)) {
 				//;; NYI: side effect of assigning to rgz
 				cch += cch2;
-				}
-			else if (!strncmp(sz, "to *$", 5))
+			} else if (!strncmp(sz, "to *$", 5)) {
 				cch += 5;
-
+			}
 LContinue:
 			sz += cch;
 			continue;
-			}
+		}
 		break;
 	}
 
 	// We should hit the ']' after the last float.
 	// Ignore any more floats before the ']'.
 	// Complain about anything else before the ']'.
-	// Complain and don't ignore extra "*4" guys.
+	// Complain and don't ignore extra "*4" vrgzMG guys.
 
 	// Parse more floats
 	float dummy;
-	while ( 1 == sscanf(sz, "%f %n", &dummy, &cch) )
+	while (1 == sscanf(sz, "%f %n", &dummy, &cch))
 		sz += cch;
 
 	// Now we better have the ']'.
-	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != ']')
-	{
+	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != ']') {
 		if (NULL != strstr(sz, "inf") || NULL != strstr(sz, "NaN"))
-			fprintf(stderr, "vss error: infinite value detected in array of floats.\n");
+			fprintf(stderr, "vss error: NaN in array of floats.\n");
 		else
 			fprintf(stderr, "vss error: syntax error in array of floats, at \"%s\" in \"%s\".\n",
 			sz, sz0);
@@ -131,27 +120,23 @@ LContinue:
 
 	// If you want to do SscanfFloatsAndOtherStuff() based on 
 	// this function SscanfFloats, put more parsing stuff on sz here.
-
-//	if (i==0)
-//		fprintf(stderr, "\t\t(fyi, SscanfFloats parsed '[]')\n");
 	return i;
 }
 
+// Match up to cw (possibly 0) ints in sz.  Stuff them in rgw.
+// Return # of ints matched, or -1 if none were.
 // Used only by thresh/switchActor.c++ ifIntArray.  Retire?
-int SscanfInts(int cw, int* rgw, const char* sz)
-{
+int SscanfInts(int cw, int* rgw, const char* sz) {
 	char ch;
 	int cch;
-
-	// Parse leading '['.
+	// Parse leading '['.  sscanf(" [%n") wouldn't distinguish a [ from a missing [.
 	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != '[')
-		return 0;
+		return -1;
 	sz += cch;
 
 	// Parse cw ints.
-	int i;
-	for (i=0; i<cw; i++)
-	{
+	auto i = 0;
+	for (; i < cw; ++i) {
 		if (1 != sscanf(sz, "%d %n", &rgw[i], &cch))
 			break;
 		sz += cch;
@@ -163,14 +148,13 @@ int SscanfInts(int cw, int* rgw, const char* sz)
 
 	// Parse more ints.
 	int dummy;
-	while ( 1 == sscanf(sz, "%d %n", &dummy, &cch) )
+	while (1 == sscanf(sz, "%d %n", &dummy, &cch))
 		sz += cch;
 
 	// Now we better have the ']'.
-	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != ']')
-	{
+	if (1 != sscanf(sz, " %c %n", &ch, &cch) || ch != ']') {
 		fprintf(stderr, "SscanfInts: garbage before the ].\n");
-		return 0;
+		return -1;
 	}
 	return i;
 }
