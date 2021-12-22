@@ -248,7 +248,7 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     		argc--; argv++;++nargs;
 			SetSoundIn(true);
 			if (argc <= 0)
-				cerr << "vss: ignoring -input with missing value.\n";
+				*nchansIn = 1; // default # of input channels
 			else {
 				const auto w = parseInt(*argv);
 				if (w > 0)
