@@ -81,20 +81,21 @@ extern void SetSoundIn(int fSoundIn);
 
 // For parsing numbers from argv[] in ParseArgs(),
 // more robustly than atoi() and atof().
-// On error, simply exit(1).
-int parseInt(const char* s)
+// On error, simply exit(1).  But if fOptional, return -1.
+int parseInt(const char* s, bool fOptional=false)
 {
 	const auto saved = errno;
 	errno = 0;
 	char* tmp;
 	const auto val = strtol(s, &tmp, 0);
-	if (tmp == s || *tmp != '\0' || errno == ERANGE || errno == EINVAL) {
+	const auto failed = tmp == s || *tmp != '\0' || errno == ERANGE || errno == EINVAL;
+	if (failed && !fOptional) {
 		std::cerr << "Failed to parse int from '" << s << "'.\n";
 		exit(1);
 	}
 	if (errno == 0)
 		errno = saved;
-	return int(val);
+	return failed && fOptional ? -1 : int(val);
 }
 
 double parseFloat(const char* s)
@@ -247,17 +248,16 @@ void ParseArgs(int argc,char *argv[],int * /*udp_port*/, int *liveaudio,
     	{
     		argc--; argv++;++nargs;
 			SetSoundIn(true);
-			if (argc <= 0)
-				*nchansIn = 1; // default # of input channels
-			else {
-				const auto w = parseInt(*argv);
-				if (w > 0)
-					{
+			if (argc <= 0) {
+				*nchansIn = 1; // Default # of input channels.  No trailing args at all.
+			} else {
+				const auto w = parseInt(*argv, true);
+				if (w > 0) {
 					// it really was "-input 4", not "-input -graphoutput" (for example).
 					*nchansIn = w;
 					argc--; argv++;++nargs;
-					}
-				}
+				} // Otherwise, *argv is another arg after -input_lacking_a_following_int.
+			}
     	}
 	    else	if(strcmp(*argv, "-ofile")==0)
     	{
