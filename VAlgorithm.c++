@@ -674,7 +674,7 @@ void VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans) {
 void VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg) {
 	assert(howMany == MaxSampsPerBuffer);
 	assert(howMany == cChunk * csampChunk);
-	assert(nchans == 1 || nchans == 2 || nchans == 4 || nchans == 8);
+	//assert(nchans == 1 || nchans == 2 || nchans == 4 || nchans == 8);
 
 	int s1 = 0;
 	for (int iChunk = 0; iChunk < cChunk; iChunk++)
