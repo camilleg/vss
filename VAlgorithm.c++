@@ -4,14 +4,15 @@
 #include <algorithm>
 #include <cassert>
 
+// csampChunk is how often amplitudes are updated due to setAmp, setElev, setDistance etc.
 #ifdef VSS_WINDOWS
-	const int csampChunk = 64;
-	const int cChunk = MaxSampsPerBuffer / csampChunk;
+	constexpr auto csampChunk = 64;
+	constexpr auto cChunk = MaxSampsPerBuffer / csampChunk;
 #else
-	const int cChunk = 32;
-	const int csampChunk = 4;
-	//const int cChunk = 128;
-	//const int csampChunk = 1;
+	constexpr auto csampChunk = 4;
+	constexpr auto cChunk = 32;
+	//constexpr int csampChunk = 1;
+	//constexpr int cChunk = 128;
 #endif
 // howMany, passed into outputSamples(), is assumed to be a multiple of cChunk.
 // As howMany is now always 128,
@@ -553,54 +554,42 @@ void VAlgorithm::updateDistance() {
 //=====================  The final mixing bus of VSS ========================
 //===========================================================================
 
-//	FOutputSamples 1,2
-// Utility functions to handle pause and mute states,
-// for classes with overridden outputSamples().
-// ProcessorActors commonly pass in (source != NULL) for fValidForOutput.
+// FOutputSamples1,2() handle pause and mute for classes that override outputSamples().
+// ProcessorActors commonly set fValidForOutput to (source != NULL).
 int VAlgorithm::FOutputSamples1(int howMany, int fValidForOutput) {
-	if (!fValidForOutput || getPause())
-		{	
-		// fill local buffer with zeros, in case anyone's listening
+	if (!fValidForOutput || getPause()) {
 		ClearBuffer(howMany);
 		return 0;
-		}
+	}
 	return 1;
 }
-
 int VAlgorithm::FOutputSamples2(int /*howMany*/, int nchans) {
-	if (getMute() && !fSetAmplsDirectly)
-		{
-		for (int iChunk = 0; iChunk < cChunk; iChunk++)
-			{
+	if (getMute() && !fSetAmplsDirectly) {
+		for (auto iChunk = 0; iChunk < cChunk; ++iChunk) {
 			updateDistance();
 			updateAmps(nchans);
-			}
-		return 0;
 		}
+		return 0;
+	}
 	return 1;
 }
 
 //	OutputSamples 3,4
 // Functions to map the computed buffer of samples to the vss output channels, 
 // then fade, scale, and pan the mapped result onto the vss output busses
-void VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans) {
-	VCircularBuffer* p;
-	int nchansAlgorithm = Nchan();
+void VAlgorithm::OutputSamples3(int howMany, float* dst, int nchans) {
+	auto nchansAlgorithm = Nchan();
 	VCircularBuffer bufferMono;
-
 	assert(fDistanceEnabled==0 || fDistanceEnabled==1);
-	if (nchansAlgorithm != 1 && fDistanceEnabled)
-		{
+	const bool fToMono = nchansAlgorithm != 1 && fDistanceEnabled;
+	if (fToMono) {
 		// Sum all channels into mono.  Yuk, slow.
 		MapBuffer(bufferMono, howMany, nchansAlgorithm, 1);
-		p = &bufferMono;
 		nchansAlgorithm = 1;
-		}
-	else
-		p = &buffer;
+	}
+	VCircularBuffer& buf = fToMono ? bufferMono : buffer;
 
-	if (fDistanceEnabled)
-		{
+	if (fDistanceEnabled) {
 		// Do the distance filtering thing on the (by now) mono source.
 		// Distance should be done in this separate pass before pan and elev,
 		// because it crunches the stream into mono first.
@@ -608,161 +597,66 @@ void VAlgorithm::OutputSamples3(int howMany, float* putEmHere, int nchans) {
 		// to smoothly ramp the distance state.
 
 		assert(nchansAlgorithm == 1);
-		int s1 = 0;
-		for (int iChunk = 0; iChunk < cChunk; iChunk++)
-			{
+		auto s1 = 0; // Doesn't rezero for each chunk.
+		for (auto iChunk = 0; iChunk < cChunk; ++iChunk) {
 			updateDistance();
-#ifdef VSS_WINDOWS
-			for (int s=0; s<csampChunk; s++)
-				{
-				lpf_d.setInput(a_d * (*p)[s1][0]);
+			for (auto s=0; s<csampChunk; ++s,++s1) {
+				lpf_d.setInput(a_d * buf[s1][0]);
 				lpf_d.computeSamp();
 				hpf_d.setInput(lpf_d.getOutput());
 				hpf_d.computeSamp();
-				(*p)[s1++][0] = hpf_d.getOutput();
-				}
-#else
-			// hand-unrolled
-				lpf_d.setInput(a_d * (*p)[s1][0]);
-				lpf_d.computeSamp();
-				hpf_d.setInput(lpf_d.getOutput());
-				hpf_d.computeSamp();
-				(*p)[s1++][0] = hpf_d.getOutput();
-
-				lpf_d.setInput(a_d * (*p)[s1][0]);
-				lpf_d.computeSamp();
-				hpf_d.setInput(lpf_d.getOutput());
-				hpf_d.computeSamp();
-				(*p)[s1++][0] = hpf_d.getOutput();
-
-				lpf_d.setInput(a_d * (*p)[s1][0]);
-				lpf_d.computeSamp();
-				hpf_d.setInput(lpf_d.getOutput());
-				hpf_d.computeSamp();
-				(*p)[s1++][0] = hpf_d.getOutput();
-
-				lpf_d.setInput(a_d * (*p)[s1][0]);
-				lpf_d.computeSamp();
-				hpf_d.setInput(lpf_d.getOutput());
-				hpf_d.computeSamp();
-				(*p)[s1++][0] = hpf_d.getOutput();
-#endif
+				buf[s1][0] = hpf_d.getOutput();
 			}
 		}
+	}
 
-	if (nchans == nchansAlgorithm ||
-		(nchansAlgorithm == 1 && nchans == 2))
-		{
-		// Direct copy
-		// (or the special case of mono-to-stereo, which we
-		// handcode for efficiency in OutputSamples4 because it's common)
-		OutputSamples4(howMany, putEmHere, nchansAlgorithm, nchans, *p);
-		}
-	else
-		{
-		// convert # of channels to vss's width, using a temporary buffer.
-		VCircularBuffer bufferT = *p;
-		bufferT.Map(howMany, nchansAlgorithm, nchans);
-		OutputSamples4(howMany, putEmHere, nchansAlgorithm, nchans, bufferT);
-		}
+	if (nchansAlgorithm == nchans || (nchansAlgorithm == 1 && nchans == 2)) {
+		// Direct copy, or hand-optimized mono to stereo.
+		OutputSamples4(howMany, dst, nchansAlgorithm, nchans, buf);
+	} else {
+		// Convert # of channels to vss's width.
+		auto tmp = buf;
+		tmp.Map(howMany, nchansAlgorithm, nchans);
+		OutputSamples4(howMany, dst, nchansAlgorithm, nchans, tmp);
+	}
 }
 
 //;;;; dynamically variable cChunk and csampChunk.
 //;;;; if (nothing's changing /*updateAmps isn't doing anything*/)
 //;;;;    { cChunk=1; csampChunk=howMany; }
 
-void VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg) {
+void VAlgorithm::OutputSamples4(int howMany, float* dst, int nchansAlgorithm, int nchans, VCircularBuffer& bufArg) {
 	assert(howMany == MaxSampsPerBuffer);
 	assert(howMany == cChunk * csampChunk);
-	//assert(nchans == 1 || nchans == 2 || nchans == 4 || nchans == 8);
 
-	int s1 = 0;
-	for (int iChunk = 0; iChunk < cChunk; iChunk++)
-		{
+	const auto tmp = 32767.0f * the_amp * the_ampScale;
+	const auto ampRaw = fInvertAmp ? -tmp : tmp;
+	auto s1 = 0; // Doesn't rezero for each chunk.
+	for (auto iChunk=0; iChunk < cChunk; ++iChunk) {
 		updateAmps(nchans);
-
-		// Handle the two common cases with handcoded optimization.
-		// mono
-		if (nchans == 1 && nchansAlgorithm == 1)
-			{
-			float amp0 = 32767.f * the_amp * the_ampScale;
-			if (fInvertAmp) amp0 = -amp0;
-#ifdef VSS_WINDOWS
-			for (int s = 0; s < csampChunk; s++)
-				*putEmHere++ += bufArg[s1++][0] * amp0;
-#else
-			// hand-unrolled
-				*putEmHere++ += bufArg[s1++][0] * amp0;
-				*putEmHere++ += bufArg[s1++][0] * amp0;
-				*putEmHere++ += bufArg[s1++][0] * amp0;
-				*putEmHere++ += bufArg[s1++][0] * amp0;
-#endif
+		if (nchansAlgorithm == 1 && nchans == 1) {
+			// Common case: mono to mono.
+			for (auto s=0; s < csampChunk; ++s,++s1)
+				*dst++ += bufArg[s1][0] * ampRaw;
+		} else if (nchansAlgorithm == 1 && nchans == 2) {
+			// Common case: mono to stereo.
+			const auto amp0 = ampRaw * panAmps[0];
+			const auto amp1 = ampRaw * panAmps[1];
+			for (auto s=0; s < csampChunk; ++s,++s1) {
+				const auto unpanned = bufArg[s1][0];
+				*dst++ += unpanned * amp0;
+				*dst++ += unpanned * amp1;
 			}
-		// mono to stereo
-		else if (nchans == 2 && nchansAlgorithm == 1)
-			{
-			float amp0 = 32767.f * the_amp * the_ampScale;
-			if (fInvertAmp) amp0 = -amp0;
-			float amp1 = amp0 * panAmps[1];
-			amp0 *= panAmps[0];
-
-#ifdef VSS_WINDOWS
-			for (int s = 0; s < csampChunk; s++)
-				{
-				float temp = bufArg[s1++][0];
-				*putEmHere++ += temp * amp0;
-				*putEmHere++ += temp * amp1;
-				}
-#else
-			// hand-unrolled
-				{
-				float temp = bufArg[s1++][0];
-				*putEmHere++ += temp * amp0;
-				*putEmHere++ += temp * amp1;
-				temp = bufArg[s1++][0];
-				*putEmHere++ += temp * amp0;
-				*putEmHere++ += temp * amp1;
-				temp = bufArg[s1++][0];
-				*putEmHere++ += temp * amp0;
-				*putEmHere++ += temp * amp1;
-				temp = bufArg[s1++][0];
-				*putEmHere++ += temp * amp0;
-				*putEmHere++ += temp * amp1;
-				}
-#endif
-			}
-		else // general case (works for the previous two, too)
-			{
-			float amp[MaxNumChannels] = {0};
-			for (int c = 0; c < nchans; c++) 
-				{
-				amp[c] = 32767.f * the_amp * the_ampScale * panAmps[c];
-				if (fInvertAmp) amp[c] = -amp[c];
-				}
-#ifdef VSS_WINDOWS
-			for (int s = 0; s < csampChunk; s++,s1++)
-				for (int c = 0; c < nchans; c++)
-					putEmHere[s1*nchans + c] += amp[c] * bufArg[s1][c];
-#else
-			// hand-unrolled
-				{
-				int c;
-				for (c = 0; c < nchans; c++)
-					putEmHere[s1*nchans + c] += amp[c] * bufArg[s1][c];
-				s1++;
-				for (c = 0; c < nchans; c++)
-					putEmHere[s1*nchans + c] += amp[c] * bufArg[s1][c];
-				s1++;
-				for (c = 0; c < nchans; c++)
-					putEmHere[s1*nchans + c] += amp[c] * bufArg[s1][c];
-				s1++;
-				for (c = 0; c < nchans; c++)
-					putEmHere[s1*nchans + c] += amp[c] * bufArg[s1][c];
-				s1++;
-				}
-#endif
-			}
+		} else {
+			// General case.  Would work for the previous two, too.
+			float amp[nchans];
+			for (auto c=0; c < nchans; ++c)
+				amp[c] = ampRaw * panAmps[c];
+			for (auto s=0; s < csampChunk; ++s,++s1)
+				for (auto c=0; c < nchans; ++c)
+					*dst++ += bufArg[s1][c] * amp[c]; // dst[s1*nchans + c]
 		}
+	}
 }
 
 //	Called for each algorithm in the list.
@@ -771,10 +665,10 @@ void VAlgorithm::OutputSamples4(int howMany, float* putEmHere, int nchansAlgorit
 // 	Derived algorithms may override this member,
 //	as in the case of algorithms that generate stereo samples,
 //	for example (such algorithms need some other prescription 
-//	for copying and scaling their samples into putEmHere[]).
+//	for copying and scaling their samples into dst[]).
 //
 //	Update amplitudes every sample.
-void VAlgorithm::outputSamples(int howMany, float* putEmHere, int nchans) {
+void VAlgorithm::outputSamples(int howMany, float* dst, int nchans) {
 	if (!FOutputSamples1(howMany, FValidForOutput()))
 		return;
 	
@@ -788,6 +682,6 @@ void VAlgorithm::outputSamples(int howMany, float* putEmHere, int nchans) {
 	// Map this # of channels to nchans, the output width of vss.
 	// Also scale the amplitudes by VAlgorithm::the_amp and the_ampScale.
 	// Also pan with data provided by SetPan(), SetElev(), SetDistance().
-	// Store the result in the output buffer putEmHere[].
-	OutputSamples3(howMany, putEmHere, nchans);
+	// Store the result in the output buffer dst[].
+	OutputSamples3(howMany, dst, nchans);
 }
