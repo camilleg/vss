@@ -80,7 +80,7 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 	LDFLAGS := -L $(CYG)/lib -L /usr/local/lib -ldsound -lwinmm -lole32
 endif
 
-CFLAGS := $(cFLAGS) -std=c++17 -fno-exceptions
+CFLAGS := $(cFLAGS) -std=c++17
 
 # Optional file containing debugging options for CFLAGS, LDFLAGS, etc.
 -include Rules.debug

@@ -3,8 +3,6 @@
 
 /*$ debug$*/
 
-extern "C" double drand48(void); // doesn't work in linux: #include <stdlib.h>
-#include <cmath>
 #include "p2c.h"
 #include "p2cmisc.h"
 
