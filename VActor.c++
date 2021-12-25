@@ -76,8 +76,14 @@ void VActor::allAct()
 		flushActorList();
 		return;
 		}
+	ProcessDeletia(); // For macOS when -silent.  Why?
 	//;;;; CamilleG: the InputActor should act() first, then ProcessorActors, to reduce latency.
 	for (const auto a: Actors) {
+		if (std::find(deletia.begin(), deletia.end(), a.first) != deletia.end()) {
+			// A p->act() must have called a.second's ~VActor, to put a.first in deletia.
+			// So this actor has been deleted, and a.second is invalid.
+			continue;
+		}
 		const auto p = a.second;
 		assert(p);
 		if (p->isActive()) {
