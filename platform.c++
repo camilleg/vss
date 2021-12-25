@@ -876,25 +876,28 @@ int Synth(int n, int nchans)
 		}
 	else
 		{
-		static int fFirstShout = 1;
+		static bool fFirstShout = true; // The first one might be a bogus NaN.
 		static int fShouted = 0;
 		if (fShouted>0)
 			--fShouted;
-		for (i=0; i < n*nchans; ++i)
-			{
-			float wAmpl = outvecp[i] * k;
-			if (!fShouted && (wAmpl > 0.9995*32768 || wAmpl < -0.9995*32768))
-				{
-				if (fFirstShout)
-					// Sometimes the first occurrence is a bogus NaN value.
-					fFirstShout = 0;
-				else
-					fprintf(stderr, "vss: hard clipping (%.2f)\n", fabs(wAmpl)/32768.);
-				// report this not more than once every 2 seconds
-				fShouted = (int)(2.0 * globs.SampleRate/MaxSampsPerBuffer);
+		for (i=0; i < n*nchans; ++i) {
+			double wAmpl = outvecp[i] * k;
+			const auto pos = abs(wAmpl);
+			if (pos > 0.9995*32768) {
+				if (fShouted <= 0) {
+					if (fFirstShout) {
+						fFirstShout = false;
+					} else {
+						fprintf(stderr, "vss: hard clipping (%.2f)\n", pos/32768.);
+						// report this not more than once every 2 seconds
+						fShouted = 2.0 * globs.SampleRate/MaxSampsPerBuffer;
+					}
 				}
-			*ssp++ = (short)wAmpl;
+				// Actually clip.  Don't just wrap around (2021).
+				wAmpl = wAmpl > 0.0 ? 32767 : -32767;
 			}
+			*ssp++ = wAmpl;
+		}
 		}
 
 		{
