@@ -1,5 +1,6 @@
 #include "VActor.h"
 
+#include <algorithm>
 #include <cassert>
 #include <map>
 #include <vector>
@@ -24,18 +25,6 @@ VActor::VActor() :
 	fDebug(0),
 	fDestroy(false)
 {
-	setTypeName("VActor");
-	Actors[myHandle] = this;
-}
-
-//	We have never tried using this. It may or may not be safe/useful.
-//	Don't copy handles, they are supposed to be unique.
-VActor::VActor(VActor & joe) :
-	myHandle(NextHandle++),
-	fActive(joe.fActive),
-	fDebug(joe.fDebug)
-{
-  assert(false);
 	setTypeName("VActor");
 	Actors[myHandle] = this;
 }

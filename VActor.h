@@ -41,7 +41,7 @@ public:
 	virtual void setDebug(int f)  { fDebug = f; }
 
 	VActor();
-	VActor(VActor &);
+	VActor(const VActor&) = delete;
 	virtual ~VActor();
 	
 //	Asynchronous behavior:
