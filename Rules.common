@@ -81,7 +81,9 @@ ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
 endif
 
 # Optional file containing debugging options for CFLAGS, LDFLAGS, etc.
+# Reach it from the top dir or the subdirs.
 -include Rules.debug
+-include ../Rules.debug
 
 CFLAGS := $(cFLAGS) -std=c++17
 
