@@ -693,9 +693,11 @@ void VModulatorPool::insertPrep(const IParam iparam)
 
 void VModulatorPool::act(VHandler* phandler)
 {
+	if (modmap.empty())
+		return;
 	SanityCheck(phandler);
 	std::vector<Modmap::const_iterator> deletia;
-	for (auto i = modmap.cbegin(); i != modmap.end(); ++i) {
+	for (auto i = modmap.cbegin(); i != modmap.cend(); ++i) {
 		// i->first is an IParam
 		// i->second is a VModulator*
 		if (!i->second->SetAttribute(phandler, i->first)) {
