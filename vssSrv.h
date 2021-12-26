@@ -4,14 +4,13 @@
 #include <windows.h>
 #endif
 
-#include <iostream>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 #include "platform.h"
-#include "vssglobals.h"
 
 #define iNil (-1)
 #define hNil (-1.0f)
