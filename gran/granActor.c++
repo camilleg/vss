@@ -232,9 +232,9 @@ void granActor::unloadFile(char* dirName, char* fName) {
         	if ((*it)->unused()) {
         		delete *it;
         		fileList.erase(it);
-        	}
-        	else
-        		fprintf(stderr, "vss: granActor can't unload soundfile %s because it's still in use.\n", fName);
+			} else {
+				fprintf(stderr, "vss: granActor file \"%s\" is still in use.\n", fName);
+			}
        		return;
        	}
 	}
@@ -245,12 +245,18 @@ void granActor::unloadFile(char* dirName, char* fName) {
 // (may crash, unless from the destructor, which then deletes the
 // VAlgorithms that are using these sfiles).
 void granActor::unloadAllFiles(int beFirm) {
-    for (auto it = fileList.begin(); it != fileList.end(); ++it) {
-        if (beFirm || (*it)->unused()) {
-        	delete *it;
-        	fileList.erase(it--);
-        } else {
+	if (beFirm) {
+		for (auto f: fileList) delete f;
+		fileList.clear();
+		return;
+	}
+    for (auto it = fileList.begin(); it != fileList.end();) {
+		if ((*it)->unused()) {
+			delete *it;
+			it = fileList.erase(it); // works with either list or vector
+		} else {
         	fprintf(stderr, "vss: granActor file %s is still in use.\n", (*it)->name());
+			++it;
 		}
 	}
 }

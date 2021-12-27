@@ -432,14 +432,17 @@ int MessageGroup::receiveMessage(const char* Message)
 }
 
 // Process and delete all delayed data arrays whose time has come.
+// Like LaterActor::act().
 void MessageGroup::act()
 {
 	VActor::act();
 	const auto now = currentTime();
-	for (auto it = dataList.begin(); it != dataList.end(); ++it) {
+	for (auto it = dataList.begin(); it != dataList.end();) {
 		if (now >= (*it)->time) {
 			receiveData((*it)->data, (*it)->size);
-			dataList.erase(it--);
+			it = dataList.erase(it);
+		} else {
+			++it;
 		}
 	}
 }

@@ -199,13 +199,13 @@ void sampActor::unloadFile(char* dirName, char* fName) {
         	if ((*it)->unused()) {
         		delete *it;
         		fileList.erase(it);
-        	}
-        	else
-        		printf("vss error: SampleActor file \"%s\" is still in use.\n", fName);
+			} else {
+				fprintf(stderr, "vss: SampleActor file \"%s\" is still in use.\n", fName);
+			}
        		return;
        	}
 	}
-	printf("vss warning: SampleActor did not find %s to unload.\n", fName);
+	fprintf(stderr, "vss: SampleActor did not find %s to unload.\n", fName);
 }
 
 
@@ -213,12 +213,18 @@ void sampActor::unloadFile(char* dirName, char* fName) {
 // (may crash, unless from the destructor, which then deletes the
 // VAlgorithms that are using these sfiles).
 void sampActor::unloadAllFiles(int beFirm) {
-	for (auto it = fileList.begin(); it != fileList.end(); it++) {
-		if (beFirm || (*it)->unused()) {
+	if (beFirm) {
+		for (auto f: fileList) delete f;
+		fileList.clear();
+		return;
+	}
+    for (auto it = fileList.begin(); it != fileList.end();) {
+		if ((*it)->unused()) {
 			delete *it;
-            fileList.erase(it--);
+			it = fileList.erase(it); // works with either list or vector
 		} else {
-			printf("vss error: SampleActor file %s is still in use.\n", (*it)->name());
+			fprintf(stderr, "vss: SampleActor file %s is still in use.\n", (*it)->name());
+			++it;
 		}
 	}
 }

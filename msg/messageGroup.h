@@ -6,25 +6,20 @@
 #include <list>
 
 // Parameterized messages.
-class ParamMsg
-{
-public:
+struct ParamMsg {
 	char msg[256];
-	ParamMsg() { msg[0] = '\0'; }
+	ParamMsg() = delete;
 	ParamMsg(char* m) { strcpy(msg, m); }
-	~ParamMsg()	{}
 };
 
 // Store arrays to be received (handled) later.
-class DelayedData
-{
-public:
+struct DelayedData {
 	float* data;
 	int size;
 	float time;
-	DelayedData(): data(NULL), size(0), time(0.) {}
+	DelayedData(): data(nullptr), size(0), time(0.0) {}
 	DelayedData(float t, float* d, int s) : data(d), size(s), time(t) {}
-	~DelayedData() { delete[] data; }
+	~DelayedData() { delete [] data; }
 };
 
 // ParticleActor derives from this, hence the virtuals.
@@ -69,8 +64,7 @@ protected:
 	virtual void receiveScheduledData(float, float*, int);
 	virtual void endReceiveSchedule(int) {}
 
-	using DelayedDataList = std::list<DelayedData*>;
-	DelayedDataList dataList;
+	std::list<DelayedData*> dataList;
 
 public:
 	virtual void act();

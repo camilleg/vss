@@ -5,17 +5,18 @@ LaterActor::LaterActor() {
 	setTypeName("LaterActor");
 }
 
-LaterActor::~LaterActor() {}
-
 // Send and delete all messages whose time has come.
+// Like MessageGroup::act().
 void LaterActor::act()
 {
 	VActor::act();
 	const auto now = currentTime();
-	for (auto it = messageList.begin(); it != messageList.end(); ++it) {
+	for (auto it = messageList.begin(); it != messageList.end();) {
 		if (now >= it->time) {
 			actorMessageHandler(it->msg);
-			messageList.erase(it--);
+			it = messageList.erase(it);
+		} else {
+			++it;
 		}
 	}
 }
