@@ -3,9 +3,7 @@
 #include "../msg/messageGroup.h"
 #include <list>
 
-class Event
-{
-public:
+struct Event {
 	VActor& actor; // what am in?
 	float myActorHandle; // whom does it happen to?
 //	float myReturnValue; // if event returns a value, store it here
@@ -14,12 +12,11 @@ public:
 //	float when_beat; // Under construction.  #defined to be 'when', for now.
 	char msg[512]; // what happens?
 	Event(VActor& a, float w, const char* m): actor(a), when(w) { strcpy(msg, m); }
-	~Event() {}
+	Event() = delete;
 };
 #define when_beat when /* hack.  does this work for different myBeatLength's? ;;;;*/
 
-class SeqActor : public VActor	
-{
+class SeqActor : public VActor {
 public:
 	SeqActor();
 	SeqActor(SeqActor&);
@@ -35,11 +32,11 @@ public:
 	void setLoopStart(float start) { myLoopStart = start; }
     void setLoopEnd(float end) { myLoopEnd = end; }
 
-/// void addMessage(const float when, const float returnID, char*) {}
     void addMessage(float when, const char*);
     void addMessage(const Event&);
 
 #ifdef UNDER_CONSTRUCTION
+	void addMessage(const float when, const float returnID, char*) {}
     // void addMessagesRet(const float howMany);
     // void addMessages(const float howMany);
 
@@ -71,8 +68,8 @@ private:
     int   myNumLoops;
     float myBeatLength;
     float myNowBeat;
-	using SeqList = std::list<Event>;
-	SeqList::iterator myIter;
+    using SeqList = std::list<Event>;
+    SeqList::iterator myIter;
     SeqList myList;
 
 public:

@@ -56,37 +56,34 @@ void SeqActor::addMessage(float when, const char* msg) {
 
 #ifdef UNDER_CONSTRUCTION
 void SeqActor::deleteEvent(Event* e) {
-	myList.erase(e);
+	myList.remove(*e);
 }
 
 void SeqActor::deleteEvent(float when) {
 	for (auto e: myList)
-		if (when == e.key)
-			myList.erase(e.myActorHandle);
+		if (when == e.when)
+			myList.remove(e);
 }
 
 void SeqActor::deleteEvent(float when, float aHandle) {
-	VActor* a = getByHandle(aHandle);
-	if (!a)
-		return;
 	for (auto e: myList)
-		if (a == e.contents->actor() && when == e.key)
-			myList.erase(e.myActorHandle);
+		if (aHandle == e.myActorHandle && when == e.when)
+			myList.remove(e);
 }
 
 void SeqActor::deleteAllEventsBefore(float when) {
 	for (auto e: myList)
-		if (e.key < when)
-			myList.erase(e.myActorHandle);
+		if (e.when < when)
+			myList.remove(e);
 }
 
 void SeqActor::deleteAllEventsAfter(float when) {
 	for (auto e: myList)
-		if (e.key >= when)
-			myList.erase(e.myActorHandle);
+		if (e.when >= when)
+			myList.remove(e);
 }
 
-void SeqActor::deleteAll() {
+void SeqActor::deleteAllEvents() {
 	myList.clear();
 }
 #endif // UNDER_CONSTRUCTION
