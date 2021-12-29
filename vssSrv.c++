@@ -423,44 +423,7 @@ static void Internal_SetGear(const char* sz)
 
 static int fKeepRunning = 1;
 
-//===========================================================================
-//		actorMessageHandlerCore
-//
-//	Handle messages that are not actor-specific.
-//
-extern void DumpServerStats(void);
-
-#define SPECIAL_TEST_FOR_RAT
-#ifdef SPECIAL_TEST_FOR_RAT
-static void foo1(int index, float value, float* cheatarray)
-{
-	cheatarray[index] = value;
-	//printf("\t\tvss special cheat: storing %f at %d\n", value, index);
-}
-
-static void foo2(float hMg, float value)
-{
-	char sz[100];
-	sprintf(sz, "SendData %f [%f]", hMg, value);
-	actorMessageHandler(sz);
-	//printf("\t\tvss special cheat: %s\n", sz);
-}
-
-static void foo3(float hMg, float value, float value2)
-{
-	char sz[100];
-	sprintf(sz, "SendData %f [%f %f]", hMg, value, value2);
-	actorMessageHandler(sz);
-}
-
-static void foo4(float hMg, float value, int value2)
-{
-	char sz[100];
-	sprintf(sz, "SendData %f [%f %d]", hMg, value, value2);
-	actorMessageHandler(sz);
-}
-#endif
-
+// Handle messages that are not actor-specific.
 int actorMessageHandlerCore(const char* Message)
 {
 	CommandFromMessage(Message, 1);
@@ -508,32 +471,6 @@ int actorMessageHandlerCore(const char* Message)
 		return Uncatch();
 		}
 
-#ifdef SPECIAL_TEST_FOR_RAT
-
-	static float cheatarray[100];
-
-	// rat sends "StoreValue 0 hTalkingGuy" to vss
-	if (CommandIs("StoreValue"))
-		{
-		ifDF(index, value, foo1(index, value, cheatarray));
-		}
-
-	if (CommandIs("GetValue"))
-		{
-		ifDF(index, hMg, foo2(hMg, cheatarray[index]));
-		ifDFD(index, hMg, z, foo4(hMg, cheatarray[index], z));
-		ifDFF(index, hMg, z, foo3(hMg, cheatarray[index], z));
-		}
-
-	// audpanel's audfile sends "GetValue 0 hReverbActor"
-	// to cause "SetInput hReverbActor hTalkingGuy" to get sent.
-	if (CommandIs("GetValue"))
-		{
-		//ifDF(index, hActor, foo2(hActor, cheatarray[index]));
-		}
-
-#endif
-
 	// Not a vss builtin message, so see if it's sent to
 	// an individual actor instance.
 	return 2;
@@ -553,17 +490,17 @@ int actorMessageHandler(const char* Message)
 		cerr << Message << " (internal)\n";
 	vfAlreadyLogged = false; // This was the 2nd time.  Permit later msgs to be printed.
 
-	switch(caught)
+	switch (caught)
 		{
 	case 0:
-		cerr << "vss: ignored message with garbled args: \"" << Message << "\"\n";
+		cerr << "vss: ignored message with garbled args: " << Message << "\n";
 		return 1;
 	case 1:
 		return 1;
 	case 2:
 		break;
 	default:
-		cerr << "vss: actorMessageHandler internal error\n";
+		cerr << "vss: actorMessageHandler internal error.\n";
 		return 1;
 		}
 
@@ -574,28 +511,22 @@ int actorMessageHandler(const char* Message)
 		}
 
 	// Process a message sent to an individual actor.
-	float aHandle;
-	if (1 != sscanf(Message, "%*s %f", &aHandle))
-		{
-		cerr << "vss: ignored message lacking actor handle \"" << Message << "\"\n";
+	float h;
+	if (1 != sscanf(Message, "%*s %f", &h)) {
+		cerr << "vss: ignored message lacking actor handle: " << Message << "\n";
 		return 1;
-		}
-
-	VActor* anActor = VActor::getByHandle(aHandle);
-	if(!anActor)
-		{
-		cerr << "vss: ignored message with unknown actor handle " << aHandle << ": \"" << Message << "\"\n";
+	}
+	auto a = VActor::getByHandle(h);
+	if (!a) {
+		cerr << "vss: ignored message with unknown actor handle " << h << ": " << Message << "\n";
 		return 1;
-		}
-
-	if (!anActor->receiveMessage(Message))
-		{
+	}
+	if (!a->receiveMessage(Message)) {
 		// VActor::receiveMessage complained already.
 		return 1;
-		}
-
-	if (anActor->delete_me() /* set by VActor::receiveMessage */)
-		delete anActor;
+	}
+	if (a->delete_me() /* set by VActor::receiveMessage */)
+		delete a;
 	return 1;
 }
 
