@@ -360,35 +360,28 @@ int actorMessageMM(const void* pv, struct sockaddr_in* cl_addr)
 
 #include "actorlist.h"
 
-VActor* dummy(void) { return NULL; }
-
-VActor* newActor(const char* szName)
-{
-	// search for szName in map.  If found, call its new().
-	for (int i=0; i<cactor; ++i) {
-		if (!strcmp(szName, m[i].name)) {
-			const auto p = m[i].pfn();
-			if (!p)
-				cerr << "vss: failed to create a \"" << szName << "\" actor.\n";
-			return p;
-		}
+VActor* newActor(const char* name) {
+	const auto& it = m.find(name);
+	if (it == m.end()) {
+		cerr << "vss: unrecognized actor '" << name << "'\n";
+		return nullptr;
 	}
-	cerr << "vss: unrecognized actor \"" << szName << "\"\n";
-	return NULL;
+	auto p = (it->second)();
+	if (!p)
+		cerr << "vss: uncreatable actor '" << name << "'.\n";
+	return p;
 }
 
-static void InternalCreateActor(const char* s)
-{
-	auto anActor = newActor(s);
-	if (!anActor)
-		{
+static void InternalCreateActor(const char* s) {
+	const auto a = newActor(s);
+	if (!a) {
 		ReturnFloatToClient(hNil);
 		return;
-		}
-	auto aHandle = anActor->handle();
-	if (aHandle == hNil)
-		cerr << "vss error: nil handle to new actor " << s << "\n";
-	ReturnFloatToClient(aHandle);
+	}
+	const auto h = a->handle();
+	if (h == hNil)
+		cerr << "vss: no handle to new actor '" << s << "'.\n";
+	ReturnFloatToClient(h);
 }
 
 static void InternalEnableOfile(int d, const char* s, int cbBuf=0)

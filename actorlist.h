@@ -1,14 +1,9 @@
 // Only for vssSrv.c++'s newActor().
-//
 #pragma once
 
+// grep ACTOR_SETUP */*.cpp
 #undef ACTOR_SETUP // Override VActor.h's definition with a compatible but typeless one.
 #define ACTOR_SETUP(ignored, t) extern VActor* t##_New();
-
-#define FOO(T, t) { T, t##_New },
-
-// grep ACTOR_SETUP */*.cpp
-
 ACTOR_SETUP(addActor, AddActor)
 ACTOR_SETUP(analogActor, AnalogActor)
 ACTOR_SETUP(AmplActor, AmplitudeAnalyzer)
@@ -57,9 +52,12 @@ ACTOR_SETUP(stkActor, StkActor)
 ACTOR_SETUP(tb303Actor, Tb303Actor)
 ACTOR_SETUP(ThresholdActor, ThresholdActor)
 ACTOR_SETUP(SwitchActor, SwitchActor)
+#undef ACTOR_SETUP
 
-typedef struct actormap { const char* name; VActor* (*pfn)(void); } actormap;
-static const actormap m[] = {
+// Init doesn't warn about duplicate keys.
+static const std::map<std::string, VActor*(*)()> m = {
+
+#define FOO(T, t) { T, t##_New },
 
 FOO("AddActor", AddActor)
 FOO("AnalogActor", AnalogActor)
@@ -126,9 +124,5 @@ FOO("StkActor", StkActor)
 FOO("Tb303Actor", Tb303Actor)
 FOO("ThresholdActor", ThresholdActor)
 FOO("SwitchActor", SwitchActor)
-};
-
-const int cactor = sizeof(m) / sizeof(actormap);
-
-#undef ACTOR_SETUP
 #undef FOO
+};
