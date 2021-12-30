@@ -3,13 +3,6 @@
 #include <windowsx.h>
 #endif
 
-#include <sys/types.h>
-
-#include <csignal>
-#include <cstring>
-
-#include <unistd.h>
-
 #ifdef VSS_IRIX
 #include <sys/resource.h> // for prctl()
 #include <sys/prctl.h>
@@ -19,49 +12,50 @@
 #include <sys/mman.h>
 #endif
 
-#include "platform.h"
-#include "VActor.h"
-#include "VHandler.h"
-#include "VAlgorithm.h"
-#include "vssSrv.h"
-#include "vssMsg.h"
-
-// for open(2)
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <climits>
+#include <csignal>
+#include <cstring>
+#include <fcntl.h>
+#include "platform.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "VActor.h"
+#include "VAlgorithm.h"
+#include "VHandler.h"
+#include "vssMsg.h"
+#include "vssSrv.h"
 
 VSSglobals globs;
 
 using std::cerr;
 
-VSSglobals::VSSglobals()
+VSSglobals::VSSglobals() :
+	SampleCount(0L),
+	nchansVSS(2),
+	nchansIn(2),
+	nchansOut(2),
+	SampleRate(44100.0),
+	OneOverSR(1.0f / SampleRate),
+	liveaudio(true),
+	ofile_enabled(false),
+	fRemappedOutput(false),
+	hog(0),
+	lwm(384),
+	hwm(1024),
+	msecAntidropout(0.0),
+	hostname("127.0.0.1"),
+	udp_port(7999),
+	dacfd(-1),
+	fdOfile(-1),
+	vcbBufOfile(0),
+	vibBufOfile(0),
+	rgbBufOfile(nullptr)
 {
-	// Always update SampleRate and OneOverSR together.
-	SampleRate = 44100.0f;
-	OneOverSR = 1.0f / SampleRate;
-#ifdef VSS_WINDOWS
-	nchansVSS = nchansIn = nchansOut = 2;
-#else
-	nchansVSS = nchansIn = nchansOut = 1;
-#endif
-	SampleCount = 0L;
-	ofile_enabled = false;
-	liveaudio = true;
-	smax = INT_MAX;
-	hog = 0;
-	lwm = 384;
-	hwm = 1024;
-	msecAntidropout = 0.;
-	hostname = "127.0.0.1";
-	udp_port = 7999;
-	fdOfile = -1;
-	vcbBufOfile = 0;
-	vibBufOfile = 0;
-	rgbBufOfile = nullptr;
 	ofile[0] = '\0';
+	// Update SampleRate and OneOverSR together.
 }
 
 VSSglobals::~VSSglobals() {
@@ -161,7 +155,7 @@ int VSS_main(int argc,char *argv[])
 	BgnMsgsend(globs.hostname, globs.udp_port);
 
 	fprintf(stderr, 
-		"%s, built %s\n  (C) 2021 U. of Illinois Board of Trustees\n  github.com/camilleg/vss\n",
+		"%s, github.com/camilleg/vss, built %s\n",
 		GetVssLibVersion(),
 		GetVssLibDate());
 
@@ -175,29 +169,25 @@ int VSS_main(int argc,char *argv[])
 	// VSS_IRIX_63, VSS_LINUX, etc.
 	SynthThread(NULL);
 #endif
-
 	return 0;
 }
 
-void DumpServerStats()
-{
+void VSSglobals::dump() {
 	printf("[31m");
-	printf("SR %g, 1/1/SR %g\n", globs.SampleRate, 1./globs.OneOverSR);
+	printf("SR %g, 1/1/SR %g\n", SampleRate, 1./OneOverSR);
 	printf("%s%s%s%swater=%d/%d  host=%s\n",
-		globs.liveaudio ? "" : "NOT LIVE  ",
-		*globs.ofile ? globs.ofile : "",
-		globs.hog > 0 ? "HOG  " : "",
-		globs.nchansVSS == 1 ? "" :
-			globs.nchansVSS == 2 ? "stereo  " :
-			globs.nchansVSS == 4 ? "quad  " :
-			globs.nchansVSS == 8 ? "8-channel  " : "BOGUS_NCHANS  ",
-		globs.lwm,
-		globs.hwm,
-		globs.hostname);
-
+		liveaudio ? "" : "NOT LIVE  ",
+		*ofile ? ofile : "",
+		hog > 0 ? "HOG  " : "",
+		nchansVSS == 1 ? "mono" :
+			nchansVSS == 2 ? "stereo  " :
+			nchansVSS == 4 ? "quad  " :
+			nchansVSS == 8 ? "8-channel  " : "n-channel  ",
+		lwm,
+		hwm,
+		hostname);
 	printf("[0m\n");
 }
-
 
 // If >=1, print each message as it is received.
 int printCommands = 0;
@@ -458,7 +448,7 @@ int actorMessageHandlerCore(const char* Message)
 	if (CommandIs("DumpAll"))		// print list of actors
 		{
 		VActor::curtainCall(std::cout);
-		DumpServerStats();
+		globs.dump();
 		return Catch();
 		}
 
@@ -547,7 +537,7 @@ extern void OpenOfile(const char * fileName, int cbBuf)
 	strcpy(globs.ofile, fileName);
 
 	if (cbBuf > 0)
-		cerr << "vss: buffering " << int(cbBuf/globs.SampleRate/globs.nchansVSS) << " seconds of output.\n";
+		cerr << "vss: buffering " << int(cbBuf/globs.SampleRate/Nchans()) << " seconds of output.\n";
 	globs.vcbBufOfile = cbBuf;
 	globs.vibBufOfile = 0;
 	globs.rgbBufOfile = new char[cbBuf];
@@ -584,7 +574,7 @@ extern void CloseOfile(const char * fileName)
 			{
 			char szCmd[1000];
 			sprintf(szCmd, "/usr/bin/sox -e signed-integer -b 16 -c %d -r %d -t raw %s -t aiff %s.aiff",
-				globs.nchansVSS, (int)globs.SampleRate, globs.ofile, globs.ofile);
+				Nchans(), int(globs.SampleRate), globs.ofile, globs.ofile);
 			(void)!system(szCmd);
 			unlink(globs.ofile);
 			cerr << "vss: created " << globs.ofile << ".aiff.\n";

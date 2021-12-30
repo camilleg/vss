@@ -38,7 +38,7 @@ class VModulator
 {
 protected:
 	int fDone;
-	long dstSamp;
+	unsigned long dstSamp;
 public:
 	VModulator(): fDone(0), dstSamp(0L) {}
 	virtual ~VModulator() {}

@@ -39,8 +39,7 @@ void doActors();
 void doActorsCleanup();
 void deleteActors();
 
-int Initsynth(int udp_port, float srate, int nchans, int nchansIn, int liveaudio, int latency, int hwm);
-int Synth(int n, int nchans);
+int Synth(int);
 void Closesynth();
 
 const float* VssInputBuffer();

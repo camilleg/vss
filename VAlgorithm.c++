@@ -222,7 +222,7 @@ void VAlgorithm::setInputGain(float a, float t) {
 }
 
 static double NormalizePan(double a) {
-	if (globs.nchansVSS < 4)
+	if (Nchans() < 4)
 		return std::clamp(a, -1.0, 1.0);
 	const auto _ = fmod(a, 2.0); // 0 to 1.999 if a>0, -1.999 to 0 if a<0.
 	return _<-1.0 ? _+2.0 : _>1.0 ? _-2.0 : _;
@@ -348,7 +348,7 @@ void VAlgorithm::setPan(float a, float t) {
 		{
 		pan = NormalizePan(a);
 		modPan = 0L;	// in case a slower setPan was in progress
-		setPanImmediately(globs.nchansVSS);
+		setPanImmediately(Nchans());
 		}
 	else
 		{
@@ -357,7 +357,7 @@ void VAlgorithm::setPan(float a, float t) {
 		// itself, itself+2, or itself-2.
 
 		pan = NormalizePan(pan);
-		if (globs.nchansVSS < 4)
+		if (Nchans() < 4)
 			destPan = a;
 		else
 			{
@@ -396,7 +396,7 @@ void VAlgorithm::setElev(float a, float t) {
 		{
 		elev = a;
 		modElev = 0L;	// in case a slower one was in progress
-		setElevImmediately(globs.nchansVSS);
+		setElevImmediately(Nchans());
 		}
 	else if (a == elev)
 		modElev = 0L;	// in case a slower one was in progress

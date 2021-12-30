@@ -3,43 +3,8 @@
 #ifdef VSS_WINDOWS
 #include "windows.h"
 #include "winplatform.h"
-#endif
-
-#include <iostream>
-#include <cerrno>
-#include <climits>
-#include <cmath>
-#include <netdb.h>
-#include <netinet/in.h>
-
-#ifdef VSS_WINDOWS
 #include <sys/select.h>
-#else
-#include <poll.h>
-#include <rpc/rpc.h>
 #endif
-
-#include <pwd.h>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <grp.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <pwd.h>
-#include <sys/fcntl.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/times.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #ifdef VSS_IRIX
 #include <dmedia/audio.h>
@@ -62,7 +27,33 @@
 #define alWriteFrames(_,__,___) ALwritesamps(_,__,___*nchans) // in Synth()
 #define alSetFillPoint(_,__) ALsetfillpoint(_,__*nchans) // in Synth()
 #endif
-#endif // VSS_IRIX
+#endif
+
+#include <algorithm>
+#include <arpa/inet.h>
+#include <cerrno>
+#include <climits>
+#include <cmath>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <fcntl.h>
+#include <grp.h>
+#include <iostream>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <pwd.h>
+#include <sys/fcntl.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/times.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "platform.h"
 #include "vssglobals.h"
@@ -229,52 +220,38 @@ int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 
 #endif // VSS_WINDOWS
 
-static int liveaudio = 0; // Sort-of duplicates globs.liveaudio.  Set by Initsynth(), but also an arg thereof (!).
 static auto vfDie = false; // Set to true when vss is dying.
 
-int vfSoftClip = FALSE;
-int vfLimitClip = FALSE;
-
-constexpr auto NSAMPS = MaxSampsPerBuffer * MaxNumChannels; /* or even more! */
-short sampbuff[NSAMPS] = {0};
+int vfSoftClip = false;
+int vfLimitClip = false;
 
 constexpr auto wSoftclipLim = 50000; // Start clipping at +-25000, about -3 dB.
 static int rgwSoftclip[wSoftclipLim + 1] = {0};
 
-static short *ssp; /* sample pointer */
+constexpr auto NSAMPS = MaxSampsPerBuffer * MaxNumChannels; /* or even more! */
+static short sampbuff[NSAMPS] = {0};
+static short *ssp; // into sampbuff
 
 static float outvecp[NSAMPS] = {0};
 static float inpvecp[NSAMPS] = {0};
 static short ibuf   [NSAMPS] = {0};
 
-static int nchansIn = 0;
 static int fSoundIn = 0;
-extern void SetSoundIn(int fSoundInArg)
-	{ fSoundIn = fSoundInArg; }
-const float* VssInputBuffer()
-	{ return fSoundIn ? inpvecp : nullptr; }
-extern int vfWaitForReinit;
-int vfWaitForReinit = 0;
+extern void SetSoundIn(int f) { fSoundIn = f; }
+const float* VssInputBuffer() { return fSoundIn ? inpvecp : nullptr; }
+static bool vfWaitForReinit = false;
 
-int Initsynth(int /*udp_port*/, float srate, int nchans,
-	int nchansInArg, int liveaudio, int lat, int hwm)
-{
-	vfWaitForReinit = 1;
+int VSSglobals::Initsynth() {
+	vfWaitForReinit = true;
 	usleep(250000); // make sure that LiveTick() noticed that we set vfWaitForReinit, and is now waiting.
 
-	if(nchans<1)
-		nchans=1;
-	else if(nchans>MaxNumChannels)
-		nchans=MaxNumChannels;
-	if (nchansInArg < 1)
-		nchansInArg = 1;
-	else if (nchansInArg > MaxNumChannels)
-		nchansInArg = MaxNumChannels;
+	nchansOut = std::clamp(nchansOut, 1, MaxNumChannels);
+	nchansIn  = std::clamp(nchansIn,  1, MaxNumChannels);
 	ssp = sampbuff;
-	globs.fdOfile = -1;
-	globs.vcbBufOfile = 0;
-	globs.vibBufOfile = 0;
-	globs.rgbBufOfile = NULL;
+	fdOfile = -1;
+	vcbBufOfile = 0;
+	vibBufOfile = 0;
+	rgbBufOfile = nullptr;
 
 //	liveaudio is a badly-named flag indicating that
 //	samples are being scheduled and sent to a CODEC
@@ -282,7 +259,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 	if (!liveaudio)
 		{
 		// ParseArgs() already checked this.
-		globs.nchansIn = nchansIn = nchansInArg = 0;
+		nchansIn = 0;
 		SetSoundIn(0);
 		}
 	else
@@ -293,10 +270,10 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 		latency = lat;
 		qsize = hwm;
 		alSetQueueSize (alc, (int)qsize);
-		if (alSetChannels(alc, (long)nchans) < 0)
+		if (alSetChannels(alc, (long)nchansOut) < 0)
 			{
-			cerr << "vss: couldn't play " << nchans << " channels, using 1 instead.\n";
-			nchans = 1;
+			cerr << "vss: couldn't play " << nchansOut << " channels, using 1 instead.\n";
+			nchansOut = 1;
 			}
 		alp = alOpenPort("obuf", "w", alc);
 		if (!alp)
@@ -309,11 +286,11 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 
 		if (fSoundIn)
 			{
-			if (alSetChannels(alc, (long)nchansInArg) < 0)
+			if (alSetChannels(alc, nchansIn) < 0)
 				{
-				cerr << "vss: couldn't input " << nchansInArg << " channels, using 1 instead.\n";
-				nchansInArg = 1;
-				alSetChannels(alc, (long)nchansInArg);
+				cerr << "vss: couldn't input " << nchansIn << " channels, using 1 instead.\n";
+				nchansIn = 1;
+				alSetChannels(alc, nchansIn);
 				}
 			alpin = alOpenPort("ibuf", "r", alc);
 			if (!alpin)
@@ -321,9 +298,8 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 #ifdef VSS_IRIX_63PLUS
 				cerr << "vss: failed to input audio: " << alGetErrorString(oserror());
 #endif
-				nchansInArg = 0;
+				nchansIn = 0;
 				}
-			globs.nchansIn = nchansIn = nchansInArg;
 			}
 
 #if defined VSS_IRIX_62 || defined VSS_IRIX_53
@@ -348,7 +324,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			ALsetparams(AL_DEFAULT_DEVICE, pvbuf, pvlen);
 			pvlen += 2;
 			}
-		if (nchans == 4)
+		if (nchansOut == 4)
 			{
 			pvbuf[pvlen] = AL_CHANNEL_MODE;
 			pvbuf[pvlen+1] = 4;
@@ -361,7 +337,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 		pvbuf[npvs].param = AL_RATE;
 		pvbuf[npvs].value.ll = alDoubleToFixed(srate);
 		++npvs;
-		if (nchans == 4)
+		if (nchansOut == 4)
 			{
 			pvbuf[npvs].param = AL_CHANNEL_MODE;
 			pvbuf[npvs].value.i = 4;
@@ -421,7 +397,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 				liveaudio = 0;
 				goto LContinue;
 			}
-			if ((rc = set_hwparams(pcm_handle_read, hwparams, nchansInArg)) < 0) {
+			if ((rc = set_hwparams(pcm_handle_read, hwparams, nchansIn)) < 0) {
 				// set_hwparams already complained.
 				fSoundIn = false;
 		    }
@@ -429,7 +405,6 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 				cerr << "vss failed to set input swparams: " << snd_strerror(rc) << "\n";
 				fSoundIn = false;
 		    }
-			globs.nchansIn = nchansIn = nchansInArg;
 		}
 #if 0
 		// These segfault.  Maybe only after snd_pcm_close(), in CloseSynth()?
@@ -441,7 +416,7 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 #ifdef VSS_WINDOWS
 		if (vfMMIO)
 			{
-			if (!areal_internal_FInitAudio(nchans, nchansIn, fSoundIn, nchans*MaxSampsPerBuffer))
+			if (!areal_internal_FInitAudio(nchansOut, nchansIn, fSoundIn, nchansOut*MaxSampsPerBuffer))
 				goto LFailed;
 
 			// Using MMIO audio i/o.
@@ -458,10 +433,10 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			goto LFailed;
 			}
 
-		if (nchans > 2)
+		if (nchansOut > 2)
 			{
-			printf("vss: DirectSound outputs at most 2 channels.  Using 2 instead of %d.\n", nchans);
-			nchans = 2;
+			printf("vss: DirectSound outputs at most 2 channels.  Using 2 instead of %d.\n", nchansOut);
+			nchansOut = 2;
 			}
 		{
 		pfn = (int (*)())GetProcAddress(fmod_dll, "_FSOUND_GetVersion@0"); TESTIT
@@ -506,8 +481,8 @@ int Initsynth(int /*udp_port*/, float srate, int nchans,
 			goto LFailed2;
 
 		extern void streamcallback(FSOUND_STREAM*, void *buff, int len, int param);
-		fsound_stream = _FSOUND_Stream_Create(streamcallback, nchans*MaxSampsPerBuffer*2, FSOUND_LOOP_OFF | FSOUND_16BITS | \
-			(nchans==2 ? FSOUND_STEREO : FSOUND_MONO) \
+		fsound_stream = _FSOUND_Stream_Create(streamcallback, nchansOut*MaxSampsPerBuffer*2, FSOUND_LOOP_OFF | FSOUND_16BITS | \
+			(nchansOut==2 ? FSOUND_STEREO : FSOUND_MONO) \
 			| FSOUND_STREAMABLE | FSOUND_2D, (int)srate, 12345);
 		if (!fsound_stream)
 			goto LFailed2;
@@ -556,7 +531,7 @@ LContinue:
 	rgwSoftclip[wSoftclipLim] = 1;
 	}
 
-	vfWaitForReinit = 0; // enable LiveTick()
+	vfWaitForReinit = false; // enable LiveTick()
 
 #ifdef VSS_LINUX
 #ifdef VSS_LINUX_UBUNTU
@@ -617,7 +592,7 @@ static int fWantToResetsynth = 0;
 
 void Closesynth()
 {	
-	if (liveaudio)
+	if (globs.liveaudio)
 		{
 #ifdef VSS_IRIX
 		alClosePort(alp);
@@ -691,20 +666,18 @@ static void MaybeResetsynth()
 		return;
     Closesynth();
 	fWantToResetsynth = 0;
-	globs.dacfd = Initsynth(globs.udp_port,
-		globs.SampleRate, globs.nchansVSS, globs.nchansIn,
-		globs.liveaudio, globs.lwm, globs.hwm);
+	globs.dacfd = globs.Initsynth();
 	fWantToResetsynth = 0;
 }
 
-int Synth(int n, int nchans)
-{
+int Synth(int n) {
+	const int nchans = Nchans();
 #ifndef VSS_WINDOWS
 	MaybeResetsynth();
 #endif
 	float k = global_ampl;
 	int i,j;
-	if (liveaudio && fSoundIn)
+	if (globs.liveaudio && fSoundIn)
 		{
 #ifdef VSS_LINUX_UBUNTU
 		const int rc = snd_pcm_readi(pcm_handle_read, ibuf, n);
@@ -734,18 +707,18 @@ int Synth(int n, int nchans)
 		static auto wDCOffset = 1<<20;
 		if (wDCOffset == 1<<20) {
 			wDCOffset = 0;
-			if (nchansIn > 0) {
-				for (i=0; i<n*nchansIn; ++i)
+			if (NchansIn() > 0) {
+				for (i=0; i<n*NchansIn(); ++i)
 					wDCOffset += ibuf[i];
-				wDCOffset /= -n*nchansIn;
+				wDCOffset /= -n*NchansIn();
 			} // Else, input failed to init.
 		}
 #endif
 
 		for (i=0; i<n; ++i)
-			for (j=0; j<nchansIn; ++j)
+			for (j=0; j<NchansIn(); ++j)
 				inpvecp[i*MaxNumChannels + j] =
-					(ibuf[i*nchansIn + j] + wDCOffset) / 32768.0f;
+					(ibuf[i*NchansIn() + j] + wDCOffset) / 32768.0f;
 				/* 32768 not 32767, to stay >= -1. */
 				// So input to vss is [-1,1].  But output is [-32k,32k].
 				// That's ok, synthesis classes only see [-1,1].
@@ -902,7 +875,7 @@ int Synth(int n, int nchans)
 
 		{
 		int samps = ssp - sampbuff;
-		if (liveaudio)
+		if (globs.liveaudio)
 			{
 #ifdef VSS_IRIX
 			alWriteFrames(alp, sampbuff, samps/nchans);
@@ -923,7 +896,7 @@ int Synth(int n, int nchans)
 					if (err < 0) {
 						if (xrun_recovery(pcm_handle_write, err) < 0) {
 							printf("vss failed to play: %s\n", snd_strerror(err));
-							return FALSE;
+							return false;
 						}
 						break;
 					}
@@ -956,7 +929,7 @@ int Synth(int n, int nchans)
 			}
 		}
 
-	return TRUE;
+	return true;
 }
 
 #ifndef VSS_WINDOWS
@@ -1020,8 +993,7 @@ void doActors(void);
 void doActorsCleanup(void);
 void deleteActors(void);
 int actorMessageMM(void*, struct sockaddr_in*);
-int Initsynth(int udp_port, float srate, int nchans,
-			  int nchansIn, int liveaudio, int latency, int hwm);
+int Initsynth();
 void Closesynth(void);
 int mdClosePortInput(MDport port);
 int mdClosePortOutput(MDport port);
@@ -1076,12 +1048,12 @@ static void doSynth(int r, int fForce=0, int wCatchUp=0)
 //	water marks:
 #ifdef VSS_IRIX
 	const int c = (wCatchUp!=0) ? wCatchUp :
-					(globs.hwm-r) / (globs.nchansOut * MaxSampsPerBuffer);
+					(globs.hwm-r) / (NchansOut() * MaxSampsPerBuffer);
 #else
 	const int c = 1; // much better for linux, I observe.
 #endif
 	for (int i=0; i<c; i++)
-		(void)Synth(MaxSampsPerBuffer, globs.nchansVSS);
+		(void)Synth(MaxSampsPerBuffer);
 }
 
 #ifdef VSS_IRIX
@@ -1408,7 +1380,7 @@ static int BatchTick(int sockfd)
 		}
 
 	if (!FParked())
-		if (!Synth(MaxSampsPerBuffer, globs.nchansVSS))
+		if (!Synth(MaxSampsPerBuffer))
 			return 0;
 
 	doActors();
@@ -1445,15 +1417,12 @@ void schedulerMain()
 		return;
 	}
 
-	liveaudio = globs.liveaudio;
-	globs.dacfd = Initsynth(globs.udp_port, globs.SampleRate, globs.nchansVSS,
-		globs.nchansIn, liveaudio, globs.lwm, globs.hwm);
-
-	if (liveaudio && (globs.dacfd < 0))
+	globs.dacfd = globs.Initsynth();
+	if (globs.liveaudio && globs.dacfd < 0)
 		goto LDie;
 
 #ifndef VSS_WINDOWS
-	if (liveaudio)
+	if (globs.liveaudio)
 		{
 		//;; probably we don't need to poll this first one, globs.dacfd.
 		pfds[0].fd = globs.dacfd;				// audio to audio-output port
@@ -1478,7 +1447,7 @@ void schedulerMain()
 	caught_sigint = 0;
 	signal(SIGINT, catch_sigint);
 	while ((!caught_sigint && !vfDie) &&
-		(liveaudio ? LiveTick(sockfd) : BatchTick(sockfd)))
+		(globs.liveaudio ? LiveTick(sockfd) : BatchTick(sockfd)))
 		;
 
 LDie:

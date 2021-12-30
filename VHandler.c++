@@ -520,29 +520,29 @@ VFloatParam::VFloatParam(float oldVal, float newVal, float modTime) :
 		cerr << "vss internal error: VFloatParam::VFloatParam(oldval) bogus, probably from an uninitialized member variable.\n";
 	printf("\t\tVFloatParam::VFloatParam(%g %g %g)\n", oldVal, newVal, modTime);
 #endif
-	dstSamp = globs.SampleCount + modSamps;
+	dstSamp = SamplesToDate() + modSamps;
 }
 
 float VFloatParam::currentValue()
 {
-	if (dstSamp <= globs.SampleCount)
+	if (dstSamp <= SamplesToDate())
 		{
 		// We're finished.
 		fDone = 1;
 		return dstVal;
 		}
-	return dstVal - ((double)(dstSamp - globs.SampleCount) * slope);
+	return dstVal - ((double)(dstSamp - SamplesToDate()) * slope);
 }
 
 float VFloatArrayElement::currentValue()
 {
-	if (dstSamp <= globs.SampleCount)
+	if (dstSamp <= SamplesToDate())
 		{
 		// We're finished.
 		fDone = 1;
 		return dstVal;
 		}
-	return dstVal - ((double)(dstSamp - globs.SampleCount) * slope);
+	return dstVal - ((double)(dstSamp - SamplesToDate()) * slope);
 }
 
 VFloatArrayElement::VFloatArrayElement(float oldVal, float newVal, float modTime) :
@@ -558,7 +558,7 @@ VFloatArrayElement::VFloatArrayElement(float oldVal, float newVal, float modTime
 		}
 	float modSamps = modTime * globs.SampleRate;
 	slope = modSamps < 1. ? 0. : (newVal - oldVal) / modSamps;
-	dstSamp = globs.SampleCount + modSamps;
+	dstSamp = SamplesToDate() + modSamps;
 }
 
 VFloatArray::VFloatArray(int sizeArg, const float* oldVals, const float* newVals, float modTime) :
@@ -580,7 +580,7 @@ VFloatArray::VFloatArray(int sizeArg, const float* oldVals, const float* newVals
 	for (int i=0; i<size; i++)
 		slopes[i] = modSamps < 1. ? 0. :
 			(newVals[i] - oldVals[i]) / modSamps;
-	dstSamp = globs.SampleCount + modSamps;
+	dstSamp = SamplesToDate() + modSamps;
 }
 
 VFloatArray::~VFloatArray()
@@ -593,7 +593,7 @@ VFloatArray::~VFloatArray()
 float* VFloatArray::currentValue()
 {
 	// If our time is up, set the slope to zero and return dstVals.
-	if (dstSamp <= globs.SampleCount)
+	if (dstSamp <= SamplesToDate())
 		{
 		fDone = 1;
 		return dstVals;
@@ -601,7 +601,7 @@ float* VFloatArray::currentValue()
 	for (int i=0; i<size; i++)
 		{
 		curVals[i] = dstVals[i] -
-			((double)(dstSamp - globs.SampleCount) * slopes[i]);
+			((double)(dstSamp - SamplesToDate()) * slopes[i]);
 		}
 	return curVals;
 }

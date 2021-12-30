@@ -6,11 +6,10 @@ mixerAlg::mixerAlg():
 	numInputs(MaxNumInput),
 	matrix(false)
 {
-	Nchan(globs.nchansVSS);
-	for (int i=0; i<MaxNumInput; i++)
-	{
-		fader[i]=0.;
-		source[i]=NULL;
+	Nchan(Nchans());
+	for (int i=0; i<MaxNumInput; ++i) {
+		fader[i] = 0.0;
+		source[i] = nullptr;
 	}
 }
 
@@ -44,7 +43,7 @@ void mixerAlg::setMatrixAmp(float * lin)
 
 void mixerAlg::generateSamples(int howMany)
 {
-	const auto nchans = globs.nchansVSS;
+	const auto nchans = Nchans();
 	for (int s=0; s<howMany; s++) 
 	{
 		float out[MaxNumChannels] = {0};

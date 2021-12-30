@@ -357,11 +357,10 @@ void mixerHand::setMatrixAmp(int dir, int chan, int num, float * rgz, float t)
 
 	if (!dir)	// row: all output amps of one input
 	{
-		if (num > globs.nchansVSS)
+		if (num > Nchans())
 		{
-			printf("mixerHand got %d fader values, more than ",num);
-			printf("current VSS channels %d. The extra is ignored.\n",globs.nchansVSS);
-			num = globs.nchansVSS;
+			printf("mixerHand ignoring the %d fader values beyond VSS's %d channels.\n", num, Nchans());
+			num = Nchans();
 		}
 		for (int i=0; i<num; i++)
 			faderm[(chan-1)*MaxNumInput+i] = rgz[i];
@@ -371,8 +370,7 @@ void mixerHand::setMatrixAmp(int dir, int chan, int num, float * rgz, float t)
 		int numInputs = getAlg()->getNumInputs();
 		if (num > numInputs)
 		{
-			printf("mixerHand got %d fader values, more than ",num);
-			printf("mixer inputs %d. The extra is ignored.\n",numInputs);
+			printf("mixerHand ignoring the %d fader values beyond its %d inputs.\n", num, numInputs);
 			num = numInputs;
 		}
 		for (int i=0; i<num; i++)

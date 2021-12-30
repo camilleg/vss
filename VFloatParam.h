@@ -8,18 +8,15 @@
 //	parameter. FloatParam should be set inactive whenever the slope 
 //	is zero.
 
-template<class RcvrType>
-class FloatParam : public VModulatorOld<float, RcvrType>
-{
+template<class RcvrType> class FloatParam : public VModulatorOld<float, RcvrType> {
 //  Modulation parameters
-private:
-	float	dstVal; 
+	float	dstVal;
 	long	dstSamp;
 	float	slope;
 	VHandler* pparent;
 
 public:
-	FloatParam(void);
+	FloatParam();
 	// typedef	void (RcvrType::*UpdtFn)(float); //;;;; bielefeld
 	// FloatParam(RcvrType * r, UpdtFn f) :
 	FloatParam(RcvrType * r, typename VModulatorOld<float, RcvrType>::UpdtFn f) :
@@ -29,7 +26,7 @@ public:
 		slope(0.)
 		{
 		VActor::setTypeName("FloatParam");
-		VActor::setActive(0);
+		VActor::setActive(false);
 		}
 	FloatParam(float init);
 	// FloatParam(RcvrType * r, UpdtFn f, float init); //;;;; bielefeld, and everywhere else "typename" is used in this file
@@ -42,17 +39,15 @@ public:
 	// aforementioned initalization list of a handler's constructor.
 	void init(VHandler* p) { pparent = p; }
 
-	~FloatParam() 	{}
 	FloatParam(const FloatParam&) = delete;
 	FloatParam& operator=(const FloatParam&) = delete;
 
 //	Return the current value of the modulation.
-	float currentValue(void);
+	float currentValue();
 
 //	For initiating modulation, or (if modTime is 0.) setting
 //	the value instantaneously.	
 	void set(float newVal, float modTime = 0.);
-
 };
 
 template<class RcvrType>
@@ -64,7 +59,7 @@ FloatParam<RcvrType>::FloatParam(void) :
 	slope(0.)
 {
 	VActor::setTypeName("FloatParam");
-	VActor::setActive(0);
+	VActor::setActive(false);
 }
 
 template<class RcvrType>
@@ -76,7 +71,7 @@ FloatParam<RcvrType>::FloatParam(float init) :
 	slope(0.)
 {
 	VActor::setTypeName("FloatParam");
-	VActor::setActive(0);
+	VActor::setActive(false);
 }
 
 template<class RcvrType>
@@ -88,39 +83,27 @@ FloatParam<RcvrType>::FloatParam(RcvrType * r, typename VModulatorOld<float, Rcv
 	slope(0.)
 {
 	VActor::setTypeName("FloatParam");
-	VActor::setActive(0);
+	VActor::setActive(false);
 }
 
-//	Compute the current value of the modulation from the 
-//	currentSample number, the destination sample number, 
-//	and the slope.
-template<class RcvrType>
-float 
-FloatParam<RcvrType>::currentValue(void)
-{
-	if (dstSamp - globs.SampleCount < 0)
-	{ 
-		// Our time is up.
-		slope = 0.;	
-		VActor::setActive(0);
+// Compute the current value of the modulation from the currentSample number, the destination sample number, and the slope.
+template<class RcvrType> float FloatParam<RcvrType>::currentValue() {
+	const auto s = SamplesToDate();
+	if (dstSamp - s < 0) {
+		// Finished modulating.
+		slope = 0.0;
+		VActor::setActive(false);
 	    return dstVal;
 	}
-	return VActor::isActive() ? 
-		dstVal - ((double)(dstSamp - globs.SampleCount) * slope) : 
-		dstVal;
+	return dstVal - (VActor::isActive() ? ((dstSamp - s) * slope) : 0.0);
 }
 
-//	Initialize the dstVal, slope, dstSamp values for modulation to 
-//	a new value.
-template<class RcvrType>
-void 
-FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */)
-{
-	if (modTime <= 0. || (pparent && pparent->getPause()==1))
-	{
-	// set the new value immediately
+// Initialize the dstVal, slope, dstSamp values for modulation to a new value.
+template<class RcvrType> void FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */) {
+	if (modTime <= 0. || (pparent && pparent->getPause()==1)) {
+		// Set the new value immediately.
 		dstVal = newVal;
-		slope = 0.;
+		slope = 0.0;
 		dstSamp = 0L;
 		VActor::setActive(true); // despite zero slope, force VModulatorOld::act() to call currentValue().
 		return;
@@ -129,12 +112,11 @@ FloatParam<RcvrType>::set(float newVal, float modTime /* = 0. */)
 	// modulate over modTime
 	const float modSamps = modTime * globs.SampleRate;
 	slope = (newVal - currentValue()) / modSamps;
-	dstSamp = globs.SampleCount + modSamps + 0.5;
-
+	dstSamp = SamplesToDate() + modSamps + 0.5;
 #if 0
-printf("\tFloatParam modulating from %f to %f over %f samples (%ld, %ld), slope is %f\n", dstVal, newVal, modSamps, globs.SampleCount, dstSamp, slope );
+printf("\tFloatParam modulating from %f to %f over %f samples (%ld, %ld), slope is %f\n", dstVal, newVal, modSamps, SamplesToDate(), dstSamp, slope );
 #endif
 	dstVal = newVal;
-//	set active accoriding to whether there is modulation to do.
-	VActor::setActive( slope != 0. );
+	// Is there modulation to do?
+	VActor::setActive(slope != 0.0);
 }

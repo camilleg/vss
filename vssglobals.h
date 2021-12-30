@@ -13,42 +13,45 @@ constexpr auto MaxSampsPerBuffer =
   /*8192*/4096;
 #endif
 
-class VSSglobals
-{
+class VSSglobals {
+	unsigned long SampleCount;
+	int nchansVSS;	// how many channels VSS computes
+	int nchansIn;	// how many channels VSS reads
+	int nchansOut;	// how many channels VSS writes
 public:
-	float   SampleRate;
-	float   OneOverSR;
-	int     liveaudio;	// non-zero means play samples in real-time
-	int     ofile_enabled;
-	unsigned long smax;
-	long   	SampleCount;
-	int     nchansVSS;		// number of channels of output that VSS computes
-	int     nchansIn;		// number of channels of  input that gets absorbed
-	int     nchansOut;		// number of channels of output that gets emitted
-	int		fRemappedOutput; // true iff nchansVSS-to-nchansOut isn't the identity map.
-	int		rgwRemappedOutput[MaxNumChannels];
-	int     hog;			// CPU hog: 1=lock memory, 2=nondegrading pri.
-	int     lwm;			// low water mark in samples
-	int     hwm;			// high water mark in samples
-	float   msecAntidropout;// longest duration of cpu-starvation to endure
-	const char *  hostname;
-	int     udp_port;	// port to receive client msgs from
-	int		dacfd;		// Was audio input.  Deprecated because it practically duplicates liveaudio.
-	int		fdOfile;
-	int		vcbBufOfile;
-	int		vibBufOfile;
-	char*	rgbBufOfile;
-	char    ofile[256];
+	float SampleRate;
+	float OneOverSR;
+	int liveaudio;	// non-zero means play samples in real-time
+	bool ofile_enabled;
+	bool fRemappedOutput; // nchansVSS-to-nchansOut isn't the identity map.
+	int rgwRemappedOutput[MaxNumChannels];
+	int hog; // CPU hog: 1=lock memory, 2=nondegrading pri.
+	int lwm; // low water mark in samples
+	int hwm; // high water mark in samples
+	float msecAntidropout;// longest duration of cpu-starvation to endure
+	const char* hostname;
+	int udp_port; // listen to clients
+	int dacfd; // Was audio input.  Deprecated because it practically duplicates liveaudio.
+	int fdOfile;
+	int vcbBufOfile;
+	int vibBufOfile;
+	char* rgbBufOfile;
+	char ofile[256];
 
 	VSSglobals();
 	~VSSglobals();
 	VSSglobals(const VSSglobals&) = delete;
 	VSSglobals& operator=(const VSSglobals&) = delete;
-};
 
-//;; These public members should be hidden behind set/get function calls,
-//;; so we can do things like enforce consistency between
-//;; globalOneOverSR and globalSampleRate.
+	int Initsynth();
+	void dump();
+	friend int Nchans();
+	friend int NchansIn();
+	friend int NchansOut();
+	friend unsigned long SamplesToDate();
+	friend int VSS_main(int, char *[]);
+	friend int Synth(int);
+};
 
 extern VSSglobals globs;
 
@@ -60,14 +63,10 @@ typedef struct mm
 	char rgch[cchmm]; // Message.
 } mm;
 
-inline int Nchans()
-	{ return globs.nchansVSS; }
-inline int NchansIn()
-	{ return globs.nchansIn; }
-inline int NchansOut()
-	{ return globs.nchansOut; }
-inline unsigned long SamplesToDate()
-	{ return globs.SampleCount; }
+inline int Nchans() { return globs.nchansVSS; }
+inline int NchansIn() { return globs.nchansIn; }
+inline int NchansOut() { return globs.nchansOut; }
+inline unsigned long SamplesToDate() { return globs.SampleCount; }
 
 #ifdef VSS_LINUX
 #include <sys/time.h>
@@ -76,13 +75,13 @@ inline float currentTime() // In seconds.
 	{
 #ifdef VSS_LINUX
 	if (globs.liveaudio)
-		return globs.SampleCount * globs.OneOverSR;
+		return SamplesToDate() * globs.OneOverSR;
 	struct timeval tNow;
 	gettimeofday(&tNow, 0);
 	tNow.tv_sec -= 86400*365*36; // seconds since 1/1/2006 approx.
 	return tNow.tv_sec + tNow.tv_usec / 1000000.0;
 #else
-	return globs.SampleCount * globs.OneOverSR;
+	return SamplesToDate() * globs.OneOverSR;
 #endif
 	}
 

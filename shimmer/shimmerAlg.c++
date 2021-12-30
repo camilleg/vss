@@ -77,8 +77,8 @@ float* shimmerAlg::ComputeMyNextSample() {
 /* Optimization.  May consider a 4-channel output by default,
  * to REALLY spread the sound around!
  */
-	Nchan(globs.nchansVSS);
-	if (globs.nchansVSS == 1)
+	Nchan(Nchans());
+	if (Nchans() == 1)
 		{
 		float k = 0.f;
 		for (int i=0; i<cPartialCur; i++)
@@ -104,30 +104,28 @@ float* shimmerAlg::ComputeMyNextSample() {
 			}
 		rgzComputeMyNextSample[0] = kL * zAmpl;
 		rgzComputeMyNextSample[1] = kR * zAmpl;
-		if (globs.nchansVSS == 4)
+		if (Nchans() == 4)
 			{
 			rgzComputeMyNextSample[2] =  rgzComputeMyNextSample[0];
 			rgzComputeMyNextSample[3] =  rgzComputeMyNextSample[1];
 			}
-		if (globs.nchansVSS == 8)
+		if (Nchans() == 8)
 			FloatCopy(rgzComputeMyNextSample+4, rgzComputeMyNextSample, 4);
 		}
-
 	return rgzComputeMyNextSample;
 }
 
 void shimmerAlg::generateSamples(int howMany) {
-	// First do some housekeeping.
 	{
-	ulong dt = (ulong)(walkspeed * globs.SampleRate);
-
-	ulong t = SamplesToDate();
+	// Housekeeping.
+	const ulong dt = walkspeed * globs.SampleRate;
+	const ulong t = SamplesToDate();
 	if (t - tStep > dt)
 		{
 		// take a step
 		tStep = t;
-		float thingmin = log(avgfreq/range);
-		float thingrange = log(avgfreq*range) - thingmin;
+		const float thingmin = log(avgfreq/range);
+		const float thingrange = log(avgfreq*range) - thingmin;
 
 		// for each partial:
 		for (int i=0; i<cPartialCur; i++)
@@ -140,13 +138,10 @@ void shimmerAlg::generateSamples(int howMany) {
 				rgwalk[i] = .98;
 
 			// Map 0..1 to logminfreq..logmaxfreq
-			float logfreq = thingmin + rgwalk[i] * thingrange;
-
-			// Then exp it to get a freq.
+			const float logfreq = thingmin + rgwalk[i] * thingrange;
+			// Exp it to get a freq.
 			// Round to nearest multiple of fundamental frequency.
-			int harmonicnum = (int)(rint(exp(logfreq) / freq));
-			if (harmonicnum < 1)
-				harmonicnum = 1;
+			const int harmonicnum = std::max(1, int(rint(exp(logfreq) / freq)));
 			rgfreq[i] = freqToDSamples(freq * harmonicnum);
 			// printf("\t\t\t\thn = %d, samp = %.2f\n", harmonicnum, rgfreq[i]);;
 			}

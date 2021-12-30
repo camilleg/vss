@@ -108,13 +108,13 @@ template<int Size, class RcvrType>
 float* FloatArray<Size, RcvrType>::currentValue()
 {
 	// Update the activity status.
-	VActor::setActive(dstSamp - globs.SampleCount > 0);
+	VActor::setActive(dstSamp - SamplesToDate() > 0);
 
 	if (!VActor::isActive())
 		return dstVals;
 
 	for (auto i = 0; i < Size; ++i)
-		currVals[i] = dstVals[i] - ((float)(dstSamp - globs.SampleCount) * slopes[i]);
+		currVals[i] = dstVals[i] - ((float)(dstSamp - SamplesToDate()) * slopes[i]);
 	return currVals;
 }
 
@@ -139,7 +139,7 @@ void FloatArray<Size, RcvrType>::set(float* newVals, int numVals, float modTime)
 	// set the new values immediately
 		ZeroFloats(slopes, numVals);
 		FloatCopy(dstVals, newVals, numVals);
-		dstSamp = globs.SampleCount;
+		dstSamp = SamplesToDate();
 		VActor::setActive( false );
 		const auto rx = VModulatorOld<float*, RcvrType>::receiver;
 		if (rx) (rx->*VModulatorOld<float *, RcvrType>::updateFn)(dstVals);
@@ -154,7 +154,7 @@ void FloatArray<Size, RcvrType>::set(float* newVals, int numVals, float modTime)
 			slopes[i] = (newVals[i] - curr[i]) / modSamps;
 			dstVals[i] = newVals[i];
 		}
-		dstSamp = globs.SampleCount + modSamps + 0.5;
+		dstSamp = SamplesToDate() + modSamps + 0.5;
 		VActor::setActive( true );
 	}
 }
@@ -175,7 +175,7 @@ void FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 		dstVals[i] = newVal;
 
 		// Don't do the next two lines: OTHER values may be sloping slowly.
-		// dstSamp = globs.SampleCount;
+		// dstSamp = SamplesToDate();
 		// setActive( false );
 
 		const auto rx = VModulatorOld<float*, RcvrType>::receiver;
@@ -193,7 +193,7 @@ void FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 		// BUG: other values will now slope at the same rate as this one.
 		// In general, this may cause bugs if you overlap calls to setIth
 		// for several different values.
-		dstSamp = globs.SampleCount + modSamps + 0.5;
+		dstSamp = SamplesToDate() + modSamps + 0.5;
 		VActor::setActive( true );
 	}
 }
