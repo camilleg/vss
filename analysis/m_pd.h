@@ -41,11 +41,7 @@ extern "C" {
 #define MAXPDARG 5    	    	/* max number of args we can typecheck today */
 
     /* an integer type the size of a pointer:  */
-#ifdef __alpha__
-typedef long t_int;
-#else
-typedef int t_int;
-#endif
+typedef long t_int; // Everything is 64-bit, by 2022.
 
 typedef float t_float;	/* a floating-point number at most the same size */
 typedef float t_floatarg;  /* floating-point type for function calls */
