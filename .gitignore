@@ -12,3 +12,4 @@ stk-4.4.4/projects/*/Makefile
 stk-4.4.4/projects/*/libMakefile
 stk-4.4.4/src/Makefile
 stk-4.4.4/src/libstk.a
+vss.dSYM
