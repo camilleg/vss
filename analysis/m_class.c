@@ -467,6 +467,14 @@ void pd_typedmess(t_pd *x, t_symbol *s, int argc, t_atom *argv)
 	{
 	    switch (wanttype)
 	    {
+	    case A_NULL:
+	    case A_SEMI:
+	    case A_COMMA:
+	    case A_DOLLAR:
+	    case A_DOLLSYM:
+	    case A_GIMME:
+	    case A_CANT:
+		break;
 	    case A_POINTER:
 		if (!argc) goto badarg;
 		else
