@@ -44,6 +44,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <pwd.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
@@ -224,20 +225,19 @@ static auto vfDie = false; // Set to true when vss is dying.
 
 int vfSoftClip = false;
 int vfLimitClip = false;
-
 constexpr auto wSoftclipLim = 50000; // Start clipping at +-25000, about -3 dB.
 static int rgwSoftclip[wSoftclipLim + 1] = {0};
 
 constexpr auto NSAMPS = MaxSampsPerBuffer * MaxNumChannels; /* or even more! */
 static short sampbuff[NSAMPS] = {0};
-static short *ssp; // into sampbuff
+static short* ssp; // into sampbuff
 
 static float outvecp[NSAMPS] = {0};
 static float inpvecp[NSAMPS] = {0};
 static short ibuf   [NSAMPS] = {0};
 
-static int fSoundIn = 0;
-extern void SetSoundIn(int f) { fSoundIn = f; }
+static bool fSoundIn = false;
+extern void SetSoundIn(int f) { fSoundIn = f; } // Only misc.c++.
 const float* VssInputBuffer() { return fSoundIn ? inpvecp : nullptr; }
 static bool vfWaitForReinit = false;
 
@@ -260,7 +260,7 @@ int VSSglobals::Initsynth() {
 		{
 		// ParseArgs() already checked this.
 		nchansIn = 0;
-		SetSoundIn(0);
+		fSoundIn = false;
 		}
 	else
 		{
@@ -578,17 +578,9 @@ int Scount()
 }
 
 static float global_ampl = 1.0;
-
-extern void VSS_SetGlobalAmplitude(float ampl)
-{
-	global_ampl = ampl;
-}
-
-extern float VSS_GetGlobalAmplitude()
-{
-	return global_ampl;
-}
-static int fWantToResetsynth = 0;
+extern void VSS_SetGlobalAmplitude(float ampl) { global_ampl = ampl; }
+extern float VSS_GetGlobalAmplitude() { return global_ampl; }
+static bool fWantToResetsynth = false;
 
 void Closesynth()
 {	
@@ -657,7 +649,7 @@ void Closesynth()
 
 void WantToResetsynth()
 {
-	fWantToResetsynth = 1;
+	fWantToResetsynth = true;
 }
 
 static void MaybeResetsynth()
@@ -665,9 +657,9 @@ static void MaybeResetsynth()
 	if (!fWantToResetsynth)
 		return;
     Closesynth();
-	fWantToResetsynth = 0;
+	fWantToResetsynth = false;
 	globs.dacfd = globs.Initsynth();
-	fWantToResetsynth = 0;
+	fWantToResetsynth = false;
 }
 
 int Synth(int n) {
@@ -984,20 +976,12 @@ void catch_sigint(SignalHandlerType)
 }
 
 #ifdef VSS_IRIX
-#include <sys/types.h>
-extern void CloseOfile(char*);
-extern void VSS_SetGlobalAmplitude(float ampl);
-extern float VSS_GetGlobalAmplitude(void);
-extern void VSS_SetGear(int iGear);
 void doActors(void);
 void doActorsCleanup(void);
 void deleteActors(void);
 int actorMessageMM(void*, struct sockaddr_in*);
-int Initsynth();
-void Closesynth(void);
 int mdClosePortInput(MDport port);
 int mdClosePortOutput(MDport port);
-const float* VssInputBuffer();
 #endif // VSS_IRIX
 
 static int viGear = 1;
