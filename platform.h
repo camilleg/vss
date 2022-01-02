@@ -2,16 +2,12 @@
 
 #ifdef VSS_WINDOWS
 #include <windows.h> // This has to be included before most other stuff.
-extern double drand48();
-extern void srand48(long seedval);
 #endif
 
 #include <arpa/inet.h>
 
 #ifdef VSS_IRIX
 
-#include <sys/types.h>
-#include <dmedia/midi.h>
 #ifdef VSS_IRIX_53
 #	include <unistd.h> // for sginap() or usleep()
 #	define usleep(_) sginap((long)(_/10000))
