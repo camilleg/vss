@@ -19,9 +19,7 @@
 #define NODAMPERKEY 90
 
 // global data class
-class PIANODATA
-{
-public:
+struct PIANODATA {
   float freqc[9];
   int hkframe[NPITCH];
 
@@ -105,13 +103,12 @@ class pianoAlg : public VAlgorithm
   float fframe1, fframe2, ftime, tstep[NGROUP], fracfreq;
   int iframe1, iframe2, itime, wi, iInRls;
 
-  /* general purpose variables */
-  int i, j, k, tempi;
-  float temp, sum, tempgmag1, tempgmag2;
+  // todo: demote these to locals
+  int i, j, k;
 
   static inline float linterp(float f, float a, float b) { return f*(b-a) + a ; }
 
- public:
+public:
   void setTstep();
   void setWhichOne();
   void setBoth();
@@ -132,7 +129,6 @@ class pianoAlg : public VAlgorithm
   void setPianoData(PIANODATA * data);
 
   void	generateSamples(int);
-
   pianoAlg();
   ~pianoAlg();
 };

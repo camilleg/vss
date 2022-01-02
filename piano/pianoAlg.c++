@@ -53,6 +53,7 @@ pianoAlg::generateSamples(int howMany)
 
   for (int s=0; s<howMany; s++) 
     {
+      float sum;
       if ( t < noteOffTime )
 	{
 	  if ( t<attnpretime ) // attack noise before tone
@@ -87,18 +88,18 @@ pianoAlg::generateSamples(int howMany)
 
 	      if (iframe1 >= npts1-1) 
 		{
-		  tempi = npts1 - 1 - hkframe1;
+		  const int tempi = npts1 - 1 - hkframe1;
 		  iframe1 -= tempi;
-		  frame1 -= float(tempi);
+		  frame1 -= tempi;
 		  for (i=0; i<ngroup2; i++)
 		    scale1[i] *= scalegmag1[i];
 		}
 
 	      if (iframe2 >= npts2-1) 
 		{
-		  tempi = npts1 - 1 - hkframe1;
+		  const int tempi = npts1 - 1 - hkframe1;
 		  iframe2 -= tempi;
-		  frame2 -= float(tempi);
+		  frame2 -= tempi;
 		  for (i=0; i<ngroup2; i++)
 		    scale2[i] *= scalegmag2[i];
 		}
@@ -115,12 +116,8 @@ pianoAlg::generateSamples(int howMany)
 		  ti[i] += tstep[i];
 		  wi = itime + offsetw;
 
-//  		  tempgmag1 = scale1[i]*linterp(fframe1, gmag[iframe1], gmag[iframe1+1]);
-//    		  tempgmag2 = scale2[i]*linterp(fframe2, gmag[iframe2], gmag[iframe2+1]);
-
-		  tempgmag1 = scale1[i]*linterp(fframe1, gmag1[iframe1], gmag1[iframe1+1]);
-		  tempgmag2 = scale2[i]*linterp(fframe2, gmag2[iframe2], gmag2[iframe2+1]);
-
+		  const auto tempgmag1 = scale1[i]*linterp(fframe1, gmag1[iframe1], gmag1[iframe1+1]);
+		  const auto tempgmag2 = scale2[i]*linterp(fframe2, gmag2[iframe2], gmag2[iframe2+1]);
   		  tempgmag[i] = linterp(fracfreq, tempgmag1, tempgmag2);
 		  sum +=  tempgmag[i] * linterp(ftime, wavetab[wi], wavetab[wi+1]);
 
@@ -165,8 +162,7 @@ pianoAlg::generateSamples(int howMany)
 	}
       Output(sum, s, 0);
       t += sampperiod;
-      temp = fabs(sum);
-      if ( temp > synmax ) synmax = temp;
+      synmax = std::max(synmax, fabs(sum));
 
       //printf("t %f, sum %f, tempgmag[0] %f, offsetw %d, wavetab %f\n",t, sum, tempgmag[0], offsetw, wavetab[0]);
     } // end of for (int s=0; s<howMany; s++) 
@@ -175,7 +171,7 @@ pianoAlg::generateSamples(int howMany)
 void pianoAlg::setKey(int z) 
 {
   midiKey = z;
-  temp = (float(z)-12.)/12.; // c0 is 12
+  float temp = (float(z)-12.)/12.; // c0 is 12
   octave = floor(temp);
   temp = z - octave*temp - 12;
   freq = 27.5*powf(2., octave + (key-9.)/12.);
@@ -193,7 +189,7 @@ void pianoAlg::setFreq(float z)
   for (int i=0; i<9; i++)
     if ( freq >= pianod->freqc[i] )
       octave=i;
-  temp = (float(log10(freq/27.5))/float(log10(2.))-octave)*12.+9.;
+  const float temp = (float(log10(freq/27.5))/float(log10(2.))-octave)*12.+9.;
   pitch = octave + key/100.;
   key = octave*12 + temp + 12;
   printf("pianoAlg key %d, MIDI key %d, octave %d, pitch %.2f\n",key,midiKey,octave,pitch);
@@ -260,20 +256,22 @@ void pianoAlg::setWhichOne()
 
   fracfreq = (freq - pianod->fa[whichone]) / (pianod->fa[whichone+1] - pianod->fa[whichone]);
 
-  tempi = tabsize1*ngroup2;
+  // setWhichOne() might have been called already.
+  delete [] wavetab;
+  delete [] gmag1;
+  delete [] gmag2;
+
+  auto tempi = tabsize1*ngroup2;
   wavetab = new float[tempi];
-  for (i=0; i<tempi; i++)
-    wavetab[i] = pianod->wavetab[offsetw+i];
+  memcpy(wavetab, pianod->wavetab + offsetw, tempi * sizeof(float));
 
   tempi = npts1*ngroup2;
   gmag1 = new float[tempi];
-  for (i=0; i<tempi; i++)
-    gmag1[i] = pianod->gmag[offsetg1+i];
+  memcpy(gmag1, pianod->gmag + offsetg1, tempi * sizeof(float));
 
   tempi = npts2*ngroup2;
   gmag2 = new float[tempi];
-  for (i=0; i<tempi; i++)
-    gmag2[i] = pianod->gmag[offsetg2+i];
+  memcpy(gmag2, pianod->gmag + offsetg2, tempi * sizeof(float));
 }
 
 void pianoAlg::setTstep()
@@ -281,11 +279,12 @@ void pianoAlg::setTstep()
   printf("pianoAlg setTstep with inhrange %f\n",inhrange);
   for (i=0; i<ngroup2; i++)
     {
-      temp = sum = 0.;
+      float temp = 0.0;
       for (k=pianod->hfrom[whichone][i]; k<=pianod->hto[whichone][i]; k++)
 	temp += pianod->cw[whichone][k] * float(k);
       temp /= float(pianod->hto[whichone][i] - pianod->hfrom[whichone][i] + 1);
 
+      float sum = 0.0;
       for (k=pianod->hfrom[whichone+1][i]; k<=pianod->hto[whichone+1][i]; k++)
 	sum += pianod->cw[whichone+1][k] * float(k);
       sum /= float(pianod->hto[whichone+1][i] - pianod->hfrom[whichone+1][i] + 1);
