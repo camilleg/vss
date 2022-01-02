@@ -797,14 +797,6 @@ int len, int n)
 	*s++ = ' ';
 }
 
-
-
-
-int _OutMem(void)
-{
-    return _Escape(-2);
-}
-
 int _CaseCheck(void)
 {
     return _Escape(-9);

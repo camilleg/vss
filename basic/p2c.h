@@ -161,7 +161,6 @@ extern Anyptr   malloc      PP( (size_t) );
 extern Void     free        PP( (Anyptr) );
 #endif
 
-extern int      _OutMem     PV();
 extern int      _CaseCheck  PV();
 extern int      _NilCheck   PV();
 extern int	_Escape     PP( (int) );
@@ -248,12 +247,7 @@ extern Void	P_sun_argv  PP( (char *, int, int) );
 #define CPUT(f)            (PUT(f,char))
 
 /* Memory allocation */
-#ifdef __GCC__
-# define Malloc(n)  (malloc(n) ?: (Anyptr)_OutMem())
-#else
-extern Anyptr __MallocTemp__;
-# define Malloc(n)  ((__MallocTemp__ = malloc(n)) ? __MallocTemp__ : (Anyptr)_OutMem())
-#endif
+# define Malloc(n)  (malloc(n))
 #define FreeR(p)    (free((Anyptr)(p)))    /* used if arg is an rvalue */
 #define Free(p)     (free((Anyptr)(p)), (p)=NULL)
 
