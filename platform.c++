@@ -1379,10 +1379,6 @@ static int BatchTick(int sockfd)
 	return 1;
 }
 
-#ifdef VSS_IRIX
-void flushme_();
-#endif
-
 void schedulerMain()
 {
 #ifdef VSS_IRIX
@@ -1423,7 +1419,8 @@ void schedulerMain()
 #endif
 
 #ifdef VSS_IRIX
-	flushme_(); // set "flush zero" bit to avoid underflow exceptions
+	void flushme_();
+	flushme_(); // underflow.c
 #elif defined VSS_LINUX
 	t0 = clock();
 #endif
