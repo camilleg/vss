@@ -121,8 +121,10 @@ SUBLIBS := \
   tb303/tb303.a \
   thresh/thresh.a
 
+# CXXFLAGS="$(CFLAGS)" would fail because ./configure clobbers that.
+# Fake it by making CFLAGS part of what ./configure thinks is the compiler.
 stk4/stk.a:
-	cd stk-4.4.4 && ./configure && cd src && make
+	cd stk-4.4.4 && ./configure CXX="$(CC) $(CFLAGS)" && cd src && make
 	cd stk4 && make
 
 now=\"$(shell date +"%Y-%m-%d\ %H:%M")\"

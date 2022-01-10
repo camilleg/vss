@@ -651,7 +651,7 @@ CFStringRef EndpointName( MIDIEndpointRef endpoint, bool isExternal )
     CFRelease( str );
   }
 
-  MIDIEntityRef entity = NULL;
+  MIDIEntityRef entity;
   MIDIEndpointGetEntity( endpoint, &entity );
   if ( entity == 0 )
     // probably virtual
