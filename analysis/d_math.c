@@ -72,7 +72,7 @@ static void init_rsqrt(void)
     {
 	float f;
 	long l = (i ? (i == DUMTAB1SIZE-1 ? DUMTAB1SIZE-2 : i) : 1)<< 23;
-	*(long *)(&f) = l;
+	*(long *)(&f) = l; // Casting from float * to signed long * is not portable due to different binary data representations on different platforms.
 	rsqrt_exptab[i] = 1./sqrt(f);	
     }
     for (i = 0; i < DUMTAB2SIZE; i++)
@@ -84,7 +84,7 @@ static void init_rsqrt(void)
 
 float qrsqrt(float f)
 {
-    long l = *(long *)(&f);
+    long l = *(long *)(&f); // Casting from float * to signed long * is not portable due to different binary data representations on different platforms.
     if (f < 0) return (0);
     else return (rsqrt_exptab[(l >> 23) & 0xff] *
 	    rsqrt_mantissatab[(l >> 13) & 0x3ff]);
@@ -119,7 +119,7 @@ static t_int *sigrsqrt_perform(t_int *w)
     while (n--)
     {	
 	float f = *in;
-	long l = *(long *)(in++);
+	long l = *(long *)(in++); // Casting from float * to signed long * is not portable due to different binary data representations on different platforms.
 	if (f < 0) *out++ = 0;
 	else *out++ =
 	    (rsqrt_exptab[(l >> 23) & 0xff] *
