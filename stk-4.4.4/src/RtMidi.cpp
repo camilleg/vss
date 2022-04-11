@@ -1672,12 +1672,14 @@ void MidiOutAlsa :: initialize( const std::string& clientName )
     delete data;
     errorString_ = "MidiOutAlsa::initialize: error initializing MIDI event parser!\n\n";
     RtMidi::error( RtError::DRIVER_ERROR, errorString_ );
+    return; // Even though error() throws.
   }
   data->buffer = (unsigned char *) malloc( data->bufferSize );
   if ( data->buffer == NULL ) {
     delete data;
     errorString_ = "MidiOutAlsa::initialize: error allocating buffer memory!\n\n";
     RtMidi::error( RtError::MEMORY_ERROR, errorString_ );
+    return; // Even though error() throws.
   }
   snd_midi_event_init( data->coder );
   apiData_ = (void *) data;
@@ -3469,6 +3471,7 @@ void MidiInJack :: initialize( const std::string& clientName )
 
   // Initialize JACK client
   if (( data->client = jack_client_open( clientName.c_str(), JackNullOption, NULL )) == 0) {
+    delete data;
     errorString_ = "MidiInJack::initialize: JACK server not running?";
     RtMidi::error( RtError::DRIVER_ERROR, errorString_ );
     return;
