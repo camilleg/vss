@@ -17,8 +17,8 @@ void *getbytes(size_t nbytes)
     if (nbytes < 1) nbytes = 1;
     ret = (void *)malloc(nbytes);
 #ifdef LOUD
-    fprintf(stderr, "new  %x %d\n", ret, nbytes);
-#endif /* LOUD */
+    fprintf(stderr, "new  %p %lu\n", ret, nbytes);
+#endif
     return (ret);
 }
 
@@ -37,16 +37,16 @@ void *resizebytes(void *old, size_t oldsize, size_t newsize)
     if (newsize < 1) newsize = 1;
     ret = (void *)realloc((char *)old, newsize);
 #ifdef LOUD
-    fprintf(stderr, "resize %x %d --> %x %d\n", old, oldsize, ret, newsize);
-#endif /* LOUD */
+    fprintf(stderr, "resize %p %lu --> %p %lu\n", old, oldsize, ret, newsize);
+#endif
     return (ret);
 }
 
 void freebytes(void *fatso, size_t nbytes)
 {
 #ifdef LOUD
-    fprintf(stderr, "free %x %d\n", fatso, nbytes);
-#endif /* LOUD */
+    fprintf(stderr, "free %p %lu\n", fatso, nbytes);
+#endif
     free(fatso);
 }
 
