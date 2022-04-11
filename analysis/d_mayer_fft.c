@@ -353,10 +353,9 @@ void mayer_fht(REAL *fz, int n)
 
 void mayer_fft(int n, REAL *real, REAL *imag)
 {
- REAL a,b,c,d;
- REAL q,r,s,t;
  int i,j,k;
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
+  REAL a,b,c,d, q,r,s,t;
   a = real[i]; b = real[j];  q=a+b; r=a-b;
   c = imag[i]; d = imag[j];  s=c+d; t=c-d;
   real[i] = (q+t)*.5; real[j] = (q-t)*.5;
@@ -383,12 +382,11 @@ void mayer_ifft(int n, REAL *real, REAL *imag)
 
 void mayer_realfft(int n, REAL *real)
 {
- REAL a,b;
  int i,j,k;
  mayer_fht(real,n);
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
-  a = real[i];
-  b = real[j];
+  REAL a = real[i];
+  REAL b = real[j];
   real[j] = (a-b)*0.5;
   real[i] = (a+b)*0.5;
  }

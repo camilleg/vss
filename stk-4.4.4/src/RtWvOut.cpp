@@ -42,13 +42,11 @@ int RtWvOut :: readBuffer( void *buffer, unsigned int frameCount )
   unsigned int nFrames = frameCount;
   StkFloat *input = (StkFloat *) &data_[ readIndex_ * nChannels ];
   StkFloat *output = (StkFloat *) buffer;
-  long counter;
-
   while ( nFrames > 0 ) {
 
     // I'm assuming that both the RtAudio and StkFrames buffers
     // contain interleaved data.
-    counter = nFrames;
+    long counter = nFrames;
 
     // Pre-increment read pointer and check bounds.
     readIndex_ += nFrames;
@@ -179,13 +177,13 @@ void RtWvOut :: tick( const StkFrames& frames )
   // See how much space we have and fill as much as we can ... if we
   // still have samples left in the frames object, then wait and
   // repeat.
-  unsigned int framesEmpty, nFrames, bytes, framesWritten = 0;
+  unsigned int nFrames, bytes, framesWritten = 0;
   unsigned int nChannels = data_.channels();
   while ( framesWritten < frames.frames() ) {
 
     // Block until we have some room for output data.
     while ( framesFilled_ == (long) data_.frames() ) Stk::sleep( 1 );
-    framesEmpty = data_.frames() - framesFilled_;
+    unsigned framesEmpty = data_.frames() - framesFilled_;
 
     // Copy data in one chunk up to the end of the data buffer.
     nFrames = framesEmpty;

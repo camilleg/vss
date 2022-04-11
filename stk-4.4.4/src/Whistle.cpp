@@ -130,7 +130,7 @@ StkFloat Whistle :: tick( unsigned int )
   StkFloat soundMix, tempFreq;
   StkFloat envOut = 0, temp, temp1, temp2, tempX, tempY;
   double phi, cosphi, sinphi;
-  double gain = 0.5, mod = 0.0;
+  double gain = 0.5;
 
   if ( --subSampCount_ <= 0 )	{
     tempVectorP_ = pea_.getPosition();
@@ -153,7 +153,7 @@ StkFloat Whistle :: tick( unsigned int )
       pea_.tick( tickSize_ );
     }
 
-    mod  = exp(-temp * 0.01);	  // exp. distance falloff of fipple/pea effect
+    const double mod = exp(-temp * 0.01); // exp. distance falloff of fipple/pea effect
     temp = onepole_.tick(mod);	// smooth it a little
     gain = (1.0 - (fippleGainMod_*0.5)) + (2.0 * fippleGainMod_ * temp);
     gain *= gain;	              // squared distance/gain

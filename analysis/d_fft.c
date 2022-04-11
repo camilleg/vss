@@ -260,8 +260,8 @@ static t_int *sigframp_perform(t_int *w)
     float *inimag = (t_float *)(w[2]);
     float *outfreq = (t_float *)(w[3]);
     float *outamp = (t_float *)(w[4]);
-    float lastreal = 0, currentreal = inreal[0], nextreal = inreal[1];
-    float lastimag = 0, currentimag = inimag[0], nextimag = inimag[1];
+    float currentreal = inreal[0], nextreal = inreal[1];
+    float currentimag = inimag[0], nextimag = inimag[1];
     int n = w[5];
     int m = n + 1;
     float fbin = 1, oneovern2 = 1.f/((float)n * (float)n);
@@ -273,10 +273,10 @@ static t_int *sigframp_perform(t_int *w)
     while (n--)
     {
     	float re, im, pow, freq;
-    	lastreal = currentreal;
+    	const float lastreal = currentreal;
     	currentreal = nextreal;
     	nextreal = *inreal++;
-    	lastimag = currentimag;
+    	const float lastimag = currentimag;
     	currentimag = nextimag;
     	nextimag = *inimag++;
     	re = currentreal - 0.5f * (lastreal + nextreal);

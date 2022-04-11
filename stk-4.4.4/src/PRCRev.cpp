@@ -33,10 +33,10 @@ PRCRev :: PRCRev( StkFloat T60 )
   double scaler = Stk::sampleRate() / 44100.0;
 
   // Scale the delay lengths if necessary.
-  int delay, i;
+  int i;
   if ( scaler != 1.0 ) {
     for (i=0; i<4; i++)	{
-      delay = (int) floor(scaler * lengths[i]);
+      int delay = floor(scaler * lengths[i]);
       if ( (delay & 1) == 0) delay++;
       while ( !this->isPrime(delay) ) delay += 2;
       lengths[i] = delay;

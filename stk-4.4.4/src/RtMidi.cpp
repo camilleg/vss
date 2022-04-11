@@ -369,7 +369,7 @@ void midiInputCallback( const MIDIPacketList *list, void *procRef, void *srcRef 
   CoreMidiData *apiData = static_cast<CoreMidiData *> (data->apiData);
 
   unsigned char status;
-  unsigned short nBytes, iByte, size;
+  unsigned short iByte, size;
   unsigned long long time;
 
   bool& continueSysex = data->continueSysex;
@@ -387,7 +387,7 @@ void midiInputCallback( const MIDIPacketList *list, void *procRef, void *srcRef 
     // MIDIPacketLists, they must be handled by multiple calls to this
     // function.
 
-    nBytes = packet->length;
+    unsigned short nBytes = packet->length;
     if ( nBytes == 0 ) continue;
 
     // Calculate time stamp.
@@ -541,7 +541,7 @@ void MidiInCore :: initialize( const std::string& clientName )
   }
 
   // Save our api-specific connection information.
-  CoreMidiData *data = (CoreMidiData *) new CoreMidiData;
+  CoreMidiData* data = new CoreMidiData;
   data->client = client;
   data->endpoint = 0;
   apiData_ = (void *) data;
@@ -712,25 +712,22 @@ static CFStringRef ConnectedEndpointName( MIDIEndpointRef endpoint )
 {
   CFMutableStringRef result = CFStringCreateMutable( NULL, 0 );
   CFStringRef str;
-  OSStatus err;
-  int i;
 
   // Does the endpoint have connections?
   CFDataRef connections = NULL;
-  int nConnected = 0;
   bool anyStrings = false;
-  err = MIDIObjectGetDataProperty( endpoint, kMIDIPropertyConnectionUniqueID, &connections );
+  (void)MIDIObjectGetDataProperty( endpoint, kMIDIPropertyConnectionUniqueID, &connections );
   if ( connections != NULL ) {
     // It has connections, follow them
     // Concatenate the names of all connected devices
-    nConnected = CFDataGetLength( connections ) / sizeof(MIDIUniqueID);
+    int nConnected = CFDataGetLength( connections ) / sizeof(MIDIUniqueID);
     if ( nConnected ) {
       const SInt32 *pid = (const SInt32 *)(CFDataGetBytePtr(connections));
-      for ( i=0; i<nConnected; ++i, ++pid ) {
+      for (int i=0; i<nConnected; ++i,++pid) {
         MIDIUniqueID id = EndianS32_BtoN( *pid );
         MIDIObjectRef connObject;
         MIDIObjectType connObjectType;
-        err = MIDIObjectFindByUniqueID( id, &connObject, &connObjectType );
+        OSStatus err = MIDIObjectFindByUniqueID( id, &connObject, &connObjectType );
         if ( err == noErr ) {
           if ( connObjectType == kMIDIObjectType_ExternalSource  ||
               connObjectType == kMIDIObjectType_ExternalDestination ) {
@@ -1342,7 +1339,7 @@ void MidiInAlsa :: initialize( const std::string& clientName )
   }
 
   // Save our api-specific connection information.
-  AlsaMidiData *data = (AlsaMidiData *) new AlsaMidiData;
+  AlsaMidiData* data = new AlsaMidiData;
   data->seq = seq;
   data->portNum = -1;
   data->vport = -1;
@@ -1376,13 +1373,12 @@ void MidiInAlsa :: initialize( const std::string& clientName )
 unsigned int portInfo( snd_seq_t *seq, snd_seq_port_info_t *pinfo, unsigned int type, int portNumber )
 {
   snd_seq_client_info_t *cinfo;
-  int client;
   int count = 0;
   snd_seq_client_info_alloca( &cinfo );
 
   snd_seq_client_info_set_client( cinfo, -1 );
   while ( snd_seq_query_next_client( seq, cinfo ) >= 0 ) {
-    client = snd_seq_client_info_get_client( cinfo );
+    int client = snd_seq_client_info_get_client( cinfo );
     if ( client == 0 ) continue;
     // Reset query info
     snd_seq_port_info_set_client( pinfo, client );
@@ -2011,7 +2007,7 @@ void MidiInWinMM :: initialize( const std::string& /*clientName*/ )
   }
 
   // Save our api-specific connection information.
-  WinMidiData *data = (WinMidiData *) new WinMidiData;
+  WinMidiData* data = new WinMidiData;
   apiData_ = (void *) data;
   inputData_.apiData = (void *) data;
   data->message.bytes.clear();  // needs to be empty for first input message
@@ -2514,7 +2510,7 @@ public:
 class CKsObject
 {
 public:
-  CKsObject(HANDLE handle) : m_handle(handle)
+  explicit CKsObject(HANDLE handle) : m_handle(handle)
   {
   }
 
@@ -3474,7 +3470,7 @@ void MidiInJack :: initialize( const std::string& clientName )
     delete data;
     errorString_ = "MidiInJack::initialize: JACK server not running?";
     RtMidi::error( RtError::DRIVER_ERROR, errorString_ );
-    return;
+    return; // Even though error() throws.
   }
 
   data->rtMidiIn = &inputData_;
@@ -3589,7 +3585,6 @@ void MidiInJack :: closePort()
 int jackProcessOut( jack_nframes_t nframes, void *arg )
 {
   JackMidiData *data = (JackMidiData *) arg;
-  jack_midi_data_t *midiData;
   int space;
 
   // Is port created?
@@ -3600,8 +3595,7 @@ int jackProcessOut( jack_nframes_t nframes, void *arg )
 
   while ( jack_ringbuffer_read_space( data->buffSize ) > 0 ) {
     jack_ringbuffer_read( data->buffSize, (char *) &space, (size_t) sizeof(space) );
-    midiData = jack_midi_event_reserve( buff, 0, space );
-
+    jack_midi_data_t* midiData = jack_midi_event_reserve( buff, 0, space );
     jack_ringbuffer_read( data->buffMessage, (char *) midiData, (size_t) space );
   }
 

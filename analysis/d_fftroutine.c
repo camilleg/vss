@@ -331,7 +331,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 
 	 /* calculate butterfly coefficients */ {
 		  
-		  int       num_diff_coeffs, power_inc, power;
 		  SAMPLE *coeffpr     = fft_net->coeffr;
 		  SAMPLE *coeffpi     = fft_net->coeffi;
 		  SAMPLE *inv_coeffpr = fft_net->inv_coeffr;
@@ -348,15 +347,10 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 		  /* stage 2 to last stage coeffs need calculation */
 		  /* (1<<r <=> 2^r */
 		  for (s = 2; s <= stages; s++) {
-			   
-			   num_diff_coeffs = n / (1 << (stages - s + 1)); 
-			   power_inc       = 1 << (stages -s);
-			   cntr            = 0;
-
+			   const int num_diff_coeffs = n / (1 << (stages - s + 1));
+			   const int power_inc = 1 << (stages -s);
 			   for (i = bps/num_diff_coeffs; i > 0; i--) {
-
-		              power  = 0;
-
+		              int power  = 0;
 			      for (j = num_diff_coeffs; j > 0; j--) {
 			         *coeffpr     = cos(two_pi_div_n*power);
 				 *inv_coeffpr = cos(two_pi_div_n*power);
@@ -376,14 +370,13 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 	    fft_net.
 	 */ {
 
-		  int       index, inc;
+		  int inc;
 		  SAMPLE **indexpr = fft_net->indexpr;
 		  SAMPLE **indexpi = fft_net->indexpi;
 		  SAMPLE **indexqr = fft_net->indexqr;
 		  SAMPLE **indexqi = fft_net->indexqi;
 		  SAMPLE *regr     = fft_net->regr;
 		  SAMPLE *regi     = fft_net->regi; 
-
 
 		  /* allocate temporary 2d stage exchange index, 1d temp 
 		     load index */
@@ -397,11 +390,12 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 
 		  /* calculate stage exchange indicies: */
 		  for (s = 0; s < stages; s++) {
+			   int index = 0;
 			   pp = p[s];
 			   qp = q[s];
 			   inc    = 1 << s;
 			   cntr   = 1 << (stages-s-1);
-			   i      = j = index = 0;
+			   i = j = 0;
 
 			   do {
 				    do {
@@ -948,11 +942,11 @@ void create_hanning(SAMPLE *window, int n, SAMPLE scale)
 */
 
 {
-	 SAMPLE	    a, pi_div_n = PI/n;
+	 SAMPLE	    pi_div_n = PI/n;
 	 int	    k;
 
 	 for (k=1; k <= n; k++) {
-		  a = sin(k * pi_div_n);
+		  const SAMPLE a = sin(k * pi_div_n);
 		  *window++ = scale * a * a;
 	 }
 }

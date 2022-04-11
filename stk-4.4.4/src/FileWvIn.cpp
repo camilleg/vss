@@ -101,7 +101,7 @@ void FileWvIn :: openFile( std::string fileName, bool raw, bool doNormalize )
   // Set default rate based on file sampling rate.
   this->setRate( data_.dataRate() / Stk::sampleRate() );
 
-  if ( doNormalize & !chunking_ ) this->normalize();
+  if (doNormalize && !chunking_) this->normalize();
 
   this->reset();
 }

@@ -37,10 +37,10 @@ JCRev :: JCRev( StkFloat T60 )
   int lengths[9] = {1116, 1356, 1422, 1617, 225, 341, 441, 211, 179};
   double scaler = Stk::sampleRate() / 44100.0;
 
-  int delay, i;
+  int i;
   if ( scaler != 1.0 ) {
     for ( i=0; i<9; i++ ) {
-      delay = (int) floor( scaler * lengths[i] );
+      int delay = floor( scaler * lengths[i] );
       if ( (delay & 1) == 0) delay++;
       while ( !this->isPrime(delay) ) delay += 2;
       lengths[i] = delay;

@@ -53,7 +53,7 @@ void Socket :: setBlocking( int socket, bool enable )
 
   int tmp = ::fcntl( socket, F_GETFL, 0 );
   if ( tmp >= 0 )
-    tmp = ::fcntl( socket, F_SETFL, enable ? (tmp &~ O_NONBLOCK) : (tmp | O_NONBLOCK) );
+    (void)::fcntl( socket, F_SETFL, enable ? (tmp &~ O_NONBLOCK) : (tmp | O_NONBLOCK) );
 
 #elif defined(__OS_WINDOWS__)
 

@@ -31,9 +31,9 @@ NRev :: NRev( StkFloat T60 )
   int lengths[15] = {1433, 1601, 1867, 2053, 2251, 2399, 347, 113, 37, 59, 53, 43, 37, 29, 19};
   double scaler = Stk::sampleRate() / 25641.0;
 
-  int delay, i;
+  int i;
   for ( i=0; i<15; i++ ) {
-    delay = (int) floor(scaler * lengths[i]);
+    int delay = floor(scaler * lengths[i]);
     if ( (delay & 1) == 0) delay++;
     while ( !this->isPrime(delay) ) delay += 2;
     lengths[i] = delay;

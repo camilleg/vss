@@ -41,8 +41,8 @@ const FileWrite::FILE_TYPE FileWrite :: FILE_MAT = 5;
 struct WaveHeader {
   char riff[4];           // "RIFF"
   SINT32 fileSize;        // in bytes
-  char wave[4];           // "WAVE"
-  char fmt[4];            // "fmt "
+  char wave[4];           // "WAVE", unused
+  char fmt[4];            // "fmt ", unused
   SINT32 chunkSize;       // in bytes (16 for PCM)
   SINT16 formatCode;      // 1=PCM, 2=ADPCM, 3=IEEE float, 6=A-Law, 7=Mu-Law
   SINT16 nChannels;       // 1=mono, 2=stereo
@@ -67,7 +67,7 @@ struct SndHeader {
   SINT32 format;
   SINT32 sampleRate;
   SINT32 nChannels;
-  char comment[16];
+  char comment[16]; // unused
 };
 
 // AIFF/AIFC header structure ... only the part common to both
@@ -76,7 +76,7 @@ struct AifHeader {
   char form[4];                // "FORM"
   SINT32 formSize;             // in bytes
   char aiff[4];                // "AIFF" or "AIFC"
-  char comm[4];                // "COMM"
+  char comm[4];                // "COMM", unused
   SINT32 commSize;             // "COMM" chunk size (18 for AIFF, 24 for AIFC)
   SINT16 nChannels;            // number of channels
   unsigned long sampleFrames;  // sample frames of audio data
@@ -87,7 +87,7 @@ struct AifHeader {
 struct AifSsnd {
   char ssnd[4];               // "SSND"
   SINT32 ssndSize;            // "SSND" chunk size
-  unsigned long offset;       // data offset in data block (should be 0)
+  unsigned long offset;       // data offset in data block (should be 0), unused
   unsigned long blockSize;    // not used by STK (should be 0)
 };
 
@@ -342,7 +342,6 @@ void FileWrite :: closeWavFile( void )
 
 bool FileWrite :: setSndFile( std::string fileName )
 {
-  std::string name( fileName );
   if ( fileName.find( ".snd" ) == std::string::npos ) fileName += ".snd";
   fd_ = fopen( fileName.c_str(), "wb" );
   if ( !fd_ ) {

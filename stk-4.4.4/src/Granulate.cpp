@@ -106,11 +106,10 @@ void Granulate :: reset( void )
   gPointer_ = 0;
 
   // Reset grain parameters.
-  unsigned int count, nVoices = grains_.size();
-  for ( unsigned int i=0; i<grains_.size(); i++ ) {
+  unsigned int nVoices = grains_.size();
+  for ( unsigned int i=0; i<nVoices; i++ ) {
     grains_[i].repeats = 0;
-    count = (unsigned int ) ( i * gDuration_ * 0.001 * Stk::sampleRate() / nVoices );
-    grains_[i].counter = count;
+    grains_[i].counter = i * gDuration_ * 0.001 * Stk::sampleRate() / nVoices;
     grains_[i].state = GRAIN_STOPPED;
   }
 
@@ -130,11 +129,9 @@ void Granulate :: setVoices( unsigned int nVoices )
   grains_.resize( nVoices );
 
   // Initialize new grain voices.
-  unsigned int count;
   for ( unsigned int i=oldSize; i<nVoices; i++ ) {
     grains_[i].repeats = 0;
-    count = (unsigned int ) ( i * gDuration_ * 0.001 * Stk::sampleRate() / nVoices );
-    grains_[i].counter = count;
+    grains_[i].counter = i * gDuration_ * 0.001 * Stk::sampleRate() / nVoices;
     grains_[i].pointer = gPointer_;
     grains_[i].state = GRAIN_STOPPED;
   }

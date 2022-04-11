@@ -37,14 +37,14 @@ int read( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 void RtWvIn :: fillBuffer( void *buffer, unsigned int nFrames )
 {
   StkFloat *samples = (StkFloat *) buffer;
-  unsigned int counter, iStart, nSamples = nFrames * data_.channels();
+  unsigned int iStart, nSamples = nFrames * data_.channels();
 
   while ( nSamples > 0 ) {
 
     // I'm assuming that both the RtAudio and StkFrames buffers
     // contain interleaved data.
     iStart = writeIndex_ * data_.channels();
-    counter = nSamples;
+    auto counter = nSamples;
 
     // Pre-increment write pointer and check bounds.
     writeIndex_ += nSamples / data_.channels();
@@ -159,19 +159,19 @@ StkFrames& RtWvIn :: tick( StkFrames& frames )
 
   // See how much space we have and fill as much as we can ... if we
   // still have space left in the frames object, then wait and repeat.
-  unsigned int nFrames, bytes, framesRead = 0;
+  unsigned int framesRead = 0;
   while ( framesRead < frames.frames() ) {
 
     // Block until we have some input data.
     while ( framesFilled_ == 0 ) Stk::sleep( 1 );
 
     // Copy data in one chunk up to the end of the data buffer.
-    nFrames = framesFilled_;
+    unsigned int nFrames = framesFilled_;
     if ( readIndex_ + nFrames > data_.frames() )
       nFrames = data_.frames() - readIndex_;
     if ( nFrames > frames.frames() - framesRead )
       nFrames = frames.frames() - framesRead;
-    bytes = nFrames * nChannels * sizeof( StkFloat );
+    unsigned int bytes = nFrames * nChannels * sizeof( StkFloat );
     StkFloat *samples = &data_[readIndex_ * nChannels];
     memcpy( &frames[framesRead * nChannels], samples, bytes );
 

@@ -646,10 +646,11 @@ void ugen_done_graph(t_dspcontext *dc)
 
     if (ugen_loud)
     {
-    	t_int *ip;
-    	if (!dc->dc_parentcontext)
+    	if (!dc->dc_parentcontext) {
+	    t_int *ip;
     	    for (i = dsp_chainsize, ip = dsp_chain; i--; ip++)
     	    	post("chain %x", *ip);
+	}
     	post("... ugen_done_graph done.");
     }
     	/* now delete everything. */
