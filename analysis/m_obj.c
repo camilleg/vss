@@ -374,7 +374,7 @@ void obj_disconnect(t_object *source, int outno, t_object *sink, int inno)
     t_outconnect *oc, *oc2;
     
     for (o = source->ob_outlet; o && outno; o = o->o_next, outno--)
-    if (!o) return;
+    if (!o) return; // "Opposite inner 'if' condition leads to a dead code block; outer condition is 'x' and inner condition is '!x'."
     if (sink->ob_pd->c_firstin)
     {
     	if (!inno)
