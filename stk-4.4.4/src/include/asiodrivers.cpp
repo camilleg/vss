@@ -87,7 +87,7 @@ void AsioDrivers::removeCurrentDriver()
 
 extern IASIO* theAsioDriver;
 
-AsioDrivers::AsioDrivers() : AsioDriverList()
+AsioDrivers::AsioDrivers() : AsioDriverList(): connID(-1L)
 {
 	curIndex = -1;
 }
