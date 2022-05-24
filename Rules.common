@@ -45,7 +45,7 @@ CC := g++
 
 INC := -I$(TOPDIR)
 
-cFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast
+cFLAGS := $(INC) -D$(PLATFORMBASE) -D$(PLATFORM) -Wall -Ofast -march=native -ffast-math
 # -maccumulate-outgoing-args -malign-double -fomit-frame-pointer
 
 # VSS-specific
