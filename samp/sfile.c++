@@ -41,7 +41,8 @@ sfile::sfile(char * dir, char * file) :
 
 //	allocate some space and read up the samples
 	int	sampSizeBytes = sampSize / 8;
-	sampleData = new char[fileNumFrames * sampSizeBytes * fileNumChans];
+	// The () zero-initializes sampleData, in case fread() is incomplete.
+	sampleData = new char[fileNumFrames * sampSizeBytes * fileNumChans]();
 	if (!sampleData)
 		{
 		std::cerr <<"vss error: sampleData allocation failure.\n";
@@ -50,18 +51,13 @@ sfile::sfile(char * dir, char * file) :
 		return;
 		}
 	
-	// fread() may return 0 on some older aiff files.  Edit and resave the file with soundeditor and it'll be fine.
-	unsigned int readNumFrames =
-		fread(sampleData, sampSizeBytes * fileNumChans, fileNumFrames, inf);
+	const auto readNumFrames = fread(sampleData, sampSizeBytes * fileNumChans, fileNumFrames, inf);
+	if (readNumFrames == 0 && feof(inf) && !ferror(inf)) {
+		printf("vss warning: SampleActor incompletely read samples from file \"%s\".\n", fNameWithPath);
+		printf("             If this is an old aiff file, try resaving it with sfconvert, sox, etc.\n");
+	}
 	fclose(inf);
 	inf = NULL;
-	if (readNumFrames != fileNumFrames )
-		{
-		printf("vss error: SampleActor failed to read samples from file \"%s\".\n", fNameWithPath );
-		delete [] (char*)sampleData;
-		sampleData = NULL;
-		return;
-		}
 
 	// endianness is irrelevant for 8-bit data
 	if (fileSampSize > 8 && ((htons(0x1234) != 0x1234) ^ fWAV))
