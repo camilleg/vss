@@ -1,0 +1,26 @@
+// dynamic.aud, for dynamic.c
+
+SetPrintCommands 2; // very verbose, so we can see what's happening
+
+fm = Create FmActor;
+later = Create LaterActor;
+
+/*** STEP 1: define message groups for creating and deleting a sound ***/
+
+NewX = Create MessageGroup;
+AddMessage NewX BeginSound fm SetAmp 0.05 SetCarFreq *0;
+
+DeleteX = Create MessageGroup;
+// Don't just delete the sound.  Fade it out and then delete it.
+AddMessage DeleteX SetAmp *0 0 .15;
+AddMessage DeleteX AddMessage later .16 Delete *0;
+
+/*** STEP 2: define message groups for modifying a sound ***/
+/*** (only one message group here) ***/
+
+ChangeFreqX = Create MessageGroup;
+AddMessage ChangeFreqX SetCarFreq *0 *1;
+
+EnableOfile 1 "/tmp/audio-out.raw";
+Done = Create MessageGroup;
+AddMessage Done EnableOfile 0;
