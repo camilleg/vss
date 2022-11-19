@@ -1,0 +1,8 @@
+audpanel
+audtest
+dynamic
+vssflush
+vsskill
+vssping
+*.o
+.depend
