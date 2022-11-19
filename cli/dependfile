@@ -1,0 +1,6 @@
+actorMsg.o: actorMsg.c actorMsg.h cliMsg.h 
+cliMsg.o: cliMsg.c cliMsg.h vssClient_int.h
+lexMsg.o: lexMsg.c++ parseMsg.h
+parseMsg.o: parseMsg.c++ symtab.h actorMsg.h cliMsg.h 
+symtab.o: symtab.c++ symtab.h
+vssClient.o: vssClient.c vssClient_int.h cliMsg.h 
