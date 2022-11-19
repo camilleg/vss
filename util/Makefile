@@ -21,6 +21,11 @@ LD := g++
 LIBSND := libsnd.a
 endif
 
+ifeq "$(PLATFORMBASE)" "VSS_MAC"
+LD := g++
+LIBSND := libsnd.a
+endif
+
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 LD := CC
 CFLAGS += -DVSS_OLD_H_FILES

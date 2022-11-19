@@ -1,29 +1,25 @@
-#include <stdlib.h>
-#if defined(VSS_IRIX) || defined(VSS_LINUX) || defined(VSS_SOLARIS)
-#include <unistd.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
 #include <netdb.h>
 #include <pwd.h>
-#include <grp.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/fcntl.h>
-#endif
-
-#include <stdio.h>
-#include <fcntl.h>
-#include <ctype.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <sys/fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
-#include <errno.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #ifdef VSS_SOLARIS
 #include <sys/file.h> // for FNDELAY
 #endif
-
 
 #define NEED_RGSZMESSAGE
 #include "cliMsg.h"
@@ -464,8 +460,6 @@ extern "C"
 {
 	AckPrint = flag;
 }
-
-
 
 float HnoteFromAckNote(void)
 {
