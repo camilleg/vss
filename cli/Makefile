@@ -4,7 +4,7 @@
 
 SRVDIR := ..
 
-VERSION= 4.0
+VERSION= 4.2.1
 TOPDIR := $(shell cd ..; pwd)
 all: do-it-all
 include $(SRVDIR)/Rules.common
@@ -34,13 +34,6 @@ ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   YACC := byacc
 else
   YACC := bison # apt install bison
-endif
-
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-  LEX := lex
-  # necessary for building a shared object that
-  # links libsnd.a:
-  CFLAGS_ALWAYS += -fpic	
 endif
 
 # -DVERBOSE prints tektronix-green diagnostics.
@@ -141,11 +134,7 @@ lexMsg.c++:	lexMsg.l parseMsg.h
 
 lexMsg.o : lexMsg.c++
 ifneq "$(PLATFORMBASE)" "VSS_IRIX"
-ifneq "$(PLATFORMBASE)" "VSS_SOLARIS"
 	$(CC) -c $(CFLAGS) lexMsg.c++
-else
-	$(CC) -c $(CFLAGS) -D__EXTERN_C__ lexMsg.c++
-endif
 	-@chmod g+w $@
 else
 	-@if test ! -d obj ; then rm -rf obj; mkdir obj; fi

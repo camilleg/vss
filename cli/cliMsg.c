@@ -17,10 +17,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef VSS_SOLARIS
-#include <sys/file.h> // for FNDELAY
-#endif
-
 #define NEED_RGSZMESSAGE
 #include "cliMsg.h"
 
@@ -413,12 +409,9 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 				This "obsolete" (according to man pages on Linux)
 				function prints an error message associated with
 				the current value of h_errno on stderr.
-				It doesn't seem to link under Solaris.
 			*/
 #ifndef VSS_WINDOWS_OLDWAY
-#ifndef VSS_SOLARIS
 			herror("VSS client error: probably an invalid value for $SOUNDSERVER");
-#endif
 #endif
 			return fFalse;
 			}
