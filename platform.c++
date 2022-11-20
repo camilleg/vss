@@ -964,7 +964,7 @@ static void closeudp(int sockfd)
 char mbuf[MAXMESG];
 int caught_sigint = 0;
 
-#if defined VSS_IRIX_63_MIPS3 || defined VSS_LINUX || defined VSS_REDHAT7 || defined VSS_WINDOWS || defined VSS_MAC
+#if defined VSS_IRIX_63_MIPS3 || defined VSS_LINUX || defined VSS_WINDOWS || defined VSS_MAC
 	#define SignalHandlerType int
 #else
 	#define SignalHandlerType ...

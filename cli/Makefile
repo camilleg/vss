@@ -30,15 +30,6 @@ endif
   VER_O32BIT = -o32
 endif
 
-ifeq "$(PLATFORMBASE)" "VSS_LINUX"
-# deprecate -DREDHAT52 ;;;;
-  CFLAGS_ALWAYS += -DREDHAT52
-endif
-ifeq "$(PLATFORMBASE)" "VSS_FreeBSD"
-# deprecate -DREDHAT52 ;;;;
-  CFLAGS_ALWAYS += -DREDHAT52
-endif
-
 ifeq "$(PLATFORM)" "VSS_CYGWIN32_NT40"
   YACC := byacc
 else
