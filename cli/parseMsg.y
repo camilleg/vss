@@ -30,9 +30,9 @@ extern "C" void yyerror(const char *msg);
 #include "actorMsg.h"
 #include "cliMsg.h"
 
-int findActorName(int fdT, char *aString);
-int findNoteName(char *aString);
-void AppendArg(char* sz);
+int findActorName(int, char*);
+int findNoteName(char*);
+void AppendArg(const char*);
 void AppendFloat(float z);
 
 char			curFileName[180] = {0};
@@ -72,9 +72,7 @@ extern "C" int yywrap() { return 1; }
 
 extern "C" void AUDEnableNoMessageGroupWarning(int f)
 	{ vfEnableWarnNoMG = f; }
-
 %}
-
 
 %union	{
 	char			string[512];
@@ -91,7 +89,7 @@ extern "C" void AUDEnableNoMessageGroupWarning(int f)
 %%
 
 Messages:	tPRAGMA
-				{ if (!fFiltered && *vszFilterCommand) { /*printf("ASDFASDFASDF <%s>\n", vszFilterCommand);;;;*/ fclose(yyin); yyin = fopen("/dev/null", "r"); vfAbsorbText = 1; } }
+				{ if (!fFiltered && *vszFilterCommand) { fclose(yyin); yyin = fopen("/dev/null", "r"); vfAbsorbText = 1; } }
 	|	MessageSemicolon
 	| Messages MessageSemicolon;
 MessageSemicolon: Message tSEMICOLON;
@@ -257,7 +255,6 @@ RawArray:
 	|	tOPEN_SQB tCLOSE_SQB { if (!vfAbsorbText) fprintf(stderr, "VSS client warning: empty array.\n"); }
 		;
 
-
 NormalFloat:	tNUMBER	{ /*;;needed?*/ strcpy($$, $1); }
 	;
 
@@ -323,9 +320,7 @@ Floats:	Float
 
 %%
 
-/**********************************************/
-
-void AppendArg(char* sz)
+void AppendArg(const char* sz)
 {
 	strcat(theArgs, sz);
 }
@@ -336,8 +331,6 @@ void AppendFloat(float z)
 	sprintf(sz, "%f", z);
 	AppendArg(sz);
 }
-
-/**********************************************/
 
 extern int yylineno;
 int hAudSimple = -1;
@@ -397,13 +390,19 @@ LAgain:
 			{
 			fFiltered = 1;
 			fclose(yyin);
-			// munch fileName into a temp file
+			// Munch fileName into a temp file.
+			// The muncher, vszFilterCommand, comes from //pragma in the .aud file,
+			// and is often /usr/lib/cpp -P, sometimes then piped through sed.
 			char szCmd[1500];
 			unlink("/tmp/_-vss-_FiLtEr_--_");
 			sprintf(szCmd, "cat %s | %s > /tmp/_-vss-_FiLtEr_--_",
 				fileName, vszFilterCommand);
-			/*printf("\n\n[[[%s]]]\n\n", szCmd);*/
-			system(szCmd);
+			const auto r = system(szCmd);
+			if (r != 0) {
+			  fprintf(stderr, "vss client error: filter '%s' failed on file '%s'.  Aborting AUDinit.\n", vszFilterCommand, fileName);
+			  unlink("/tmp/_-vss-_FiLtEr_--_"); // Just in case.
+			  return -1;
+			}
 			/*system("cp /tmp/_-vss-_FiLtEr_--_ /tmp/asdf");*/
 			yyin = fopen("/tmp/_-vss-_FiLtEr_--_", "r");
 			vfAbsorbText = 0;
@@ -425,8 +424,6 @@ LAgain:
 	hAudSimple = fd;
 	return fd++;	 	// return the row # of actors allocated
 }
-
-/**********************************************/
 
 static int vfHush = 0;
 extern "C" void AUDterminateImplicit(void)
@@ -456,7 +453,6 @@ extern "C" void AUDterminate(int fdT)
 		}
 
 	int sendEm = SelectSoundServer(serverHandles[fdT]);
-
 	if (fdT < 0 || fdT >= fdMax)
 		{
 		if (!vfHush)
@@ -498,11 +494,7 @@ extern "C" void AUDterminate(int fdT)
 	*prevFileName = '\0';
 }
 
-//===========================================================================
-//		AUDreset
-//
 //	Terminate all of this client's server connections.
-//
 extern "C" void AUDreset(void)
 {
 	for (int fdT = 0; fdT < fdMax; fdT++)
@@ -530,7 +522,6 @@ float AUDupdateSimpleFloats(char* szActor, int numFloats, ...)
 		}
 
 	// Build an array and then pass it to the conventional AUDupdate().
-
 	const int numFloatsMax = 1000;
 	static float rgz[numFloatsMax]; // not re-entrant, but that's OK.
 	if (numFloats > numFloatsMax)
@@ -567,17 +558,11 @@ float AUDupdateFloats(int fdT, char* szActor, int numFloats, ...)
 	return AUDupdate(fdT, szActor, numFloats, rgz);
 }
 
-//===========================================================================
-//		AUDupdate
-//
-//	Send a data array to the message group called szActor at server
-//	fdT. Complain if there is no such message group at fdT.
-//
-
 extern "C" void VSS_StripZerosInPlace(char *); // in cliMsg.c
 
-extern "C"
-float AUDupdate(int fdT, char *szActor, int numFloats, float *floatArray)
+// Send a data array to the message group called szActor at server fdT.
+// Complain if there is no such message group at fdT.
+extern "C" float AUDupdate(int fdT, char *szActor, int numFloats, float *floatArray)
 {
 	if (fdT < 0)
 		{
@@ -585,7 +570,8 @@ float AUDupdate(int fdT, char *szActor, int numFloats, float *floatArray)
 		return hNil;
 		}
 
-	if (!SelectSoundServer(serverHandles[fdT])) return hNil;
+	if (!SelectSoundServer(serverHandles[fdT]))
+		return hNil;
 
 	float h = symtabActor[fdT].HactorFromSz(szActor);
 	if (h < 0.)
@@ -611,14 +597,8 @@ float AUDupdate(int fdT, char *szActor, int numFloats, float *floatArray)
 	return actorMessageRetval(szT);
 }
 
-//===========================================================================
-//		AUDupdateTwo
-//
-//	Call AUDupdate for two servers, convenient when using a pair
-//	of servers for wet and dry localization.
-//
-extern "C"
-void AUDupdateTwo(int vss1, int vss2, char *szActor, int size, float *array)
+// Call AUDupdate for two servers, e.g. for wet and dry localization.
+extern "C" void AUDupdateTwo(int vss1, int vss2, char *szActor, int size, float *array)
 {
 	if (SelectSoundServer(serverHandles[vss1]))
 		(void)AUDupdate(vss1, szActor, size, array);
@@ -626,37 +606,24 @@ void AUDupdateTwo(int vss1, int vss2, char *szActor, int size, float *array)
 		(void)AUDupdate(vss2, szActor, size, array);
 }
 
-//===========================================================================
-//		AUDupdateMany
-//
-//	Call AUDupdate for an array of server handles.
-//
-extern "C"
-void AUDupdateMany(int numHandles, int * handleArray, char *actorHandleName,
+// Call AUDupdate for an array of server handles.
+extern "C" void AUDupdateMany(int numHandles, int * handleArray, char *actorHandleName,
 				int numFloats, float *floatArray)
 {
-	int	fdT;
-
 	for (int i = 0; i < numHandles; i++)
 	{
-		fdT = handleArray[i];
-
+		const auto fdT = handleArray[i];
 		if (SelectSoundServer(serverHandles[fdT]))
 			(void)AUDupdate(fdT, actorHandleName, numFloats, floatArray);
 	}
 
 }
 
-//===========================================================================
-//		AUDqueue
-//
 //	Queue up an array of data to send to a message group with
 //	ScheduleData whenever AUDflushQueue is finally called. Complain
 //	if AUDqueue is called more than qdMax times before AUDflushQueue
 //	is called.
-//
-extern "C"
-void AUDqueue(int size, float * data, float when)
+extern "C" void AUDqueue(int size, float * data, float when)
 {
 	if (QdataCount >= qdMax)
 	{
@@ -685,21 +652,17 @@ void AUDqueue(int size, float * data, float when)
 	QdataCount++;
 }
 
-//===========================================================================
-//		AUDflushQueue
-//
-//	Send queued data to the message group szActor at server fdT using
-//	ScheduleData. Complain if there is no actor called szActor.
-//
-extern "C"
-void AUDflushQueue(int fdT, char *szActor, int fPreserveQueueData)
+// Send queued data to the message group szActor, at server fdT, using ScheduleData.
+// Complain if actor is called szActor.
+extern "C" void AUDflushQueue(int fdT, char *szActor, int fPreserveQueueData)
 {
 	if (fdT < 0)
 		{
 		fprintf(stderr, "vss client error: invalid handle to .aud file.  Possible error in .aud file.\n");
 		return;
 		}
-    if (!SelectSoundServer(serverHandles[fdT])) return;
+    if (!SelectSoundServer(serverHandles[fdT]))
+		return;
 
     float h = symtabActor[fdT].HactorFromSz(szActor);
     if (h < 0.)
