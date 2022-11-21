@@ -7,7 +7,7 @@ TOPDIR := $(shell cd ..; pwd)
 all: do-it-all
 include $(SRVDIR)/Rules.common
 
-CFLAGS := -O3 -I../cli
+CFLAGS := -O3 -Wall -Werror -pedantic -I../cli
 cFLAGS := $(CFLAGS)
 #  -DVERBOSE
 
