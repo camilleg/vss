@@ -58,7 +58,7 @@ parseMsg.c++: parseMsg.y
 
 lexMsg.c++: lexMsg.l parseMsg.h
 	$(LEX) lexMsg.l
-	sed -e "s/^yylex/int yylex/" -e "s/#include <unistd.h>//" < lex.yy.c > $@
+	sed -e "s/^yylex/int yylex/" -e "s/#include <unistd.h>//" -e "s/define YY_NEED_STRLEN/undef YY_NEED_STRLEN/" < lex.yy.c > $@
 	-@rm lex.yy.c
 
 # bug: seem to need to "make parseMsg.c++" before parseMsg.tab.h gets rebuilt.

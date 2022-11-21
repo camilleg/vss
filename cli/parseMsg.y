@@ -35,8 +35,7 @@ int findNoteName(char*);
 void AppendArg(const char*);
 void AppendFloat(float z);
 
-char curFileName[2000]{0};
-char prevFileName[2000]{0};
+char curFileName[2000], prevFileName[2000]; // Static storage duration, therefore zero initialized.
 extern FILE		*yyin;
 int numErrors;
 static SymtabActor symtabActor[fdMax];
@@ -397,7 +396,7 @@ LAgain:
 			unlink("/tmp/_-vss-_FiLtEr_--_");
 			sprintf(szCmd, "cat %s | %s > /tmp/_-vss-_FiLtEr_--_",
 				fileName, vszFilterCommand);
-			const auto r = system(szCmd);
+			const int r = system(szCmd);
 			if (r != 0) {
 			  fprintf(stderr, "vss client error: filter '%s' failed on file '%s'.  Aborting AUDinit.\n", vszFilterCommand, fileName);
 			  unlink("/tmp/_-vss-_FiLtEr_--_"); // Just in case.
@@ -612,7 +611,7 @@ extern "C" void AUDupdateMany(int numHandles, int * handleArray, char *actorHand
 {
 	for (int i = 0; i < numHandles; i++)
 	{
-		const auto fdT = handleArray[i];
+		const int fdT = handleArray[i];
 		if (SelectSoundServer(serverHandles[fdT]))
 			(void)AUDupdate(fdT, actorHandleName, numFloats, floatArray);
 	}

@@ -93,14 +93,14 @@ void PragmaFilter()
 
 void yyerror(const char *msg)
 {
-	extern int numErrors;
-	extern char* curFileName;
-
-	// Report no errors as the result of a filtering.
-	if (vszFilterCommand && !fFiltered)
+	if (*vszFilterCommand && !fFiltered) {
+		// A filtering started but failed.  Report no further errors.
 		return;
+	}
 
 	// Dereferencing curFileName[] causes a coredump, inexplicably.
+	extern int numErrors;
+	extern char* curFileName;
 	fprintf(stderr, "vss client error: File %s, line %d: %s at \"%s\"",
 		curFileName && *curFileName ? curFileName : "-",
 		yylineno+1, msg, yytext);
