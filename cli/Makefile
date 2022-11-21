@@ -5,7 +5,7 @@ TOPDIR := $(shell cd ..; pwd)
 include $(SRVDIR)/Rules.common
 
 OBJCLI = lexMsg.o parseMsg.o vssClient.o actorMsg.o symtab.o cliMsg.o
-CFLAGS := -O3 -DDEBUG -D$(PLATFORMBASE) -D$(PLATFORM)
+CFLAGS := -O3 -Wall -Werror -pedantic -DDEBUG -D$(PLATFORMBASE) -D$(PLATFORM)
 LEX := flex -l # apt install flex
 
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"

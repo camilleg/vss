@@ -78,10 +78,9 @@ BeginSoundPaused		{ yylval.actorMessage = 4; return tBEGIN_PAUSED_NOTE_MESSAGE; 
 
 %%
 
-void PragmaFilter(void)
+void PragmaFilter()
 {
 	strcpy(yylval.string, "");
-
 	/* Do this not more than once. */
 	if (*vszFilterCommand)
 		return;
@@ -90,8 +89,6 @@ void PragmaFilter(void)
 	strcpy(sz, yytext);
 	sz[yyleng-1] = '\0';
 	strcpy(vszFilterCommand, strchr(sz, '"') + 1);
-//	printf("<<<%s>>>\n", vszFilterCommand);
-	return;
 }
 
 void yyerror(const char *msg)
@@ -104,28 +101,21 @@ void yyerror(const char *msg)
 		return;
 
 	// Dereferencing curFileName[] causes a coredump, inexplicably.
-//	fprintf(stderr, "vss client error: File %s, line %d: %s at \"%s\"",
-//		curFileName && *curFileName ? curFileName : "-",
-//		yylineno+1, msg, yytext);
+	fprintf(stderr, "vss client error: File %s, line %d: %s at \"%s\"",
+		curFileName && *curFileName ? curFileName : "-",
+		yylineno+1, msg, yytext);
 	fprintf(stderr, "vss client error: Line %d: %s at \"%s\"",
 		yylineno+1, msg, yytext);
-
-	if(++numErrors >= MAX_ERRORS)	{
-		fprintf(stderr, ", giving up.\n");
-		return;
-	}
-	else
-		fprintf(stderr, "\n");
+	fprintf(stderr, ++numErrors >= MAX_ERRORS ? ", giving up.\n" : "\n");
 }
 
 #ifdef VSS_LINUX
 #define input() yyinput()
 #endif
 
-void skipComment(void)
+void skipComment()
 {
 	char c;
-	
 	for(;;)	{
 		while((c=yyinput())!='*')
 			;
@@ -136,4 +126,3 @@ void skipComment(void)
 		}
 	}
 }
-

@@ -35,8 +35,8 @@ int findNoteName(char*);
 void AppendArg(const char*);
 void AppendFloat(float z);
 
-char			curFileName[180] = {0};
-char			prevFileName[180] = {0};
+char curFileName[2000]{0};
+char prevFileName[2000]{0};
 extern FILE		*yyin;
 int numErrors;
 static SymtabActor symtabActor[fdMax];

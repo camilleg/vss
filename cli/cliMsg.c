@@ -46,7 +46,7 @@ typedef struct
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- OBJ BgnMsgsend(char *szHostname, int channel)
+ OBJ BgnMsgsend(const char *szHostname, int channel)
 {
 	struct sockaddr_in  cl_addr;
 	int  sockfd;
@@ -360,24 +360,17 @@ int wSendChannel = 7999;
 /* set up the UDP connection.  szHostname defaults to localhost. */
 static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 {
-	char szT[100]; /* warning: buffer overflow possible. */
-
 	if (!szHostname || !*szHostname)
 		{
-		char *szT = getenv("SOUNDSERVER");
-		char* pch;
-		szHostname = (szT == NULL ) ? "127.0.0.1" : szT;
-		pch = strchr(szHostname, ':');
+		char* szEnv = getenv("SOUNDSERVER");
+		szHostname = szEnv ? szEnv : "127.0.0.1";
+		char* pch = strchr(szHostname, ':');
 		if (pch)
 			{
-			// Maybe what's after the colon is a port number.
-			int w = atoi(pch+1);
+			const int w = atoi(pch+1);
 			if (w > 0 && w < 1000000)
 				{
-				// Yes, it is.
-				// Copy szHostname to a local buffer.
-				strcpy(szT, szHostname);
-				*strchr(szT, ':') = '\0';
+				// What's after the colon is a port number.
 				if (w < 1000 || w > 65535)
 					fprintf(stderr, "VSS client error: port number %d is out of range 1000 to 65535.  Using default %d instead.\n",
 						w, wChannel);
@@ -397,11 +390,8 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 #ifdef VSS_WINDOWS
 		fprintf(stderr, "VSS client error: Sorry, Windows needs a dotted-quad address, not a name\n");
 #else
-		char ipAddr[16];
-		char **cp;
-		struct hostent * myHostent;
-
-		if (! (myHostent = /*schmoo*/gethostbyname(szHostname) ) )
+		struct hostent* myHostent = /*schmoo*/gethostbyname(szHostname);
+		if (!myHostent)
 			{
 			fprintf(stderr, "VSS client error: host name \"%s\" doesn't exist?\n",
 				szHostname);
@@ -416,14 +406,15 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 			return fFalse;
 			}
 
-		cp = myHostent->h_addr_list;
-		sprintf(ipAddr, "%s", inet_ntoa(*(struct in_addr *)(*cp)));
+		char** cp = myHostent->h_addr_list;
+		char ipAddr[16];
+		strcpy(ipAddr, inet_ntoa(*(struct in_addr *)(*cp)));
 		szHostname = ipAddr;
 #endif
 		}
 
 	*pobj = BgnMsgsend(szHostname, wChannel);
-	return (*pobj != 0);
+	return *pobj != 0;
 }
 
 static float vhnote = hNil;

@@ -1,13 +1,12 @@
-/* cliMsg.h -- send data over udp packets */
+/* Send data over UDP packets. */
 
-#ifndef __CLI_MSG_H_
-#define __CLI_MSG_H_
+#pragma once
 
 #define hNil (-1.f)
 
 /* urp.. defined in actorMsg.h as well as in here. */
 #ifndef actorMsg_h
-typedef void *OBJ;
+typedef void* OBJ;
 
 #define cchmm 5120
 typedef struct mm
@@ -28,30 +27,26 @@ typedef struct mm
 extern "C" {
 #endif
 
-void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, mm* pmm);
-OBJ BgnMsgsend(char *szHostname, int channel);
+void MsgsendObj(OBJ, struct sockaddr_in*, mm*);
+OBJ BgnMsgsend(const char *szHostname, int channel);
 
 void setAckPrint(int flag);
-int BeginSoundServer(void);
-int BeginSoundServerAt(char * hostName);
+int BeginSoundServer();
+int BeginSoundServerAt(char* hostName);
 int SelectSoundServer(int serverHandle);
-void EndSoundServer(void);
-void EndAllSoundServers(void);
-int PingSoundServer(void);
-void Msgsend(struct sockaddr_in *paddr, mm* pmm);
-void MsgsendArgs1(struct sockaddr_in *paddr, mm* pmm, const char* msg,
-					float z0);
-void MsgsendArgs2(struct sockaddr_in *paddr, mm* pmm, const char* msg,
-					float z0, float z1);
-void clientMessageCall(char* Message);
-int WMsgFromSz(char *szMsg);
-const char* SzMsgFromW(int wMsg);
+void EndSoundServer();
+void EndAllSoundServers();
+int PingSoundServer();
+void Msgsend(struct sockaddr_in*, mm*);
+void MsgsendArgs1(struct sockaddr_in*, mm*, const char* msg, float z0);
+void MsgsendArgs2(struct sockaddr_in*, mm*, const char* msg, float z0, float z1);
+void clientMessageCall(char*);
+int WMsgFromSz(char*);
+const char* SzMsgFromW(int);
 
-const char* GetVssLibVersion(void); /* from vssBuild.c++ */
-const char* GetVssLibDate(void);
+const char* GetVssLibVersion(); /* from vssBuild.c++ */
+const char* GetVssLibDate();
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 }
 #endif
-
-#endif /* __CLI_MSG_H_ */

@@ -1,6 +1,5 @@
 //;; coalesce these two classes.
 
-#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include "symtab.h"
@@ -58,7 +57,7 @@ int SymtabActor::FAddSz(char* sz, float hactor)
 				{
 				fAdded = 1;
 				iAdded = i;
-				strncpy(storage[i].szName, sz, cchszName);
+				strncpy(storage[i].szName, sz, cchszName-1);
 				storage[i].szName[cchszName-1] = '\0';
 				storage[i].hActor = hactor;
 				}
@@ -160,7 +159,7 @@ int SymtabNote::FAddSz(char* sz, float hactor, float hnote)
 				{
 				fAdded = 1;
 				iAdded = i;
-				strncpy(storage[i].szName, sz, cchszName);
+				strncpy(storage[i].szName, sz, cchszName-1);
 				storage[i].szName[cchszName-1] = '\0';
 				storage[i].hActor = hactor;
 				storage[i].hNote = hnote;
