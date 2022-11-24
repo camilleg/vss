@@ -238,7 +238,7 @@ PentaActor::receiveMessage(const char* Message)
 
 	if (CommandIs("SetMessageGroup"))
 	{
-		ifS( szName, setMG(szName) );
+		ifS( szName, setMG(szName) ); // strncpy might truncate char szName[1000] to char szMG[80].
 		return Uncatch();
 	}
 

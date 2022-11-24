@@ -22,7 +22,7 @@ int smActor::receiveMessage(const char* Message)
 	
   if (CommandIs("setMessageGroup"))
     {
-      ifS( name, setMessageGroup(name) );
+      ifS( name, setMessageGroup(name) ); // strncpy might truncate char szName[1000] to char szMG[100].
       return Uncatch();
     }
 
@@ -84,7 +84,7 @@ int smActor::receiveMessage(const char* Message)
 
 void smActor::setDirectory(const char* dirname)
 {
-  strncpy(szFilename, dirname, strlen(dirname)+1);
+  strcpy(szFilename, dirname); // buffer overflow
   printf("directory = %s\n", szFilename);
 }
 

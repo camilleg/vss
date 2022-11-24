@@ -47,7 +47,7 @@ void CrowdActor::setDirectory(const char* sz)
 
 void CrowdActor::setFile(const char* sz)
 {
-	strncpy(szFile, sz, cchFileMax);
+	strncpy(szFile, sz, cchFileMax-1);
 	char szCmd[1100];
 	sprintf(szCmd, "LoadFile %g %s", hSampActor, szFile);
 	actorMessageHandler(szCmd);
