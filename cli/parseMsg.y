@@ -4,9 +4,9 @@
 #include <cstring>
 #include <cstdarg>
 #include <unistd.h>
-extern "C" {
 
-#define MAX_ERRORS 1
+extern "C" {
+const auto MAX_ERRORS = 1;
 
 int     AUDinit(const char *);
 float    AUDupdate(int, char *, int, float *);
@@ -18,10 +18,8 @@ void	AUDqueue(int, float *, float);
 void	AUDflushQueue(int, char*, int);
 void	SetReplyTimeout(float);
 
-int yyparse(void);
-int yylex(void);
-extern "C" void yyerror(const char *msg);
-
+int yylex();
+extern "C" void yyerror(const char*);
 }
 
 #include "symtab.h"
@@ -33,7 +31,7 @@ extern "C" void yyerror(const char *msg);
 int findActorName(int, char*);
 int findNoteName(char*);
 void AppendArg(const char*);
-void AppendFloat(float z);
+void AppendFloat(float);
 
 char curFileName[2000], prevFileName[2000]; // Static storage duration, therefore zero initialized.
 extern FILE		*yyin;
@@ -54,7 +52,6 @@ static int 		vfEnableWarnNoMG = 1;
 int fFiltered = 0; // not static
 char vszFilterCommand[500] = {0};
 int vfAbsorbText = 0;
-
 
 typedef struct
 {
@@ -424,62 +421,51 @@ LAgain:
 	return fd++;	 	// return the row # of actors allocated
 }
 
-static int vfHush = 0;
-extern "C" void AUDterminateImplicit(void)
-{
-	if (hAudSimple >= 0)
-		{
-		vfHush = 1;
+static bool vfHush = false;
+extern "C" void AUDterminateImplicit() {
+	if (hAudSimple >= 0) {
+		vfHush = true;
 		AUDterminate(hAudSimple);
-		vfHush = 0;
-		}
+		vfHush = false;
+	}
 }
 
 extern "C" void AUDterminate(int fdT)
 {
-	float h;
-	if (fdT < 0)
-		{
+	if (fdT < 0) {
 		if (!vfHush)
 			fprintf(stderr, "vss client error: invalid handle to .aud file.  Possible error in .aud file.\n");
 		return;
-		}
-	if (serverHandles[fdT] <= 0)
-		{
+	}
+	if (serverHandles[fdT] <= 0) {
 		if (!vfHush)
 			fprintf(stderr, "vss client error: bogus AUDterminate().\n");
 		return;
-		}
+	}
 
-	int sendEm = SelectSoundServer(serverHandles[fdT]);
-	if (fdT < 0 || fdT >= fdMax)
-		{
+	const auto sendEm = SelectSoundServer(serverHandles[fdT]);
+	if (fdT < 0 || fdT >= fdMax) {
 		if (!vfHush)
 			fprintf(stderr, "vss client error: AUDterminate called with bogus value %d\n", fdT);
 		return;
-		}
+	}
 	SymtabActor* pA = &symtabActor[fdT];
 
-/*
-	First de-activate all the actors, then delete them. That way the order
-	of deletion doesn't matter because there will be no important dependencies
-	between the various actors. In particular, inactive actors won't generate
-	audEvents.
-*/
-	if (sendEm)
-		{
+	if (sendEm) {
+		// Inactivate all actors, so they can't send audEvents,
+		// in particular to a deleted actor.
+		float h;
 		char szT[500];
-		for (h = pA->HFirst(); h != -1.; h = pA->HNext())
-			{
+		for (h = pA->HFirst(); h != -1.; h = pA->HNext()) {
 			sprintf(szT, "Active %f 0", h);
 			actorMessage(szT);
-			}
-		for (h = pA->HFirst(); h != -1.; h = pA->HNext())
-			{
+		}
+		// Now it's safe to delete all actors.  Order doesn't matter.
+		for (h = pA->HFirst(); h != -1.; h = pA->HNext()) {
 			sprintf(szT, "Delete %f", h);
 			actorMessage(szT);
-			}
 		}
+	}
 	pA->Reset();
 
 	// set the server handle for this call to 0
@@ -487,23 +473,23 @@ extern "C" void AUDterminate(int fdT)
 
 	// reuse array, if AUDterminates match up with AUDinits.
 	if (fdT == fd-1)
-		fd--;
+		--fd;
 
 	// Suppress spurious warning.
 	*prevFileName = '\0';
 }
 
 //	Terminate all of this client's server connections.
-extern "C" void AUDreset(void)
+extern "C" void AUDreset()
 {
-	for (int fdT = 0; fdT < fdMax; fdT++)
-		if (serverHandles[fdT] > 0) AUDterminate(fdT);
+	for (int fdT = 0; fdT < fdMax; ++fdT)
+		if (serverHandles[fdT] > 0)
+			AUDterminate(fdT);
 	fd = 0;
 	QdataCount = 0;
 }
 
-extern "C"
-float AUDupdateSimple(char *szActor, int numFloats, float *floatArray)
+extern "C" float AUDupdateSimple(char* szActor, int numFloats, float* floatArray)
 {
 	if (hAudSimple >= 0)
 		return AUDupdate(hAudSimple, szActor, numFloats, floatArray);
@@ -514,24 +500,22 @@ float AUDupdateSimple(char *szActor, int numFloats, float *floatArray)
 
 float AUDupdateSimpleFloats(char* szActor, int numFloats, ...)
 {
-	if (hAudSimple < 0)
-		{
+	if (hAudSimple < 0) {
 		fprintf(stderr, "vss client error: AUDupdateSimpleFloats() without preceding AUDinit().\n");
 		return hNil;
-		}
+	}
 
 	// Build an array and then pass it to the conventional AUDupdate().
 	const int numFloatsMax = 1000;
 	static float rgz[numFloatsMax]; // not re-entrant, but that's OK.
-	if (numFloats > numFloatsMax)
-		{
+	if (numFloats > numFloatsMax) {
 		fprintf(stderr, "VSS client warning: AUDupdateFloats() truncated list of %d floats to %d.\n",
 			numFloats, numFloatsMax);
 		numFloats = numFloatsMax;
-		}
+	}
 	va_list _;
 	va_start(_, numFloats);
-	for (int i=0; i<numFloats; i++)
+	for (int i=0; i<numFloats; ++i)
 		rgz[i] = (float)va_arg(_, double);
 	va_end(_);
 	return AUDupdate(hAudSimple, szActor, numFloats, rgz);
@@ -543,61 +527,56 @@ float AUDupdateFloats(int fdT, char* szActor, int numFloats, ...)
 
 	const int numFloatsMax = 1000;
 	static float rgz[numFloatsMax]; // not re-entrant, but that's OK.
-	if (numFloats > numFloatsMax)
-		{
+	if (numFloats > numFloatsMax) {
 		fprintf(stderr, "VSS client warning: AUDupdateFloats() truncated list of %d floats to %d.\n",
 			numFloats, numFloatsMax);
 		numFloats = numFloatsMax;
-		}
+	}
 	va_list _;
 	va_start(_, numFloats);
-	for (int i=0; i<numFloats; i++)
+	for (int i=0; i<numFloats; ++i)
 		rgz[i] = (float)va_arg(_, double);
 	va_end(_);
 	return AUDupdate(fdT, szActor, numFloats, rgz);
 }
 
-extern "C" void VSS_StripZerosInPlace(char *); // in cliMsg.c
+extern "C" void VSS_StripZerosInPlace(char*); // in cliMsg.c
 
 // Send a data array to the message group called szActor at server fdT.
 // Complain if there is no such message group at fdT.
-extern "C" float AUDupdate(int fdT, char *szActor, int numFloats, float *floatArray)
+extern "C" float AUDupdate(int fdT, char* szActor, int numFloats, float* floatArray)
 {
-	if (fdT < 0)
-		{
+	if (fdT < 0) {
 		fprintf(stderr, "vss client error: invalid handle to .aud file.  Possible error in .aud file.\n");
 		return hNil;
-		}
+	}
 
 	if (!SelectSoundServer(serverHandles[fdT]))
 		return hNil;
 
-	float h = symtabActor[fdT].HactorFromSz(szActor);
-	if (h < 0.)
-		{
-		if (vfEnableWarnNoMG)
-			{
+	const auto h = symtabActor[fdT].HactorFromSz(szActor);
+	if (h < 0.0) {
+		if (vfEnableWarnNoMG) {
 			fprintf(stderr, "vss client error: No message group called '%s'.\n",  szActor);
 			symtabActor[fdT].Dump();
-			}
-		return hNil;
 		}
+		return hNil;
+	}
 
-	char szT2[20];
 	char szT[5000];
 	sprintf(szT, "SendData %f [ ", h);
-	for (int i=0; i<numFloats; i++)
-		{
+	for (int i=0; i<numFloats; ++i) {
+		char szT2[20];
 		sprintf(szT2, "%f ", floatArray[i]);
 		strcat(szT, szT2);
-		}
+	}
 	strcat(szT, "]");
 	VSS_StripZerosInPlace(szT);
 	return actorMessageRetval(szT);
 }
 
 // Call AUDupdate for two servers, e.g. for wet and dry localization.
-extern "C" void AUDupdateTwo(int vss1, int vss2, char *szActor, int size, float *array)
+extern "C" void AUDupdateTwo(int vss1, int vss2, char* szActor, int size, float* array)
 {
 	if (SelectSoundServer(serverHandles[vss1]))
 		(void)AUDupdate(vss1, szActor, size, array);
@@ -606,23 +585,20 @@ extern "C" void AUDupdateTwo(int vss1, int vss2, char *szActor, int size, float 
 }
 
 // Call AUDupdate for an array of server handles.
-extern "C" void AUDupdateMany(int numHandles, int * handleArray, char *actorHandleName,
-				int numFloats, float *floatArray)
+extern "C" void AUDupdateMany(int numHandles, int* handleArray, char* actorHandleName, int numFloats, float* floatArray)
 {
-	for (int i = 0; i < numHandles; i++)
-	{
+	for (int i = 0; i < numHandles; ++i) {
 		const int fdT = handleArray[i];
 		if (SelectSoundServer(serverHandles[fdT]))
 			(void)AUDupdate(fdT, actorHandleName, numFloats, floatArray);
 	}
-
 }
 
 //	Queue up an array of data to send to a message group with
 //	ScheduleData whenever AUDflushQueue is finally called. Complain
 //	if AUDqueue is called more than qdMax times before AUDflushQueue
 //	is called.
-extern "C" void AUDqueue(int size, float * data, float when)
+extern "C" void AUDqueue(int size, float* data, float when)
 {
 	if (QdataCount >= qdMax)
 	{
@@ -632,76 +608,69 @@ extern "C" void AUDqueue(int size, float * data, float when)
 
 	Qdata[QdataCount].time = when;
 	Qdata[QdataCount].size = size;
-
 // printf("\t\tqueueing %d at %f: ", size, when);
 	Qdata[QdataCount].farray = (float *)malloc(size * sizeof(float));
-
 	if (NULL == Qdata[QdataCount].farray)
 	{
 		fprintf(stderr, "vss client error: out of memory trying to queue data.\n");
 		return;
 	}
 
-	for (int i=0; i<size; i++)
+	for (int i=0; i<size; ++i)
 	{
 		Qdata[QdataCount].farray[i] = data[i];
 // printf("%f ", data[i]);
 	}
 // printf("\n\n");
-	QdataCount++;
+	++QdataCount;
 }
 
 // Send queued data to the message group szActor, at server fdT, using ScheduleData.
 // Complain if actor is called szActor.
-extern "C" void AUDflushQueue(int fdT, char *szActor, int fPreserveQueueData)
+extern "C" void AUDflushQueue(int fdT, char* szActor, int fPreserveQueueData)
 {
-	if (fdT < 0)
-		{
+	if (fdT < 0) {
 		fprintf(stderr, "vss client error: invalid handle to .aud file.  Possible error in .aud file.\n");
 		return;
-		}
+	  }
     if (!SelectSoundServer(serverHandles[fdT]))
 		return;
 
-    float h = symtabActor[fdT].HactorFromSz(szActor);
-    if (h < 0.)
-        {
-		if (vfEnableWarnNoMG)
-			{
-        	fprintf(stderr, "vss client error: No message group called '%s'.\n",  szActor);
+    const auto h = symtabActor[fdT].HactorFromSz(szActor);
+    if (h < 0.0) {
+		if (vfEnableWarnNoMG) {
+			fprintf(stderr, "vss client error: No message group called '%s'.\n", szActor);
         	symtabActor[fdT].Dump();
-			}
+		}
         return;
-        }
+	}
 
 // printf("AUDflushQueue flushing %d\n", QdataCount);
-	//	set up the message
+	// Start the message.
     char szT[5000];
-	char szT2[50];
-	int cqd;
 	sprintf(szT, "ScheduleData %f [ ", h);
 
-	//	first build the time offset array
-	for (cqd = 0; cqd< QdataCount; cqd++)
-	{
+	// Build the time offset array.
+	int cqd;
+	char szT2[50];
+	for (cqd = 0; cqd < QdataCount; ++cqd) {
 		sprintf(szT2, "%f ", Qdata[cqd].time);
 		strcat(szT, szT2);
 	}
 	strcat(szT, "]");
 
-	// add the data arrays
-	for (cqd = 0; cqd< QdataCount; cqd++)
-	{
+	// Add the data arrays.
+	for (cqd = 0; cqd < QdataCount; ++cqd) {
 		strcat(szT, " [");
-		for(int cdata = 0; cdata < Qdata[cqd].size; cdata++)
+		for (int cdata = 0; cdata < Qdata[cqd].size; ++cdata)
 		{
 			sprintf(szT2, "%f ", Qdata[cqd].farray[cdata]);
 			strcat(szT, szT2);
 		}
 		strcat(szT, "]");
 	}
-	// send it off to the server
-// printf("AUDflushQueue sending %s\n\n", szT);
+
+	// Send it to VSS.
     actorMessage(szT);
 
 	if (!fPreserveQueueData)
