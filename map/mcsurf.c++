@@ -236,5 +236,7 @@ void MCSurface::DelPoint(int i)		// delete a control point
 		}
 printf("\t\t\t\tMCSurface deleting %d\n", i);
 
+	// todo: replace with copy-assignment or copy-initialization,
+	// because class MCPoint isn't trivially copyable.
 	memmove(rgPt+i, rgPt+i+1, sizeof(MCPoint) * (--cPt - i));
 }
