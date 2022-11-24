@@ -63,39 +63,39 @@ void print_neighbor_snum(FILE* F, neighbor *n){
 	if (n->vert)
 		fprintf(F, "%ld ", (*site_num)(n->vert));
 	else
-		fprintf(F, "NULL vert ");
+		fprintf(F, "%s", "NULL vert ");
 	fflush(stdout);
 }
 
 void print_basis(FILE *F, basis_s* b) {
-	if (!b) {fprintf(F, "NULL basis ");fflush(stdout);return;}
-	if (b->lscale<0) {fprintf(F, "\nbasis computed");return;}
+	if (!b) {fprintf(F, "%s", "NULL basis ");fflush(stdout);return;}
+	if (b->lscale<0) {fprintf(F, "%s", "\nbasis computed");return;}
 	fprintf(F, "\n%p  %d \n b=",(void*)b,b->lscale);
 	print_point(F, rdim, b->vecs);
-	fprintf(F, "\n a= ");
-	print_point_int(F, rdim, b->vecs+rdim); fprintf(F, "   ");
+	fprintf(F, "%s", "\n a= ");
+	print_point_int(F, rdim, b->vecs+rdim); fprintf(F, "%s", "   ");
 	fflush(F);
 }
 
 void print_simplex_num(FILE *F, simplex *s) {
-	fprintf(F, "simplex ");
-	if(!s) fprintf(F, "NULL ");
+	fprintf(F, "%s", "simplex ");
+	if(!s) fprintf(F, "%s", "NULL ");
 	else fprintf(F, "%p  ", (void*)s);
 }
 
 void print_neighbor_full(FILE *F, neighbor *n){
-	if (!n) {fprintf(F, "null neighbor\n");return;}
+	if (!n) {fprintf(F, "%s", "null neighbor\n");return;}
 
 	print_simplex_num(F, n->simp);
-	print_neighbor_snum(F, n);fprintf(F, ":  ");fflush(F);
+	print_neighbor_snum(F, n);fprintf(F, "%s", ":  ");fflush(F);
 	if (n->vert) {
-/*		if (n->basis && n->basis->lscale <0) fprintf(F, "trans ");*/
+/*		if (n->basis && n->basis->lscale <0) fprintf(F, "%s", "trans ");*/
 		/* else */ print_point(F, pdim,n->vert);
 		fflush(F);
 	}
 	print_basis(F, n->basis);
 	fflush(F);
-	fprintf(F, "\n");
+	fprintf(F, "%s", "\n");
 }
 
 simplex *print_facet(FILE *F, simplex *s, print_neighbor_f *pnfin) {
@@ -104,7 +104,7 @@ simplex *print_facet(FILE *F, simplex *s, print_neighbor_f *pnfin) {
 
 /*	fprintf(F, "%d ", s->mark);*/
 	for (i=0; i<cdim;i++,sn++) (*pnfin)(F, sn);
-	fprintf(F, "\n");
+	fprintf(F, "%s", "\n");
 	fflush(F);
 	return NULL;
 }
@@ -115,11 +115,11 @@ simplex *print_simplex_f(simplex *s, FILE *F, print_neighbor_f *pnfin){
 	if (pnfin) {pnf=pnfin; if (!s) return NULL;}
 
 	print_simplex_num(F, s);
-	fprintf(F, "\n");
+	fprintf(F, "%s", "\n");
 	if (!s) return NULL;
-	fprintf(F, "normal ="); print_basis(F, s->normal); fprintf(F, "\n");
-	fprintf(F, "peak ="); (*pnf)(F, &(s->peak));
-	fprintf (F, "facet =\n");fflush(F);
+	fprintf(F, "%s", "normal ="); print_basis(F, s->normal); fprintf(F, "%s", "\n");
+	fprintf(F, "%s", "peak ="); (*pnf)(F, &(s->peak));
+	fprintf(F, "%s", "facet =\n");fflush(F);
 	return print_facet(F, s, pnf);
 }
 
@@ -147,19 +147,19 @@ simplex *check_simplex(simplex *s, void *){
 	for (i=-1,sn=s->neigh-1;i<cdim;i++,sn++) {
 		sns = sn->simp;
 		if (!sns) {
-			fprintf(DFILE, "check_triang; bad simplex\n");
+			fprintf(DFILE, "%s", "check_triang; bad simplex\n");
 			print_simplex_f(s, DFILE, &print_neighbor_full); fprintf(DFILE, "site_num(p)=%x\n", (int)site_num(hull_p));
 			return s;
 		}
 		if (!s->peak.vert && sns->peak.vert && i!=-1) {
-			fprintf(DFILE, "huh?\n");
+			fprintf(DFILE, "%s", "huh?\n");
 			print_simplex_f(s, DFILE, &print_neighbor_full);
 			print_simplex_f(sns, DFILE, &print_neighbor_full);
 			exit(1);
 		}
 		for (j=-1,snn=sns->neigh-1; j<cdim && snn->simp!=s; j++,snn++);
 		if (j==cdim) {
-			fprintf(DFILE, "adjacency failure:\n");
+			fprintf(DFILE, "%s", "adjacency failure:\n");
 			DEBEXP(-1,site_num(hull_p))
 			print_simplex_f(sns, DFILE, &print_neighbor_full);
 			print_simplex_f(s, DFILE, &print_neighbor_full);
@@ -173,7 +173,7 @@ simplex *check_simplex(simplex *s, void *){
 					l++,sn2++);
 				if (l==cdim) {
 					fprintf(DFILE, "cdim=%d\n",cdim);
-					fprintf(DFILE, "error: neighboring simplices with incompatible vertices:\n");
+					fprintf(DFILE, "%s", "error: neighboring simplices with incompatible vertices:\n");
 					print_simplex_f(sns, DFILE, &print_neighbor_full);
 					print_simplex_f(s, DFILE, &print_neighbor_full);
 					exit(1);
