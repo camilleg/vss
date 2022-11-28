@@ -50,7 +50,7 @@ extern int		currentServerHandle;	// in cliMsg.c
 static int		vfPaused;
 static int 		vfEnableWarnNoMG = 1;
 int fFiltered = 0; // not static
-char vszFilterCommand[500] = {0};
+char vszFilterCommand[500];
 int vfAbsorbText = 0;
 
 typedef struct

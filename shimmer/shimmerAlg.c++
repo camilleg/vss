@@ -68,7 +68,7 @@ static float f(float x) {
 		0.;
 }
 
-static float rgzComputeMyNextSample[MaxNumChannels] = {0};
+static float rgzComputeMyNextSample[MaxNumChannels];
 
 float* shimmerAlg::ComputeMyNextSample() {
 	float fPhase;

@@ -1927,7 +1927,7 @@ Local Void cmdrenum(struct LOC_exec *LINK)
   }
 }
 
-static char szBasicOutput[5000] = {0};
+static char szBasicOutput[5000];
 
 void BASICflushoutput(void)
 {

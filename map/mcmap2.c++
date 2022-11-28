@@ -391,7 +391,7 @@ void MCMap::XYZFromMCPoint(MCPoint& pt, float& x, float& y, float& z) const
 	}
 
 	int _; // in this function, "_" means "idim"
-	Barycoords bary = {0};
+	Barycoords bary = {};
 	for (int itet=0; itet<ctet; itet++)
 		{
 		// vertices of tet in Rn

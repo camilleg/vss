@@ -46,7 +46,7 @@ void mixerAlg::generateSamples(int howMany)
 	const auto nchans = Nchans();
 	for (int s=0; s<howMany; s++) 
 	{
-		float out[MaxNumChannels] = {0};
+		float out[MaxNumChannels] = {};
 		if (matrix) {
 			for (int i=0; i<numInputs; i++)
 				if (source[i])

@@ -130,7 +130,7 @@ LAbort:
 
 	// Get the indices of vertices in the hull H,
 	// by traversing all the triangles and noting which v's they contain.
-	int rgiVertex[cPtMax] = {0};
+	int rgiVertex[cPtMax] = {};
 
 	std::cout <<"HidimMapper: cPt=" <<cPt <<", ctri=" <<ctri <<", ctet=" <<ctet << std::endl;;;;
 

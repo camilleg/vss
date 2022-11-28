@@ -120,7 +120,7 @@ double logb(double x) { return ilogb(x); }
 #endif
 
 static int vd;
-static basis_s	tt_basis = {0,1,-1,0,0,0},
+static basis_s	tt_basis = {0,1,-1,0,0,{0}},
 		*tt_basisp = &tt_basis,
 		*infinity_basis;
 // might have memory leak in here, reallocing infinity_basis?
@@ -138,12 +138,9 @@ void print_site(site p, FILE* F)
 #define VA(x) ((x)->vecs+rdim)
 #define VB(x) ((x)->vecs)
 
-
-
-
 /* tables for runtime stats */
-int A[100]={0}, B[100] ={0}, C[100] = {0}, D[100] ={0};
-int tot =0, totinf=0, bigt=0; 
+int A[100]={}, B[100]={}, C[100]={}, D[100]={};
+int tot=0, totinf=0, bigt=0;
 
 #define two_to(x) ( ((x)<20) ? 1<<(x) : ldexp(1,(x)) )
 

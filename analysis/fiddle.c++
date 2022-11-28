@@ -441,9 +441,8 @@ if (--ctr < 0)
 	const int peakTMax = 15;
 	if (npeakT > peakTMax) npeakT = peakTMax;
 	const float hzMax = 1300.; // don't play partials higher than this
-	static float rghz[peakTMax] = {0};
-		// static, so we don't freq-swoop if we don't have to.
-	float rgampl[peakTMax] = {0};
+	static float rghz[peakTMax] = {}; // static, so we don't freq-swoop if we don't have to.
+	float rgampl[peakTMax] = {};
 	int fSilent = 1;
 	static int fSilentPrev = 1; //;; should be a class variable
     for (i = 0, pk1 = peaklist; i < npeakT; i++, pk1++)

@@ -91,8 +91,7 @@ delayAlg::generateSamples(int howMany)
 	else
 		{
 		int c;
-		float temp[MaxNumChannels] = {0};
-
+		float temp[MaxNumChannels] = {};
 		for (s = 0; s < howMany; s++)
 			{
 			for (c=0; c<nchans; c++)
@@ -100,17 +99,14 @@ delayAlg::generateSamples(int howMany)
 			for (c=0; c<nchans; c++)
 				temp[c] = inputs[c][outPoint];
 
-			inPoint++;
-			if (inPoint >= length)
+			if (++inPoint >= length)
 				inPoint -= length;
-			outPoint++;
-			if (outPoint >= length)
+			if (++outPoint >= length)
 				outPoint -= length;
 
 			for (c=0; c<nchans; c++)
 				{
-				lastOutput[c] = -coeff * lastOutput[c] +
-								lastIn[c] + (coeff * temp[c]);
+				lastOutput[c] = -coeff * lastOutput[c] + lastIn[c] + (coeff * temp[c]);
 				lastIn[c] = temp[c];
 				}
 			OutputNchan(lastOutput, s);
