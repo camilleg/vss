@@ -43,7 +43,7 @@ void EnvelopeActor::act()
 		// Get the next segment's destination and time.
 		const auto segDstVal = nextSegIt->destVal;
 		const auto segModTime = std::max(0.0f, nextSegIt->segDur - now + nextSegStart);
-		for (const auto m: messageList) {
+		for (const auto& m: messageList) {
 			// Build and send the message.
 			const auto scaledDstVal = segDstVal * m.scale + m.offset;
 			char message[1000];
@@ -250,7 +250,7 @@ int EnvelopeActor::receiveMessage(const char* Message)
 void EnvelopeActor::deleteReceivers()
 {
 	float h;
-	for (const auto m: messageList)
+	for (const auto& m: messageList)
 		if (sscanf(m.msg, "%*s %f", &h) == 1)
 			delete VActor::getByHandle(h);
 	messageList.clear();
