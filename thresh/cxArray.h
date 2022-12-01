@@ -1,5 +1,4 @@
 /* -*-C++-*-
-
    !!! NOTE: this version has been hacked up to work with SwitchActor.
    
   This file is part of a set of general purpose libraries to extend C++,
@@ -21,11 +20,8 @@
    
    _CC_NO_INLINE_LOOPS	-> 1 if compiler does NOT inline loops,
 			   0 (default) if inlining of loops is done.
-
-  BUGS:
    */
-#ifndef _cxArray_h
-#define _cxArray_h
+#pragma once
 
 #define SA_HACK 1		// 1 to use the hacks for SwitchActor.
 
@@ -114,7 +110,6 @@ inline void cxBitCopyRange(T* dst, T* src, int start, int end)
   memmove(dst, src, sizeof(T)*(end-start));
 }
 
-
 //----------------------------------------------------------------------
 //	class array
 //		type safe and access safe array data type
@@ -132,21 +127,13 @@ public:
   cxBaseAB()	{}
   // this function should return non-zero if the destructor should be called.
   // when old data arrays are deleted, or when ~cxArrayB is called.
-#if 1
   static int  destroyArray()		{ return 1; }
-#else
-  static const int  destroyArray()	{ return 1; }
-#endif
   // static int destroyArray(cxArrayB<T,AB>&)
   
   // this function should return non-zero if the assignment operator
   // should be used to copy elements between old and new arrays.
   // Other bitwise copy (using mem moves) will be used.
-#if 1
   static int  assignToCopy()		{ return 1; }
-#else
-  static const int  assignToCopy()	{ return 1; }
-#endif
   
   static void	assertionFailed(const char* test, const char* file, int line)
 	{
@@ -154,8 +141,6 @@ public:
 	__assert(test,file,line);
 #endif
 	}
-
-  
 };
 class cxHeapAB :      public cxBaseAB, public cxHeapMB		{ };
 class cxNewDeleteAB : public cxBaseAB, public cxNewDeleteMB	{ };
@@ -396,7 +381,6 @@ public:
   ostream& dumpOn(ostream& os, unsigned int printCount=10);
 };
 
-
 /*------------------------------------------------------------
   This function will call the destructors for every element
   of the array.
@@ -543,10 +527,6 @@ public:
   }
 };
 
-
-
-
-
 //----------------------------------------------------------------------
 //	class cxArray implementation
 //----------------------------------------------------------------------
@@ -589,15 +569,12 @@ template <class T,class AB> cxArrayB<T,AB>::cxArrayB(const cxArrayB<T,AB> & sour
 	data[i] = source.data[i];
 }
 
-
-
 template <class T,class AB> cxArrayB<T,AB>::~cxArrayB()
 {
     // free the dynamic memory buffer
     CXA_delete(AB,data,T,size);
     //data = 0;
 }
-
 
 template <class T,class AB> cxArrayB<T,AB> & cxArrayB<T,AB>::operator=
     (const cxArrayB<T,AB> & right)
@@ -617,8 +594,6 @@ template <class T,class AB> cxArrayB<T,AB> & cxArrayB<T,AB>::operator=
     return *this;
 }
 
-
-
 #if 1				// attempting trySetCapacity
 // Set the capacity of array to exactly newSize.  Create new array
 // if the new size is different from the requested size, and copy
@@ -636,14 +611,12 @@ unsigned int cxArrayB<T,AB>::trySetCapacity(unsigned int newSize)
   // first create the new data area
   T* newData = 0;
   if (newSize > 0) {
-    
 #if 1
     newData = CXA_new(AB, T, newSize);
 #else
     cxVoidp mp = AB::alloc(sizeof(T)*newSize);
     newData = new(mp) T[newSize];
 #endif
-    
     if (newData==0) {
       return size;
       // !!! Change this? to some out-of-mem check or error handler?
@@ -687,7 +660,6 @@ unsigned int cxArrayB<T,AB>::setCapacity(unsigned int newSize)
   }
   return size;
 }
-
 
 #else
 // Set the capacity of array to exactly newSize.  Create new array
@@ -738,8 +710,6 @@ unsigned int cxArrayB<T,AB>::setCapacity(unsigned int newSize)
 }
 #endif
 
-
-
 // Set the count and expand the capacity of the array if needed.
 template <class T,class AB> void cxArrayB<T,AB>::count(int newCount)
 {
@@ -747,7 +717,6 @@ template <class T,class AB> void cxArrayB<T,AB>::count(int newCount)
     expandTo(newCount); }
   numElements = newCount;
 }
-
 
 // This increases the array capacity, if needed, by successively doubling
 // the current size, until it meets or exceeds the minSize.
@@ -814,7 +783,6 @@ template <class T,class AB> void cxArrayB<T,AB>::shift(int idx, int numToShift)
   numElements += numToShift;
 }
 
-
 /*
   Fill a range of positions with a value.
   j points one PAST the last index to be filled.
@@ -843,7 +811,6 @@ void cxArrayB<T,AB>::atDeleteWith(int idx, int numToDel, const T& fillVal)
   for (int i=numElements; i<j; i++)
     data[i] = fillVal;
 }
-
 
 //extern void *memmove(void *, const void *, size_t sz);
 
@@ -947,7 +914,6 @@ template <class T,class AB> ostream& cxArrayB<T,AB>::dumpOn(ostream& os, unsigne
   return os;
 }
 
-
 template <class T,class AB>
 void cxArrayB<T,AB>::dumpAll()
 {
@@ -964,7 +930,6 @@ void cxArrayB<T,AB>::dump()
   fprintf(stderr, "this: &%x size: %d, numElements: %d data: &%x\n",
 	  this, size, numElements, data);
 }
-
 
 #if !SA_HACK
 /*
@@ -1040,8 +1005,6 @@ int cxArrayB<T,AB>::removeFirst(const T& elm)
 }
 #endif
 
-
-
 //----------------------------------------------------------------------
 //	class cxArrayIterB implementation
 //----------------------------------------------------------------------
@@ -1107,46 +1070,24 @@ template <class T,class AB> void cxArrayIterB<T,AB>::initIdx(int startIdx)
     }
 }
 
-
-// *******************************************************
 //	template functions 
 //	Cfront demands these are in a different file,
 //	g++ and borland want them in this file.
-// *******************************************************
-
-# ifdef __GNUG__
-
+#ifdef __GNUG__
 //# include <array.c>
-
-# endif
-
-# ifndef __GNUG__
-
+#else
 template <class VecType, class EleType>
 int binarySearch(VecType data, EleType ele, unsigned int max);
-
 template <class T,class AB> void swap( cxArrayB<T,AB> & data, int i, int j);
-
 template <class T,class AB> void bubbleSort(cxArrayB<T,AB> & data);
-
 template <class T,class AB> void selectionSort(cxArrayB<T,AB> & data);
-
 template <class T,class AB> void insertionSort(cxArrayB<T,AB> & data);
-
-template <class T,class AB>
-int partition(cxArrayB<T,AB> & v, int low, int high, int pivotIndex);
-
-template <class T,class AB>
-T findElement(cxArrayB<T,AB> & v, int N, int low, int high);
-
-template <class T,class AB>
-void quackSort(cxArrayB<T,AB> & v, int low, int high);
-
+template <class T,class AB> int partition(cxArrayB<T,AB> & v, int low, int high, int pivotIndex);
+template <class T,class AB> T findElement(cxArrayB<T,AB> & v, int N, int low, int high);
+template <class T,class AB> void quackSort(cxArrayB<T,AB> & v, int low, int high);
 template <class T,class AB>
 void quackSort(cxArrayB<T,AB> & v);
-
 # endif
-
 
 /* instantiation of cxArray with allocation from the heap.
    This will probably be most common instantiation.
@@ -1180,5 +1121,3 @@ public:
   cxArrayIter(cxArray<T>& anArray, int startIdx)
     : base(anArray, startIdx) {}
 };
-
-#endif /* _cxArray_h */
