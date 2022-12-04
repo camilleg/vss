@@ -1,94 +1,41 @@
-# util/Makefile
-
 .SUFFIXES: .c .c++ .o .a .l .y
+VERSION= 4.2.1
 SRVDIR := ..
-VERSION= 4.0
 TOPDIR := $(shell cd ..; pwd)
-all: do-it-all
+
+# Sets cFLAGS, CFLAGS and LDFLAGS, possibly for debugging via ../Rules.debug.
 include $(SRVDIR)/Rules.common
 
-CFLAGS := -O3 -Wall -Werror -pedantic -I../cli
-cFLAGS := $(CFLAGS)
-#  -DVERBOSE
+cFLAGS += -Werror -pedantic -I../cli
+# -DVERBOSE prints tektronix-green diagnostics.
 
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-LD := g++
-LIBSND := libsnd.a
-endif
+INC := ../cli/vssClient.h
+LIBS := ../cli/libsnd.a
 
-ifeq "$(PLATFORMBASE)" "VSS_LINUX"
-LD := g++
-LIBSND := libsnd.a
-endif
+TARGETS		:= audtest dynamic vssflush vsskill vssping
 
-ifeq "$(PLATFORMBASE)" "VSS_MAC"
-LD := g++
-LIBSND := libsnd.a
-endif
-
-ifeq "$(PLATFORMBASE)" "VSS_IRIX"
-LD := CC
-CFLAGS += -DVSS_OLD_H_FILES
-ifeq "$(PLATFORM)" "VSS_IRIX_53"
-CC := cc
-LD := CC
-CFLAGS += -mips2
-LIBSND := libsnd.a
-else
-ifeq "$(PLATFORM)" "VSS_IRIX_62"
-CFLAGS += -mips2
-LIBSND := libsnd.a
-else
-LD += -n32
-CFLAGS += -n32 -mips3
-LIBSND := libsnd_n32.a
-endif
-endif
-endif
-
-ifeq "$(PLATFORMBASE)" "VSS_WINDOWS"
-LD := g++
-CC := gcc
-LIBSND := libsnd.a
-endif
-
-INC			:= ../cli/vssClient.h
-LIB			:= ../cli/$(LIBSND)
-LIBS		:= $(LIB)
-
-#	sockets stuf for Solaris
-ifeq "$(PLATFORMBASE)" "VSS_SOLARIS"
-LIBS += -lxnet
-endif
-
-.PHONY: audpanel_always
-
-TARGETS		:= audtest vssping vssflush vsskill dynamic
-
-OBJSND		:= vsssend.o
-OBJPNG		:= vssping.o
-OBJFLSH		:= vssflush.o
-OBJKILL		:= vsskill.o
 OBJTEST		:= audtest.o
 OBJDYNAMIC	:= dynamic.o
+OBJFLSH		:= vssflush.o
+OBJKILL		:= vsskill.o
+OBJPNG		:= vssping.o
 
-do-it-all: $(TARGETS)
+all: $(TARGETS)
 
 clean:
 	-rm -rf $(TARGETS) $(TARGETS:=.exe) *.o .depend
 
-# Stripped audtest dumps core sometimes?
 audtest: $(OBJTEST) $(LIB) $(INC)
-	$(LD) -s -o $@ $(OBJTEST) $(LIBS)
+	$(CC) -o $@ $(OBJTEST) $(LIBS) $(LDFLAGS)
 
 vssping: $(OBJPNG) $(LIB) $(INC)
-	$(LD) -s -o $@ $(OBJPNG) $(LIBS)
+	$(CC) -o $@ $(OBJPNG) $(LIBS) $(LDFLAGS)
 
 vssflush: $(OBJFLSH) $(LIB) $(INC)
-	$(LD) -s -o $@ $(OBJFLSH) $(LIBS)
+	$(CC) -o $@ $(OBJFLSH) $(LIBS) $(LDFLAGS)
 
 vsskill: $(OBJKILL) $(LIB) $(INC)
-	$(LD) -s -o $@ $(OBJKILL) $(LIBS)
+	$(CC) -o $@ $(OBJKILL) $(LIBS) $(LDFLAGS)
 
 dynamic: $(OBJDYNAMIC) $(LIB) $(INC)
-	$(LD) -s -o $@ $(OBJDYNAMIC) $(LIBS)
+	$(CC) -o $@ $(OBJDYNAMIC) $(LIBS) $(LDFLAGS)
