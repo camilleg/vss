@@ -335,13 +335,13 @@ extern "C" int AUDinit(const char *fileName)
 {
 	if (currentServerHandle < 1)
 		{
-		fprintf(stderr, "vss client error: no connection to sound server!\n");
+		fprintf(stderr, "vss client error: not connected to sound server.  Ignoring .aud file '%s'.\n", fileName);
 		return -1;
 		}
 
 	if (fd >= fdMax)
 		{
-		fprintf(stderr, "vss client error:  can't AUDinit() more than %d times\nwithout AUDterminate()'ing old ones first.\nFile \"%s\" not read.\n", fdMax, fileName);
+		fprintf(stderr, "vss client error:  AUDinit() more than %d times without AUDterminate()'ing old ones first.  Ignoring .aud file '%s'.\n", fdMax, fileName);
 		return -1;
 		}
 
@@ -352,12 +352,12 @@ extern "C" int AUDinit(const char *fileName)
 	yyin = fopen(fileName, "r");
 	if (!yyin)
 		{
-		fprintf(stderr, "vss client error: can't read file \"%s\"\n", fileName);
+		fprintf(stderr, "vss client error: can't read .aud file '%s'.\n", fileName);
 		return -1;
 		}
 	if (!strcmp(fileName, prevFileName))
 		{
-		fprintf(stderr, "vss client warning: loading .aud file \"%s\" twice in a row.\n", fileName);
+		fprintf(stderr, "vss client warning: loading .aud file '%s' twice in a row.\n", fileName);
 		}
 
 LAgain:
@@ -376,11 +376,9 @@ LAgain:
 		if (!fOK && !fGonnaFilter)
 			{
 			if (yylineno <= 0)
-				fprintf(stderr, "vss client warning: File \"%s\" may be empty.\n",
-					fileName);
+				fprintf(stderr, "vss client warning: possibly empty .aud file '%s'.\n", fileName);
 			else
-				fprintf(stderr, "vss client error: Syntax error in file \"%s\", line %d\n",
-					fileName, yylineno);
+				fprintf(stderr, "vss client error: syntax error in .aud file '%s', line %d\n", fileName, yylineno);
 			}
 		if (fGonnaFilter)
 			{
@@ -395,7 +393,7 @@ LAgain:
 				fileName, vszFilterCommand);
 			const int r = system(szCmd);
 			if (r != 0) {
-			  fprintf(stderr, "vss client error: filter '%s' failed on file '%s'.  Aborting AUDinit.\n", vszFilterCommand, fileName);
+			  fprintf(stderr, "vss client error: filter '%s' failed on .aud file '%s'.", vszFilterCommand, fileName);
 			  unlink("/tmp/_-vss-_FiLtEr_--_"); // Just in case.
 			  return -1;
 			}
@@ -410,13 +408,12 @@ LAgain:
 	unlink("/tmp/_-vss-_FiLtEr_--_");
 	if (numErrors > MAX_ERRORS)
 		{
-		fprintf(stderr, "vss client error: Too many errors -- aborting AUDinit\n");
+		fprintf(stderr, "vss client error: too many errors with .aud file '%s'.\n", fileName);
 		return -1;
 		}
 
 	// If the aud file was loaded successfully, remember the current server handle.
 	serverHandles[fd] = currentServerHandle;
-
 	hAudSimple = fd;
 	return fd++;	 	// return the row # of actors allocated
 }
