@@ -46,12 +46,11 @@ typedef struct
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- OBJ BgnMsgsend(const char *szHostname, int channel)
+OBJ BgnMsgsend(const char *szHostname, int channel)
 {
 	struct sockaddr_in  cl_addr;
 	int  sockfd;
 	desc *o = (desc *)malloc(sizeof(desc));
-
 	if (!o)
 		return (OBJ)0;
 
@@ -120,21 +119,22 @@ LCleanup:
 	o->sockfd = sockfd;
 	o->len = sizeof(o->addr);
 #ifndef VSS_WINDOWS
-	fcntl(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
+	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking I/O
 #endif
 #if defined(SET_SOCK_SND_BUF_SIZE)
-	setsockopt(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
+	setsockopt(sockfd, F_SETFL, FNDELAY);
 #endif
 #ifdef NOISY
 	printf("opened send socket fd %d on channel %d, obj %x\n",
 		o->sockfd, o->channel, (int)(OBJ)o);
 #endif
-	return (OBJ)o;
+	return o;
 }
 
 static void EndMsgsend(OBJ obj)
 {
 	close(((desc*)obj)->sockfd);
+	free(obj);
 }
 
 static int sendudp(struct sockaddr_in *sp, int sockfd, long count, void  *b)
@@ -149,7 +149,6 @@ static int sendudp(struct sockaddr_in *sp, int sockfd, long count, void  *b)
 #endif
 	if (sendto(sockfd, (const char*)b, (int)count, 0, (const struct sockaddr*)sp, sizeof(*sp)) != count)
 		return fFalse;
-
 	return fTrue;
 }
 
@@ -208,7 +207,7 @@ void VSS_StripZerosInPlace(char* sz)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, mm* pmm)
+void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, mm* pmm)
 {
 	desc* o = (desc *)obj;
 	if (!obj)
@@ -232,7 +231,7 @@ printf("\t\033[32msend %s \"%s\"\033[0m\n", pmm->fRetval ? "RET" : "   ", pmm->r
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void Msgsend(struct sockaddr_in *paddr, mm* pmm)
+void Msgsend(struct sockaddr_in *paddr, mm* pmm)
 {
 	if (vpobj != NULL)
 		MsgsendObj(*vpobj, paddr, pmm);
@@ -241,7 +240,7 @@ extern "C"
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void MsgsendArgs1(struct sockaddr_in *paddr, mm* pmm, 
+void MsgsendArgs1(struct sockaddr_in *paddr, mm* pmm,
 				const char* msg, float z0)
 {
 	sprintf(pmm->rgch, "%s %f", msg, z0);
@@ -251,7 +250,7 @@ extern "C"
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void MsgsendArgs2(struct sockaddr_in *paddr, mm* pmm, 
+void MsgsendArgs2(struct sockaddr_in *paddr, mm* pmm,
 				const char* msg, float z0, float z1)
 {
 	sprintf(pmm->rgch, "%s %f %f", msg, z0, z1);
@@ -269,7 +268,6 @@ void SetReplyTimeout(float z)
 	vtimeout.tv_usec = (long)(1000000. * (z - (float)(long)z));
 	fprintf(stderr, "VSS client remark: timeout set to %g seconds.\n", z);
 }
-
 
 static int FMsgrcvCore(OBJ pv)
 {
@@ -328,7 +326,7 @@ static int FMsgrcvCore(OBJ pv)
 	return fFalse;
 }
 
-int FMsgrcv(void)
+int FMsgrcv()
 {
 	return FMsgrcvCore(NULL);
 }
@@ -440,17 +438,17 @@ static void AckDataReply(char* returnVal)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void setAckPrint(int flag)
+void setAckPrint(int flag)
 {
 	AckPrint = flag;
 }
 
-float HnoteFromAckNote(void)
+float HnoteFromAckNote()
 {
 	return vhnote;
 }
 
-const char* SzFromDataReply(void)
+const char* SzFromDataReply()
 {
 	return vszDataReply;
 }
@@ -474,7 +472,7 @@ VSSMDevent* MidiMsgsFromAckMidi(float* pcvssmdevent)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-int PingSoundServer(void)
+int PingSoundServer()
 {
 	sprintf(mmT.rgch, "Ping");
         Msgsend(NULL, &mmT);
@@ -484,12 +482,12 @@ int PingSoundServer(void)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void AUDterminateImplicit(void);
+void AUDterminateImplicit();
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void EndSoundServer(void)
+void EndSoundServer()
 {
 	if (!vpobj)
 		{
@@ -507,7 +505,7 @@ void EndSoundServer(void)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void EndAllSoundServers(void)
+void EndAllSoundServers()
 {
 	int i;
 	for (i = 0; i < numServers; i++)
@@ -563,7 +561,7 @@ extern "C"
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- int BeginSoundServer(void)
+int BeginSoundServer()
 {
 	return BeginSoundServerCore(NULL);
 }
@@ -585,7 +583,7 @@ extern "C"
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- void clientMessageCall(char* Message)
+void clientMessageCall(char* Message)
 {
 	/* format of string: "AckMidiInputMsg 5 00ff00ff00",
 	 * but the hex digits are 012345689:;<=>? for consecutive ASCIIness.
