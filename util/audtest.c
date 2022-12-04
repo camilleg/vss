@@ -1,44 +1,49 @@
-/* One-shot tester for .aud files. */
+// One-shot tester for .aud files.
 
 #include "vssClient.h"
+#include <stdbool.h>
 #include <string.h>
 
-int main(int argc, char *argv[])
+bool is_i(const char* s)
 {
-	if (argc != 2 && argc != 3) {
+	return strcmp(s, "-i") == 0;
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc < 2 || argc > 3 || (argc == 2 && is_i(argv[1]))) {
 LUsage:
-		fprintf(stderr, "\
-Usage:  %s [-i] audfilename\n\
-(-i means you then type in message-group names, <CR> by itself to quit)\n\n",
+		fprintf(stderr, "Usage: %s [-i] foo.aud\n  (-i lets you type the names of message groups, or return to quit)\n",
 			argv[0]);
 		return -1;
 	}
 	
-	if (argc==3 && strcmp(argv[1], "-i")) {
-		printf("Unrecognized flag \"%s\"\n", argv[1]);
+	if (argc==3 && !is_i(argv[1])) {
+		printf("Unrecognized flag \"%s\".\n", argv[1]);
 		goto LUsage;
 		}
 
 	if (!BeginSoundServer()) {
-		printf("Error: couldn't find a running copy of VSS.\n");
+		printf("Error: VSS not running.\n");
 		return -1;
 	}
 
 	const int handle = AUDinit(argv[argc-1]);
 	if (handle < 0) {
-		printf("Syntax error in .aud file \"%s\"\n", argv[argc-1]);
-		EndSoundServer();
+		EndSoundServer(); // AUDinit complained.
 		return -1;
 	}
 
-	if (argc==3 && !strcmp(argv[1], "-i")) {
+	if (argc==3 && is_i(argv[1])) {
 		for (;;) {
 			char command[2000];
 			const char* r = fgets(command, sizeof(command)-1, stdin);
-			if (!r || !*command)
+			if (!r)
 				break;
 			// Strip trailing newline.
 			command[strlen(command) - 1] = '\0';
+			if (!*command)
+				break;
 			AUDupdate(handle, command, 0, NULL);
 		}
 	}
