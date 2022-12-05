@@ -10,7 +10,7 @@ cFLAGS += -Werror -pedantic -I../cli
 # -DVERBOSE prints tektronix-green diagnostics.
 
 INC := ../cli/vssClient.h
-LIBS := ../cli/libsnd.a
+LIB := ../cli/libsnd.a
 
 TARGETS		:= audtest dynamic vssflush vsskill vssping
 
@@ -26,16 +26,16 @@ clean:
 	-rm -rf $(TARGETS) $(TARGETS:=.exe) *.o .depend
 
 audtest: $(OBJTEST) $(LIB) $(INC)
-	$(CC) -o $@ $(OBJTEST) $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJTEST) $(LIB) $(LDFLAGS)
 
 vssping: $(OBJPNG) $(LIB) $(INC)
-	$(CC) -o $@ $(OBJPNG) $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJPNG) $(LIB) $(LDFLAGS)
 
 vssflush: $(OBJFLSH) $(LIB) $(INC)
-	$(CC) -o $@ $(OBJFLSH) $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJFLSH) $(LIB) $(LDFLAGS)
 
 vsskill: $(OBJKILL) $(LIB) $(INC)
-	$(CC) -o $@ $(OBJKILL) $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJKILL) $(LIB) $(LDFLAGS)
 
 dynamic: $(OBJDYNAMIC) $(LIB) $(INC)
-	$(CC) -o $@ $(OBJDYNAMIC) $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJDYNAMIC) $(LIB) $(LDFLAGS)
