@@ -1,8 +1,4 @@
-/*
- *  dynamic.c -- example of using return value of AUDupdate()
- *
- *  Camille Goudeseune, 5/99
- */
+// An example of using AUDupdate()'s return value.
 
 #include "vssClient.h"
 
@@ -12,10 +8,11 @@ int main()
 	float sounds[10];
 	if (!BeginSoundServer())
 		return -1;
-	AUDinit("dynamic.aud");
 
-	/*** STEP 3: Create several sounds via AUDupdate() ***/
+	// Ignore AUDinit()'s return value, and thus also don't bother to AUDterminate().
+	(void)AUDinit("dynamic.aud");
 
+	// Create sounds.
 	for (i=0; i<10; i++)
 		{
 		sounds[i] = AUDupdateSimpleFloats("NewX", 1, (float)(300 + 100 * i));
@@ -23,8 +20,7 @@ int main()
 		}
 	usleep(250000);
 
-	/*** STEP 4: Modify sounds via AUDupdate() ***/
-
+	// Modify sounds.
 	for (i=0; i<10; i++)
 		{
 		AUDupdateSimpleFloats("ChangeFreqX", 2, sounds[i], (float)(80+40*i));
@@ -32,12 +28,11 @@ int main()
 		}
 	usleep(500000);
 
-	/*** STEP 4: Delete sounds via AUDupdate() ***/
-
+	// Delete sounds.
 	for (i=0; i<10; i++)
 		{
 		AUDupdateSimpleFloats("DeleteX", 1, sounds[i]);
-		sounds[i] = hNil; /* prevent "dangling" handles */
+		sounds[i] = hNil; // Prevent "dangling" handles.
 		}
 	usleep(300000);
 
