@@ -9,7 +9,6 @@ all: $(DSO)
 
 $(DSO): $(OBJS)
 	$(AR) r $@ $(OBJS)
-	-@chmod a+r $@
 
 clean_dso:
 	-rm -f $(DSO) $(OBJS)

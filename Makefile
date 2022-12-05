@@ -137,7 +137,6 @@ now=\"$(shell date +"%Y-%m-%d\ %H:%M")\"
 $(TARGET): vssBuild.c++ $(OBJSRV) $(SUBDIRS) stk4/stk.a
 	@set -e; for i in $(SUBDIRS); do ( $(MAKE) -s -C $$i | grep -v 'Nothing to be done for' || true ); done
 	$(CC) -o $@ $(CFLAGS) -D__TIMESTAMP_ISO8601__=$(now) vssBuild.c++ $(OBJSRV) $(SUBLIBS) $(VSSLIBS) $(LDFLAGS)
-	-@chmod a+rx $@
 ifeq "$(PLATFORMBASE)" "VSS_IRIX"
 	strip -fs $@
 endif
