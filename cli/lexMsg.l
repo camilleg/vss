@@ -15,8 +15,8 @@ const auto MAX_ERRORS = 1;
 
 #include "parseMsg.h"
 
-void skipComment();
-void PragmaFilter();
+static void skipComment();
+static void PragmaFilter();
 
 /*
 When using flex 2.6.1, e.g. compiled from source https://launchpad.net/ubuntu/+source/flex/2.6.1-1,
@@ -87,12 +87,11 @@ BeginSoundPaused		{ yylval.actorMessage = 4; return tBEGIN_PAUSED_NOTE_MESSAGE; 
 
 %%
 
-void PragmaFilter()
+static void PragmaFilter()
 {
 	*yylval.string = '\0';
-	/* Do this not more than once. */
 	if (*vszFilterCommand)
-		return;
+		return; // Already read a pragma.  Ignore later ones.
 
 	char sz[500];
 	strcpy(sz, yytext);
@@ -107,31 +106,28 @@ void yyerror(const char *msg)
 		return;
 	}
 
-	// Dereferencing curFileName[] causes a coredump, inexplicably.
 	extern int numErrors;
-	extern char* curFileName;
-	fprintf(stderr, "vss client error: File %s, line %d: %s at \"%s\"",
-		curFileName && *curFileName ? curFileName : "-",
-		yylineno+1, msg, yytext);
-	fprintf(stderr, "vss client error: Line %d: %s at \"%s\"",
-		yylineno+1, msg, yytext);
-	fprintf(stderr, ++numErrors >= MAX_ERRORS ? ", giving up.\n" : "\n");
+	extern char curFileName[];
+	fprintf(stderr, "vss client error: .aud file %s, line %d: %s at '%s'%s\n",
+		*curFileName ? curFileName : "-",
+		yylineno+1, msg, yytext,
+		++numErrors >= MAX_ERRORS ? ", giving up." : "");
 }
 
 #ifdef VSS_LINUX
 #define input() yyinput()
 #endif
 
-void skipComment()
+// Having read /*, keep reading to the next */.
+static void skipComment()
 {
 	char c;
-	for(;;)	{
-		while((c=yyinput())!='*')
-			;
-		if((c=yyinput())=='/')
+	for (;;) {
+		while ((c = yyinput()) != '*');
+		if ((c = yyinput()) == '/')
 			return;
-		else	{
-			unput(c);
-		}
+		unput(c);
 	}
 }
+
+// vim: ts=4 sw=4

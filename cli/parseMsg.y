@@ -377,8 +377,10 @@ LAgain:
 			{
 			if (yylineno <= 0)
 				fprintf(stderr, "vss client warning: possibly empty .aud file '%s'.\n", fileName);
+#if 0 // lexMsg.l's yyerror() already complained.
 			else
 				fprintf(stderr, "vss client error: syntax error in .aud file '%s', line %d\n", fileName, yylineno);
+#endif
 			}
 		if (fGonnaFilter)
 			{
@@ -673,3 +675,5 @@ extern "C" void AUDflushQueue(int fdT, char* szActor, int fPreserveQueueData)
 	if (!fPreserveQueueData)
 		QdataCount = 0;
 }
+
+// vim: ts=4 sw=4
