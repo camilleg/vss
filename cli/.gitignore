@@ -1,10 +1,4 @@
-obj
-obj_64
-obj_mips4_n32
-obj_n32
-obj_o32
 parseMsg.tab.h
-parseMsg.h
 parseMsg.c++
 lexMsg.c++
 *.o

@@ -13,7 +13,7 @@ extern "C" int yylex();
 extern "C" void yyerror(const char*);
 const auto MAX_ERRORS = 1;
 
-#include "parseMsg.h"
+#include "parseMsg.tab.h"
 
 static void skipComment();
 static void PragmaFilter();
