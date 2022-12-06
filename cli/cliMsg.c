@@ -125,8 +125,8 @@ LCleanup:
 	setsockopt(sockfd, F_SETFL, FNDELAY);
 #endif
 #ifdef NOISY
-	printf("opened send socket fd %d on channel %d, obj %x\n",
-		o->sockfd, o->channel, (int)(OBJ)o);
+	printf("opened send socket fd %d on channel %d, obj %p\n",
+		o->sockfd, o->channel, (void*)o);
 #endif
 	return o;
 }
@@ -140,7 +140,7 @@ static void EndMsgsend(OBJ obj)
 static int sendudp(struct sockaddr_in *sp, int sockfd, long count, void  *b)
 {
 #ifdef NOISY
-	printf("sendto \"%s\", fd=%d, cb=%d,\t",
+	printf("sendto \"%s\", fd=%d, cb=%ld,\t",
 		((mm*)b)->rgch, sockfd, count);
 	/* sockaddr_in defined in /usr/include/netinet/in.h */
 	printf("port=%d, ipaddr=%x\n",
