@@ -1,16 +1,9 @@
-/***************************************
- *               vssKill.c             *
- * Terminate the server.               *
- * Terminate pre-3.0 servers too.      *
- ***************************************/
+// Connect to vss and kill it.
+// On IRIX, also kill any vss older than version 3.0.
 
 #include "vssClient.h"
 
 #ifdef __sgi
-
-int fKilled = 0;
-int fDone = 0;
-int pid2 = -1, pid3 = -1;
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -33,10 +26,6 @@ int pid2 = -1, pid3 = -1;
 #include <sys/types.h>
 #include <bstring.h>
 #include <sys/prctl.h>
-
-#define A_KillServer 74 /* same as in vss 2.x ACTOR/actorMessages.h */
-#define PingMsg (-6)    /* same as in vss 2.x vssMsg.h */
-#define wSendChannel 7999 /* same as in vss 2.x vssMsg.c++ */
 
 /* from htm/htm.h */
 #define cchmm23 32
@@ -75,19 +64,21 @@ int FInitUdp23(OBJ* pobj, int wChannel)
 	sprintf(ipAddr, "%s", inet_ntoa(*(struct in_addr *)(*cp)));
 	szHostname = ipAddr;
 	*pobj = BgnMsgsend(szHostname, wChannel);
-	return (*pobj != 0);
+	return *pobj != 0;
 }
 
-extern int FMsgrcv23(void* pv); /* defined in 3.0 libsnd.a */
+extern int FMsgrcv23(void*); /* defined in 3.0 libsnd.a */
 
-int BeginSoundServer23(void)
+int BeginSoundServer23()
 {
 	vpobj = NULL;
+	const int wSendChannel = 7999; // from vss 2.x vssMsg.c++
 	if (!FInitUdp23(&vobj, wSendChannel))
 		return 0;
 	vpobj = &vobj;
 	mmT.name[0] = '_';
 	mmT.name[1] = '\0';
+	const int PingMsg = -6; // from vss 2.x vssMsg.h
 	((int *)mmT.name)[1] = PingMsg;
 
 	/* Msgsend(NULL, &mmT, 0); */
@@ -107,54 +98,47 @@ int BeginSoundServer23(void)
 
 void killSoundServer23()
 {
-	/* actorMessage(A_KillServer, ""); */
-	{
-	unsigned char   *paramPtr;
-	char            *formatPtr;
+	const int A_KillServer = 74; // from vss 2.x ACTOR/actorMessages.h
+	// Implement actorMessage(A_KillServer, "").
 	mm23 Thingy;
-
 	Thingy.name[0] = 'A';
-	((int *)(Thingy.name))[1] = A_KillServer;
-	formatPtr = Thingy.name + sizeof(int)*2;
-	paramPtr = (unsigned char *)Thingy.param;
+	((int*)(Thingy.name))[1] = A_KillServer;
+	char* formatPtr = Thingy.name + sizeof(int)*2;
 	*formatPtr = '\0';
-
-
-	/* Msgsend(NULL, &Thingy, ((float *)paramPtr)-Thingy.param+1); */
-	/* MsgsendObj(vpobj, NULL, (mm*)&Thingy, 1); */
+	// unsigned char* paramPtr = Thingy.param;
+	// Msgsend(NULL, &Thingy, ((float *)paramPtr)-Thingy.param+1);
+	// MsgsendObj(vpobj, NULL, (mm*)&Thingy, 1);
 		{
-		desc *o = (desc*)*vpobj;
+		desc *o = *vpobj;
 		struct sockaddr_in *paddr = &o->addr;
-		if(!sendudp(paddr, o->sockfd, cchmm23 + sizeof(float), &Thingy))
+		if (!sendudp(paddr, o->sockfd, cchmm23 + sizeof(float), &Thingy))
 			printf("vssKill: 2.x send failed\n");
 		}
+}
+
+int pid2 = -1, pid3 = -1;
+int fDone = 0;
+int fKilled = 0;
+
+void killvss2(void* pv)
+{
+	if (BeginSoundServer23()) {
+		killSoundServer23();
+		kill(pid3, SIGKILL);
+		fKilled = 1;
 	}
-}
-
-void killvss2(void *pv)
-{
-	if (!BeginSoundServer23())
-		goto LDone;
-
-	killSoundServer23();
-	kill(pid3, SIGKILL);
-	fKilled = 1;
-LDone:
 	fDone++;
 }
 
-void killvss3(void *pv)
+void killvss3(void* pv)
 {
-	if (!BeginSoundServer())
-		goto LDone;
-
-	killSoundServer();
-	kill(pid2, SIGKILL);
-	fKilled = 1;
-LDone:
+	if (BeginSoundServer()) {
+		killSoundServer();
+		kill(pid2, SIGKILL);
+		fKilled = 1;
+	}
 	fDone++;
 }
-
 
 int main()
 {
