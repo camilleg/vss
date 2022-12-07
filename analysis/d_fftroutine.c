@@ -283,7 +283,6 @@ void fft_clear(void)
 	   } while ((thisnet = nextnet));
 	 }
 }
-	   
 
 /*****************************************************************************/
 /* NETWORK CONSTRUCTION                                                      */
@@ -299,11 +298,10 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 */
 
 {
-	 int cntr, i, j, s; 
+	 int i, j, s;
 	 int       stages, bps;
          int       **p, **q, *pp, *qp;
 	 SAMPLE     two_pi_div_n = TWO_PI / n;
-
 
 	 /* network definition */
 	 fft_net->n   = n;
@@ -317,7 +315,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 	 /* allocate registers, index, coefficient arrays */
 	 net_alloc(fft_net);
 
-
 	 /* create appropriate windows */
 	 if (window_type==HANNING)   {
 		  create_hanning(fft_net->window, n, 1.);
@@ -327,7 +324,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 		  create_rectangular(fft_net->window, n, 1.);
 		  create_rectangular(fft_net->inv_window, n, 1./n);
 	 }
-
 
 	 /* calculate butterfly coefficients */ {
 		  
@@ -369,8 +365,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 	    register locations.  The final addresses are then stored in
 	    fft_net.
 	 */ {
-
-		  int inc;
 		  SAMPLE **indexpr = fft_net->indexpr;
 		  SAMPLE **indexpi = fft_net->indexpi;
 		  SAMPLE **indexqr = fft_net->indexqr;
@@ -393,10 +387,9 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 			   int index = 0;
 			   pp = p[s];
 			   qp = q[s];
-			   inc    = 1 << s;
-			   cntr   = 1 << (stages-s-1);
+			   const int inc = 1 << s;
+			   int cntr = 1 << (stages-s-1);
 			   i = j = 0;
-
 			   do {
 				    do {
 					     qp[i]   = index + inc;
@@ -417,7 +410,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 			   }
 		  }
 	 }
-
 
          /* calculate load indicies (bit reverse ordering) */
          /* bit reverse ordering achieved by passing normal
@@ -459,8 +451,6 @@ void build_fft_network(FFT_NET *fft_net, int n, int window_type)
 	 }
 }
 
-
-
 /*****************************************************************************/
 /* REGISTER LOAD AND STORE                                                   */
 /*****************************************************************************/
@@ -597,7 +587,6 @@ void load_registers(FFT_NET *fft_net, float *buf, int buf_form,
 	 } break;
 	 }
 }
-
 
 void store_registers(FFT_NET	*fft_net, float *buf, int buf_form,
     int buf_scale, int debug)
@@ -760,14 +749,11 @@ void store_registers(FFT_NET	*fft_net, float *buf, int buf_form,
          }
 }
 
-
-
 /*****************************************************************************/
 /* COMPUTE TRANSFORMATION                                                    */
 /*****************************************************************************/
 
 void compute_fft(FFT_NET  *fft_net)
-
 
 /* modifies: fft_net
    effects: Passes the values (already loaded) in the registers through
@@ -860,18 +846,14 @@ void compute_fft(FFT_NET  *fft_net)
 	 }
 }
 
-
 /****************************************************************************/
 /* SUPPORT MODULES                                                          */
 /****************************************************************************/
 
 void net_alloc(FFT_NET *fft_net)
-
-
 /* effects: Allocates appropriate two dimensional arrays and assigns
 	   correct internal pointers.
 */
-
 {
 
 	 int      stages, bps, n;
@@ -901,11 +883,8 @@ void net_alloc(FFT_NET *fft_net)
 }
 
 void net_dealloc(FFT_NET *fft_net)
-
-
 /* effects: Deallocates given FFT network.
 */
-
 {
 
 	 free((char *)fft_net->load_index);  
@@ -923,58 +902,45 @@ void net_dealloc(FFT_NET *fft_net)
 	 free((char *)fft_net->inv_window);
 }
 
-
 BOOL power_of_two(int n)
 /* effects: Returns TRUE if n is a power of two, otherwise FALSE. */
 {
 	 int      i;
-
 	 for (i = n; i > 1; i >>= 1) 
 		  if (i & 1) return FALSE;        /* more than one bit high */
 	 return TRUE;
 }
 
-
 void create_hanning(SAMPLE *window, int n, SAMPLE scale)
-
 /* effects: Fills the buffer window with a hanning window of the appropriate
          size scaled by scale.
 */
-
 {
 	 SAMPLE	    pi_div_n = PI/n;
 	 int	    k;
-
 	 for (k=1; k <= n; k++) {
 		  const SAMPLE a = sin(k * pi_div_n);
 		  *window++ = scale * a * a;
 	 }
 }
 
-
 void create_rectangular(SAMPLE *window, int n, SAMPLE scale)
-
 /* effects: Fills the buffer window with a rectangular window of the
    appropriate size of height scale.
 */
-
 {
 	 while (n--)
 	   *window++ = scale;
 }
 
-
 void short_to_float(short *short_buf, float *float_buf, int n)
-
 /* effects; Converts short_buf to floats and stores them in float_buf.
 */
-
 {
 	 while (n--) {
 		  *float_buf++ = (float)*short_buf++;
 	 }
 }
-
 
 /* here's the meat: */
 
@@ -1016,9 +982,7 @@ void pd_fft(float *buf, int npoints, int inverse)
 			t = buf[i+j];
 	*/
 	if (t < 0.) t = 0.;
-
 	putchar(" __--++**#@XXXXXXXXXX"[(int)(t / ((float)(npoints/4)/10.) )]);
-
 	if (i*STEPME >= 79)
 		break;
 	}
