@@ -40,7 +40,6 @@
 **                       including all the optimizations in one package.
 **       Thanks,
 **       Ron Mayer; mayer@acuson.com
-**
 */
 
 /* This is a slightly modified version of Mayer's contribution; write
@@ -49,17 +48,12 @@
 */
 
 #define REAL float
+
 #define GOOD_TRIG
-
 #ifdef GOOD_TRIG
-#else
-#define FAST_TRIG
-#endif
-
-#if defined(GOOD_TRIG)
 #define FHT_SWAP(a,b,t) {(t)=(a);(a)=(b);(b)=(t);}
 #define TRIG_VARS					         \
-      int t_lam=0;
+      int t_lam;
 #define TRIG_INIT(k,c,s)					 \
      {								 \
       int i;							 \
@@ -86,9 +80,10 @@
             }                                                    \
      }
 #define TRIG_RESET(k,c,s)
-#endif
 
-#if defined(FAST_TRIG)
+#else
+// Fast instead of good.
+
 #define TRIG_VARS					 \
       REAL t_c,t_s;
 #define TRIG_INIT(k,c,s)				 \
@@ -107,6 +102,7 @@
 #define TRIG_RESET(k,c,s)
 #endif
 
+#ifdef GOOD_TRIG
 static REAL halsec[20]=
     {
      0,
@@ -126,6 +122,7 @@ static REAL halsec[20]=
      .50000000229794635411562887767906868558991922348920,
      .50000000057448658687873302235147272458812263401372
     };
+#endif
 static REAL costab[20]=
     {
      .00000000000000000000000000000000000000000000000000,
@@ -164,6 +161,7 @@ static REAL sintab[20]=
      .00009587379909597734587051721097647635118706561284,
      .00004793689960306688454900399049465887274686668768
     };
+#ifdef GOOD_TRIG
 static REAL coswrk[20]=
     {
      .00000000000000000000000000000000000000000000000000,
@@ -202,24 +200,23 @@ static REAL sinwrk[20]=
      .00009587379909597734587051721097647635118706561284,
      .00004793689960306688454900399049465887274686668768
     };
-
+#endif
 
 #define SQRT2_2   0.70710678118654752440084436210484
 #define SQRT2   2*0.70710678118654752440084436210484
 
 void mayer_fht(REAL *fz, int n)
 {
- int i,k,k1,k2,k3,k4,kx;
+ int i,k,k1,k2,k4;
  REAL *fi,*fn,*gi;
  TRIG_VARS;
 
  for (k1=1,k2=0;k1<n;k1++)
     {
-     REAL a;
      for (k=n>>1; (!((k2^=k)&k)); k>>=1);
      if (k1>k2)
 	{
-	     a=fz[k1];fz[k1]=fz[k2];fz[k2]=a;
+	     const REAL a=fz[k1];fz[k1]=fz[k2];fz[k2]=a;
 	}
     }
  for ( k=0 ; (1<<k)<n ; k++ );
@@ -279,8 +276,8 @@ void mayer_fht(REAL *fz, int n)
      k1  = 1  << k;
      k2  = k1 << 1;
      k4  = k2 << 1;
-     k3  = k2 + k1;
-     kx  = k1 >> 1;
+     const int k3 = k2 + k1;
+     const int kx = k1 >> 1;
 	 fi  = fz;
 	 gi  = fi + kx;
 	 fn  = fz + n;
@@ -355,9 +352,14 @@ void mayer_fft(int n, REAL *real, REAL *imag)
 {
  int i,j,k;
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
-  REAL a,b,c,d, q,r,s,t;
-  a = real[i]; b = real[j];  q=a+b; r=a-b;
-  c = imag[i]; d = imag[j];  s=c+d; t=c-d;
+  const REAL a = real[i];
+  const REAL b = real[j];
+  const REAL q=a+b;
+  const REAL r=a-b;
+  const REAL c = imag[i];
+  const REAL d = imag[j];
+  const REAL s=c+d;
+  const REAL t=c-d;
   real[i] = (q+t)*.5; real[j] = (q-t)*.5;
   imag[i] = (s-r)*.5; imag[j] = (s+r)*.5;
  }
@@ -367,14 +369,18 @@ void mayer_fft(int n, REAL *real, REAL *imag)
 
 void mayer_ifft(int n, REAL *real, REAL *imag)
 {
- REAL a,b,c,d;
- REAL q,r,s,t;
  int i,j,k;
  mayer_fht(real,n);
  mayer_fht(imag,n);
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
-  a = real[i]; b = real[j];  q=a+b; r=a-b;
-  c = imag[i]; d = imag[j];  s=c+d; t=c-d;
+  const REAL a = real[i];
+  const REAL b = real[j];
+  const REAL q=a+b;
+  const REAL r=a-b;
+  const REAL c = imag[i];
+  const REAL d = imag[j];
+  const REAL s=c+d;
+  const REAL t=c-d;
   imag[i] = (s+r)*0.5;  imag[j] = (s-r)*0.5;
   real[i] = (q-t)*0.5;  real[j] = (q+t)*0.5;
  }
@@ -385,8 +391,8 @@ void mayer_realfft(int n, REAL *real)
  int i,j,k;
  mayer_fht(real,n);
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
-  REAL a = real[i];
-  REAL b = real[j];
+  const REAL a = real[i];
+  const REAL b = real[j];
   real[j] = (a-b)*0.5;
   real[i] = (a+b)*0.5;
  }
@@ -394,13 +400,12 @@ void mayer_realfft(int n, REAL *real)
 
 void mayer_realifft(int n, REAL *real)
 {
- REAL a,b;
  int i,j,k;
  for (i=1,j=n-1,k=n/2;i<k;i++,j--) {
-  a = real[i];
-  b = real[j];
-  real[j] = (a-b);
-  real[i] = (a+b);
+  const REAL a = real[i];
+  const REAL b = real[j];
+  real[j] = a-b;
+  real[i] = a+b;
  }
  mayer_fht(real,n);
 }
