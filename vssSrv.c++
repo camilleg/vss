@@ -212,44 +212,11 @@ const char* ClientReturnValString()
 }
 
 static struct sockaddr_in* vcl_addr;
-
 void ReturnFloatMsgToClient(float z, const char* msg)
 {
 	mm mmT;
 	mmT.fRetval = 0;
-
-	if (!strcmp(msg, "AckMidiInputMsg"))
-		{
-#ifdef needed_eventually_for_xx30
-
-		// send the msgs to the client, which should call FMsgrcv()
-		// and MidiMsgsFromAckMidi() to get them.
-
-		int cch;
-		char* pch;
-		int cb = z * sizeof(VSSMDevent);
-
-		if (cb > 10000/2 - 30)
-			{
-			cerr << "buffer overflow in MidiGetMsgs()\n";
-			return;
-			}
-		sprintf(mmT.rgch, "AckMidiInputMsg %d %n", cMsg, &cch);
-		pch = mmT.rgch + cch;
-
-		extern VSSMDevent* vpMsg; // in midiActor.c++
-		for (ib=0; ib<cb; ib++)
-			{
-			int b = ((char*)vpMsg)[ib];
-			pch[ib*2  ] = (b >> 4) + '0';
-			pch[ib*2+1] = (b & 0xf) + '0';
-			}
-
-		// Encode the midi data as an ascii string.
-		Msgsend(vcl_addr, &mmT);
-#endif
-		}
-	else if (!strcmp(msg, "AckNoteMsg"))
+	if (!strcmp(msg, "AckNoteMsg"))
 		{
 		sprintf(mmT.rgch, "%s %f", msg, z);
 		//printf("replying on port=%d\n", ((struct sockaddr_in *)vcl_addr)->sin_port );;
@@ -268,7 +235,7 @@ void ReturnSzMsgToClient(const char* sz, const char* msg)
 }
 
 // Called by scheduler.
-extern void doActors(void)
+extern void doActors()
 {
 	VHandler::allAct();
 	VActor::allAct();
@@ -276,12 +243,12 @@ extern void doActors(void)
 
 // Clean up any dangling pointers, in a second pass.
 // Kind of like real-time garbage collection.
-extern void doActorsCleanup(void)
+extern void doActorsCleanup()
 {
 	VActor::allActCleanup();
 }
 
-extern void deleteActors(void)
+extern void deleteActors()
 {
 	VActor::flushActorList();
 }
@@ -562,9 +529,9 @@ extern void CloseOfile(const char * fileName)
 			(void)!write(globs.fdOfile, globs.rgbBufOfile, globs.vibBufOfile);
 			globs.vcbBufOfile=0;
 			globs.vibBufOfile=0;
-			delete [] globs.rgbBufOfile;
-			globs.rgbBufOfile = NULL;
 			}
+		delete [] globs.rgbBufOfile;
+		globs.rgbBufOfile = NULL;
 		close(globs.fdOfile);
 		globs.fdOfile = -1;
 

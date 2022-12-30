@@ -30,7 +30,6 @@ inline void ZeroFloats(void* dst, const int n)
 // vssSrv.c++
 extern void PingServer(struct sockaddr_in*);
 extern void Srv_UpdateMasterVolume(float);
-extern void Srv_UpdateMidiVolume(float);
 extern int actorMessageMM(const void*, struct sockaddr_in*);
 extern int actorMessageHandler(const char*);
 

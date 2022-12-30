@@ -931,16 +931,6 @@ int main(int argc,char *argv[])
 }
 #endif
 
-// If caller passes in 0, *vpfnMidi should return an int filehandle
-// corresponding to the midi port to read from.
-// Otherwise, *vpfnMidi should read all pending incoming midi messages
-// on this port, returning zero iff an error occured.
-static int (*vpfnMidi)(int) = NULL;
-void SetMidiFunction(int (*vpfnMidiArg)(int))
-{
-	vpfnMidi = vpfnMidiArg;
-}
-
 static int initudp(int chan)
 {
 	const auto sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -976,13 +966,11 @@ void catch_sigint(SignalHandlerType)
 }
 
 #ifdef VSS_IRIX
-void doActors(void);
-void doActorsCleanup(void);
-void deleteActors(void);
+void doActors();
+void doActorsCleanup();
+void deleteActors();
 int actorMessageMM(void*, struct sockaddr_in*);
-int mdClosePortInput(MDport port);
-int mdClosePortOutput(MDport port);
-#endif // VSS_IRIX
+#endif
 
 static int viGear = 1;
 enum { prndl_parked=0, prndl_low, prndl_drive }; // for viGear
@@ -1001,9 +989,8 @@ void VSS_SetGear(int iGear)
 }
 
 #ifndef VSS_WINDOWS
-struct pollfd pfds[3];
+struct pollfd pfds[2];
 #endif
-int nfds = -1;
 
 // Compute (c*MaxSampsPerBuffer) samples into the output buffer.
 //
@@ -1206,15 +1193,11 @@ static int LiveTick(int sockfd)
 	if (vfDie)
 		return 0;
 	doSynth(Scount());
-
-	nfds = (vpfnMidi && ((pfds[2].fd = (*vpfnMidi)(0)) >= 0)) ? 3 : 2;
-	// 3 if midi is running, otherwise 2.
-
+	const auto nfds = 2;
 	//	pfds is an array of file descriptors, initialized
 	//	in schedulerMain(). The first one is the audio device,	
 	//	and doesn't need to be polled. The second one is 
-	//	where we listen for client messages. The third is 
-	//	 the midi port if midi is enabled.
+	//	where we listen for client messages.
 	//	(why poll the audio hardware under IRIX?)
 	if (poll(pfds+1, nfds-1, 0) < 0) // not using pfds[0]
 		return 1;
@@ -1228,16 +1211,6 @@ static int LiveTick(int sockfd)
 		return 0;
 	const int r = Scount();
 	doSynth(r, 0, 2);
-
-	// Is midi input pending?  (And do we have time to deal with it now?)
-	if (r>0 && nfds==3 && (pfds[2].revents & POLLIN))
-		{
-		if (!(*vpfnMidi)(1))
-			fprintf(stderr, "vss: error reading midi input\n");
-		if (r < globs.lwm)
-			return 1;
-		}
-
 	if (!(pfds[1].revents & POLLIN))
 	{
 #ifdef EXPERIMENT
@@ -1408,13 +1381,9 @@ void schedulerMain()
 		pfds[0].fd = globs.dacfd;				// audio to audio-output port
 		pfds[0].events = POLLOUT;
 		pfds[0].revents = 0;
-
 		pfds[1].fd = sockfd;					// messages from clients
 		pfds[1].events = POLLIN /* | POLLOUT */;
 		pfds[1].revents = 0;
-		pfds[2].fd = -1;						// midi in (if enabled)
-		pfds[2].events = POLLIN;
-		pfds[2].revents = 0;
 		}
 #endif
 

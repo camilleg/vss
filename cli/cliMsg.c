@@ -455,19 +455,6 @@ const char* SzFromDataReply()
 
 #include "vssClient_int.h"
 
-static VSSMDevent vrgvssmdevent[100]; /* match vssMidicore.c++'s size;; */
-static int vcvssmdevent;
-static void AckMidi(int cb, char* pb)
-{
-	vcvssmdevent = cb;
-	memcpy(vrgvssmdevent, pb, vcvssmdevent * sizeof(VSSMDevent));
-}
-VSSMDevent* MidiMsgsFromAckMidi(float* pcvssmdevent)
-{
-	*pcvssmdevent = (float)vcvssmdevent;
-	return vrgvssmdevent;
-}
-
 /* Send a Ping msg without args. */
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
@@ -585,37 +572,7 @@ extern "C"
 #endif
 void clientMessageCall(char* Message)
 {
-	/* format of string: "AckMidiInputMsg 5 00ff00ff00",
-	 * but the hex digits are 012345689:;<=>? for consecutive ASCIIness.
-	 */
-	if (!strncmp(Message, "AckMidiInputMsg ", 16))
-		{
-		char* pch;
-		int ib, bHi, bLo;
-		char pb[10000];
-		/* decode args from ascii to binary */
-		int cb = atoi(Message += 16);
-		if (cb < 0 || cb > 10000)
-			{
-LError:
-			fprintf(stderr, "vss client error: Internal syntax error in AckMidiInputMsg\n");
-			return;
-			}
-		pch = strchr(Message, ' ') + 1;
-		for (ib=0; ib<cb; ib++)
-			{
-			bHi = *(pch++) - '0';
-			bLo = *(pch++) - '0';
-			if (bHi < 0 || bHi >= 16 || bLo < 0 || bLo >= 16)
-				goto LError;
-			pb[ib] = (bHi<<4) + bLo;
-			}
-		AckMidi(cb, pb);
-		return;
-		/*;; CEntry.c++, look for "AckMidiInputMsg" */
-		}
-
-	else if (!strncmp(Message, "AckNoteMsg ", 11))
+	if (!strncmp(Message, "AckNoteMsg ", 11))
 		{
 		float z = 0.;
 		if (1 != sscanf(Message+11, "%f", &z))

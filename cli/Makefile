@@ -32,7 +32,7 @@ clean:
 
 now=\"$(shell date +"%Y-%m-%d\ %H:%M")\"
 
-OBJCLI = lexMsg.o parseMsg.o vssClient.o actorMsg.o symtab.o cliMsg.o
+OBJCLI = lexMsg.o parseMsg.o actorMsg.o symtab.o cliMsg.o
 
 $(LIBSND): $(SRVDIR)/vssBuild.c++ Makefile $(OBJCLI)
 	-rm -f $@
