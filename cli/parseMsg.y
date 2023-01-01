@@ -36,8 +36,8 @@ void AppendFloat(float);
 char curFileName[2000], prevFileName[2000]; // Static storage duration, therefore zero initialized.
 extern FILE		*yyin;
 int numErrors;
-static SymtabActor symtabActor[fdMax];
-static SymtabNote symtabNote[fdMax];
+static Symtab symtabActor[fdMax];
+static Symtab symtabNote[fdMax];
 static int		serverHandles[fdMax];
 static char		theArgs[1500];
 static float	vhActor;
@@ -91,7 +91,7 @@ Messages:	tPRAGMA
 MessageSemicolon: Message tSEMICOLON;
 
 Message:	tSTRING tEQUAL tCREATE_MESSAGE tSTRING {
-			if (!vfAbsorbText && !symtabActor[fd].FAddSz($1, createActor($4)))
+			if (!vfAbsorbText && !symtabActor[fd].FAdd($1, createActor($4)))
 				{
 				fprintf(stderr, "vss client error: Command \"%s = Create %s\":\n", $1, $4);
 				yyerror("Actor name already used, or too many actors in this AUDinit() call.");
@@ -106,11 +106,11 @@ Message:	tSTRING tEQUAL tCREATE_MESSAGE tSTRING {
 	|	tSTRING tEQUAL { strcpy(vszhnote, $1); /*printf("bgnnote lvalue is \"%s\"\n", vszhnote);*/ } BeginNoteBody
 
 	|	tDELETE_MESSAGE tSTRING {
-				float h = symtabActor[fd].HactorFromSz($2); /* grab it before we delete */
-				if (!vfAbsorbText && (h < 0. || !symtabActor[fd].FDeleteSz($2)))
+				float h = symtabActor[fd].HFromSz($2); /* grab it before we delete */
+				if (!vfAbsorbText && (h < 0. || !symtabActor[fd].FDelete($2)))
 					{
-					h = symtabNote[fd].HnoteFromSz($2);
-					if (h < 0. || !symtabNote[fd].FDeleteSz($2))
+					h = symtabNote[fd].HFromSz($2);
+					if (h < 0. || !symtabNote[fd].FDelete($2))
 						{
 						fprintf(stderr, "vss client error: Delete: undefined actor \"%s\"\n", $2);
 						yyerror("");
@@ -126,12 +126,12 @@ Message:	tSTRING tEQUAL tCREATE_MESSAGE tSTRING {
 			LDeleteFinished: ;
 			}
 	|   tSTRING {
-		if (!vfAbsorbText && symtabActor[fd].FFoundSz($1))
+		if (!vfAbsorbText && symtabActor[fd].FFound($1))
 			{
 			fprintf(stderr, "vss client error: Syntax error: actor %s\n", $1);
 			yyerror("");
 			}
-		else if (!vfAbsorbText && symtabNote[fd].FFoundSz($1))
+		else if (!vfAbsorbText && symtabNote[fd].FFound($1))
 			{
 			fprintf(stderr, "vss client error: Syntax error: handler %s\n", $1);
 			yyerror("");
@@ -187,9 +187,9 @@ BeginNoteBody: aBeginNoteMessage tSTRING {
 				if(!vfAbsorbText && numErrors < MAX_ERRORS)
 					{
 					/* assumption: BeginNoteBody can't be nested. */
-					vhActor = symtabActor[fd].HactorFromSz($2);
+					vhActor = symtabActor[fd].HFromSz($2);
 					if (vhActor < 0)
-						vhActor = symtabNote[fd].HnoteFromSz($2);
+						vhActor = symtabNote[fd].HFromSz($2);
 					if (vhActor < 0)
 						{
 						fprintf(stderr, "vss client error: Actor \"%s\" not defined\n", $2);
@@ -215,14 +215,8 @@ BeginNoteBody: aBeginNoteMessage tSTRING {
 						}
 
 					/* add (hNote,vszhnote) to symbol table. if (!*vszhnote), overwrite prev "" value. */
-					/*;; Don't really need to maintain vhActor-vhNote connection anymore,
-					  i.e. don't store vhActor in symtabNote. */
-					if (*vszhnote && !symtabNote[fd].FAddSz(vszhnote, vhActor, vhNote))
+					if (*vszhnote && !symtabNote[fd].FAdd(vszhnote, vhNote))
 						fprintf(stderr, "VSS client error: BeginSound failed during AUDinit\n\t(duplicate handle name \"%s\" for BeginSound?).\n", vszhnote);
-					/*printf("actor %s = %g gets note %s = %g\n",
-						"$2", vhActor,
-						vszhnote, vhNote);*/
-
 					/* clear it, just in case */
 					*vszhnote = '\0';
 					vhNote = -1;
@@ -286,10 +280,10 @@ DoubleQuote: tESCAPEDDOUBLEQUOTE
 Handle: tSTRING	{
 			/* Substitute handles for names, of actors and notes.  Otherwise pass the string through. */
 			float h;
-			if ((h = symtabActor[fd].HactorFromSz($1)) >= 0.)
+			if ((h = symtabActor[fd].HFromSz($1)) >= 0.)
 				/* print actor's handle */
 				AppendFloat(h);
-			else if ((h = symtabNote[fd].HnoteFromSz($1)) >= 0.)
+			else if ((h = symtabNote[fd].HFromSz($1)) >= 0.)
 				/* print note's handle */
 				AppendFloat(h);
 			else
@@ -445,32 +439,31 @@ extern "C" void AUDterminate(int fdT)
 	const auto sendEm = SelectSoundServer(serverHandles[fdT]);
 	if (fdT < 0 || fdT >= fdMax) {
 		if (!vfHush)
-			fprintf(stderr, "vss client error: AUDterminate called with bogus value %d\n", fdT);
+			fprintf(stderr, "vss client error: bogus AUDterminate(%d).\n", fdT);
 		return;
 	}
-	SymtabActor* pA = &symtabActor[fdT];
-
+	auto& sa = symtabActor[fdT];
 	if (sendEm) {
+		const auto handles = sa.Handles();
+		char szT[500];
 		// Inactivate all actors, so they can't send audEvents,
 		// in particular to a deleted actor.
-		float h;
-		char szT[500];
-		for (h = pA->HFirst(); h != -1.; h = pA->HNext()) {
+		for (auto h: handles) {
 			sprintf(szT, "Active %f 0", h);
 			actorMessage(szT);
 		}
 		// Now it's safe to delete all actors.  Order doesn't matter.
-		for (h = pA->HFirst(); h != -1.; h = pA->HNext()) {
+		for (auto h: handles) {
 			sprintf(szT, "Delete %f", h);
 			actorMessage(szT);
 		}
 	}
-	pA->Reset();
+	sa.Reset();
 
-	// set the server handle for this call to 0
+	// Clear this server handle.
 	serverHandles[fdT] = 0;
 
-	// reuse array, if AUDterminates match up with AUDinits.
+	// Reuse array, if the order of AUDterminates matches that of AUDinits.
 	if (fdT == fd-1)
 		--fd;
 
@@ -553,7 +546,7 @@ extern "C" float AUDupdate(int fdT, char* szActor, int numFloats, float* floatAr
 	if (!SelectSoundServer(serverHandles[fdT]))
 		return hNil;
 
-	const auto h = symtabActor[fdT].HactorFromSz(szActor);
+	const auto h = symtabActor[fdT].HFromSz(szActor);
 	if (h < 0.0) {
 		if (vfEnableWarnNoMG) {
 			fprintf(stderr, "vss client error: No message group called '%s'.\n",  szActor);
@@ -635,7 +628,7 @@ extern "C" void AUDflushQueue(int fdT, char* szActor, int fPreserveQueueData)
     if (!SelectSoundServer(serverHandles[fdT]))
 		return;
 
-    const auto h = symtabActor[fdT].HactorFromSz(szActor);
+    const auto h = symtabActor[fdT].HFromSz(szActor);
     if (h < 0.0) {
 		if (vfEnableWarnNoMG) {
 			fprintf(stderr, "vss client error: No message group called '%s'.\n", szActor);
