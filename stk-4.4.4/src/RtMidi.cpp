@@ -814,7 +814,7 @@ void MidiOutCore :: initialize( const std::string& clientName )
   }
 
   // Save our api-specific connection information.
-  CoreMidiData *data = (CoreMidiData *) new CoreMidiData;
+  CoreMidiData *data = new CoreMidiData;
   data->client = client;
   data->endpoint = 0;
   apiData_ = (void *) data;
@@ -1656,7 +1656,7 @@ void MidiOutAlsa :: initialize( const std::string& clientName )
 	}
 
   // Save our api-specific connection information.
-  AlsaMidiData *data = (AlsaMidiData *) new AlsaMidiData;
+  AlsaMidiData* data = new AlsaMidiData;
   data->seq = seq;
   data->portNum = -1;
   data->vport = -1;
@@ -2178,10 +2178,8 @@ void MidiOutWinMM :: initialize( const std::string& /*clientName*/ )
     errorString_ = "MidiOutWinMM::initialize: no MIDI output devices currently available.";
     RtMidi::error( RtError::WARNING, errorString_ );
   }
-
   // Save our api-specific connection information.
-  WinMidiData *data = (WinMidiData *) new WinMidiData;
-  apiData_ = (void *) data;
+  apiData_ = new WinMidiData;
 }
 
 unsigned int MidiOutWinMM :: getPortCount()
@@ -2928,7 +2926,7 @@ CKsMidiPin* CKsMidiRenFilter::CreateRenderPin()
   if (m_RenderPins.empty())
     throw std::runtime_error("Could not find a MIDI render pin");
 
-  CKsMidiPin* pPin = (CKsMidiPin*)m_RenderPins[0];
+  CKsMidiPin* pPin = m_RenderPins[0];
   pPin->Instantiate();
   return pPin;
 }
@@ -2943,7 +2941,7 @@ CKsMidiPin* CKsMidiCapFilter::CreateCapturePin()
   if (m_CapturePins.empty())
     throw std::runtime_error("Could not find a MIDI capture pin");
 
-  CKsMidiPin* pPin = (CKsMidiPin*)m_CapturePins[0];
+  CKsMidiPin* pPin = m_CapturePins[0];
   pPin->Instantiate();
   return pPin;
 }
@@ -3404,7 +3402,7 @@ struct JackMidiData {
 
 int jackProcessIn( jack_nframes_t nframes, void *arg )
 {
-  JackMidiData *jData = (JackMidiData *) arg;
+  JackMidiData* jData = arg;
   MidiInApi :: RtMidiInData *rtData = jData->rtMidiIn;
   jack_midi_event_t event;
   jack_time_t long long time;
@@ -3610,13 +3608,13 @@ MidiOutJack :: MidiOutJack( const std::string clientName ) : MidiOutApi()
 void MidiOutJack :: initialize( const std::string& clientName )
 {
   JackMidiData *data = new JackMidiData;
-
   data->port = NULL;
 
   // Initialize JACK client
   if (( data->client = jack_client_open( clientName.c_str(), JackNullOption, NULL )) == 0) {
     errorString_ = "MidiOutJack::initialize: JACK server not running?";
     RtMidi::error( RtError::DRIVER_ERROR, errorString_ );
+    delete data;
     return;
   }
 
