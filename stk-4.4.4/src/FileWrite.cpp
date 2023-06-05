@@ -39,7 +39,7 @@ const FileWrite::FILE_TYPE FileWrite :: FILE_MAT = 5;
 // http://www-mmsp.ece.mcgill.ca/documents/audioformats/WAVE/Docs/rfc2361.txt
 // for information regarding format codes.
 struct WaveHeader {
-  char riff[4];           // "RIFF"
+  char riff[4];           // "RIFF", unused
   SINT32 fileSize;        // in bytes
   char wave[4];           // "WAVE", unused
   char fmt[4];            // "fmt ", unused
@@ -54,7 +54,7 @@ struct WaveHeader {
   SINT16 validBits;       // valid bits per sample
   SINT32 channelMask;     // speaker position mask
   char subformat[16];     // format code and GUID
-  char fact[4];           // "fact"
+  char fact[4];           // "fact", unused
   SINT32 factSize;        // fact chunk size
   SINT32 frames;          // sample frames
 };
@@ -73,7 +73,7 @@ struct SndHeader {
 // AIFF/AIFC header structure ... only the part common to both
 // formats.
 struct AifHeader {
-  char form[4];                // "FORM"
+  char form[4];                // "FORM", unused
   SINT32 formSize;             // in bytes
   char aiff[4];                // "AIFF" or "AIFC"
   char comm[4];                // "COMM", unused
@@ -85,7 +85,7 @@ struct AifHeader {
 };
 
 struct AifSsnd {
-  char ssnd[4];               // "SSND"
+  char ssnd[4];               // "SSND", unused
   SINT32 ssndSize;            // "SSND" chunk size
   unsigned long offset;       // data offset in data block (should be 0), unused
   unsigned long blockSize;    // not used by STK (should be 0)
