@@ -1,5 +1,3 @@
-//	This fragment of the vss renaissance brought to you by Kelly Fitz, 1996.
-//
 #pragma once
 #include "VModulator.h"
 
@@ -29,7 +27,7 @@ public:
 	typedef	void (RcvrType::*UpdtFn)(float*); //;;;; bielefeld
 	FloatArray(RcvrType* r, UpdtFn f) :
 		VModulatorOld<float*, RcvrType>(r, f),
-		dstSamp(0L),
+		dstSamp(0),
 		pparent(nullptr)
 		{
 		ZeroFloats(dstVals, Size);
@@ -37,11 +35,10 @@ public:
 		VActor::setTypeName("FloatArray");
 		VActor::setActive(0);
 		}
-
 	FloatArray(RcvrType*, UpdtFn, float* init);
+	~FloatArray() {}
 
-//	For initiating modulation, or (if modTime is 0.) setting
-//	the value instantaneously.	
+	// Initiate modulation, or (if modTime==0) set the value instantaneously.
 	void set(float* newVals, int numVals = Size, float modTime = 0.);
 	void setIth(int i, float newVal, float modTime);
 
@@ -52,15 +49,13 @@ public:
 	// aforementioned initalization list of a handler's constructor.
 	void init(VHandler* p) { pparent = p; }
 
-	~FloatArray() {} 
-
 	virtual float* currentValue();
 };
 
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray():
 	VModulatorOld<float*, RcvrType>(),
-	dstSamp(0L),
+	dstSamp(0),
 	pparent(nullptr)
 {
 	ZeroFloats(dstVals, Size);
@@ -72,7 +67,7 @@ FloatArray<Size, RcvrType>::FloatArray():
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray(float* init):
 	VModulatorOld<float*, RcvrType>(),
-	dstSamp(0L),
+	dstSamp(0),
 	pparent(nullptr)
 {
 	FloatCopy(dstVals, init, Size);
@@ -82,7 +77,7 @@ FloatArray<Size, RcvrType>::FloatArray(float* init):
 
 template<int Size, class RcvrType>
 FloatArray<Size, RcvrType>::FloatArray(RcvrType* r, UpdtFn f, float* init):
-	VModulatorOld<float *, RcvrType>(r, f),
+	VModulatorOld<float*, RcvrType>(r, f),
 	dstSamp(0),
 	pparent(NULL)
 {
@@ -97,13 +92,9 @@ FloatArray<Size, RcvrType>::FloatArray(RcvrType* r, UpdtFn f, float* init):
 	VActor::setActive(0);
 }
 
-//===========================================================================
-//		currentValue
-//
 //	Compute the current values of the modulation from the 
 //	currentSample number, the destination sample number, 
 //	and the slopes.
-//
 template<int Size, class RcvrType>
 float* FloatArray<Size, RcvrType>::currentValue()
 {
@@ -118,7 +109,7 @@ float* FloatArray<Size, RcvrType>::currentValue()
 	return currVals;
 }
 
-//	member for beginning modulation to new values
+// Start modulating to new values.
 template<int Size, class RcvrType>
 void FloatArray<Size, RcvrType>::set(float* newVals, int numVals, float modTime)
 {
@@ -159,7 +150,7 @@ void FloatArray<Size, RcvrType>::set(float* newVals, int numVals, float modTime)
 	}
 }
 
-// member for modulating only ONE value.
+// Modulate only ONE value.
 template<int Size, class RcvrType>
 void FloatArray<Size, RcvrType>::setIth(int i, float newVal, float modTime)
 {
