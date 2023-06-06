@@ -45,10 +45,6 @@ typedef struct
 	int channel;
 } desc;
 
-OBJ* vpobj = NULL;
-mm23 mmT;
-OBJ vobj;
-
 int sendudp(struct sockaddr_in *sp, int sockfd, long count, void  *b)
 {
 	return sendto(sockfd, b, (int)count, 0, sp, sizeof(*sp)) == count;
@@ -71,20 +67,21 @@ extern int FMsgrcv23(void*); /* defined in 3.0 libsnd.a */
 
 int BeginSoundServer23()
 {
-	vpobj = NULL;
 	const int wSendChannel = 7999; // from vss 2.x vssMsg.c++
+	OBJ vobj;
 	if (!FInitUdp23(&vobj, wSendChannel))
 		return 0;
-	vpobj = &vobj;
+	OBJ* vpobj = &vobj;
+	mm23 mmT;
 	mmT.name[0] = '_';
 	mmT.name[1] = '\0';
 	const int PingMsg = -6; // from vss 2.x vssMsg.h
-	((int *)mmT.name)[1] = PingMsg;
+	((int*)mmT.name)[1] = PingMsg;
 
 	/* Msgsend(NULL, &mmT, 0); */
 		{
-		desc *o = (desc*)*vpobj;
-		struct sockaddr_in *paddr = &o->addr;
+		desc* o = (desc*)*vpobj;
+		struct sockaddr_in* paddr = &o->addr;
 		if(!sendudp(paddr, o->sockfd, cchmm23 + sizeof(float), &mmT))
 			return 0;
 		}
@@ -100,18 +97,18 @@ void killSoundServer23()
 {
 	const int A_KillServer = 74; // from vss 2.x ACTOR/actorMessages.h
 	// Implement actorMessage(A_KillServer, "").
-	mm23 Thingy;
-	Thingy.name[0] = 'A';
-	((int*)(Thingy.name))[1] = A_KillServer;
-	char* formatPtr = Thingy.name + sizeof(int)*2;
+	mm23 mmT;
+	mmT.name[0] = 'A';
+	((int*)(mmT.name))[1] = A_KillServer;
+	char* formatPtr = mmT.name + sizeof(int)*2;
 	*formatPtr = '\0';
-	// unsigned char* paramPtr = Thingy.param;
-	// Msgsend(NULL, &Thingy, ((float *)paramPtr)-Thingy.param+1);
-	// MsgsendObj(vpobj, NULL, (mm*)&Thingy, 1);
+	// unsigned char* paramPtr = mmT.param;
+	// Msgsend(NULL, &mmT, ((float *)paramPtr)-mmT.param+1);
+	// MsgsendObj(vpobj, NULL, (mm*)&mmT, 1);
 		{
-		desc *o = *vpobj;
-		struct sockaddr_in *paddr = &o->addr;
-		if (!sendudp(paddr, o->sockfd, cchmm23 + sizeof(float), &Thingy))
+		desc* o = *vpobj;
+		struct sockaddr_in* paddr = &o->addr;
+		if (!sendudp(paddr, o->sockfd, cchmm23 + sizeof(float), &mmT))
 			printf("vssKill: 2.x send failed\n");
 		}
 }
