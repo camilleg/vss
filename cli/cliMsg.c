@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -263,65 +264,58 @@ extern "C"
 #endif
 void SetReplyTimeout(float z)
 {
-	vtimeout.tv_sec = (long)z;
-	vtimeout.tv_usec = (long)(1000000. * (z - (float)(long)z));
+	vtimeout.tv_sec = z;
+	vtimeout.tv_usec = 1000000. * (z - (long)z);
 	fprintf(stderr, "VSS client remark: timeout set to %g seconds.\n", z);
 }
 
 static int FMsgrcvCore(OBJ pv)
 {
-	desc *o;
-	struct sockaddr_in  cl_addr;
-	int r;
-	fd_set read_fds;
-	struct timeval timeout = { 2L, 500000L };
-
-#	define MAXMESG 32768
-	static char rgchT[MAXMESG];
-
-	if (vpobj == NULL && pv == NULL)
+	if (!vpobj && !pv)
 		return fFalse;
 
-	o = (desc *)(pv ? pv : *vpobj);
+	const desc* o = (desc *)(pv ? pv : *vpobj);
+	fd_set read_fds;
 	FD_ZERO(&read_fds);
 	FD_SET(o->sockfd, &read_fds);            
-	/* Reassign the struct before every select() call, the manpage advises. */
+
+	// Assign the struct before every select() call, the manpage advises.
+	struct timeval timeout;
 	timeout.tv_sec = vtimeout.tv_sec;
 	timeout.tv_usec = vtimeout.tv_usec;
 
-	r = select(o->sockfd+1, &read_fds, (fd_set *)0, (fd_set *)0, &timeout);
+	const int r = select(o->sockfd+1, &read_fds, (fd_set *)0, (fd_set *)0, &timeout);
 	if (r <= 0)
 		return fFalse;
+	if (!FD_ISSET(o->sockfd, &read_fds)) {
+		fprintf(stderr, "VSS client: internal error 4\n"); // Should not happen.
+		return fFalse;
+	}
 
-	if (FD_ISSET(o->sockfd, &read_fds))
-		{
-		int fGotSomething = 0;
-		int n = 0;
-		unsigned clilen;
-		while (clilen = sizeof(cl_addr),
-			(n=recvfrom(o->sockfd, rgchT, MAXMESG, 0,
-			(struct sockaddr*)&cl_addr, &clilen)) >0)
-			{
-			fGotSomething = 1;
-			if (!pv)
-				/* really a 3.0 client, not a 2.3 client */
-				clientMessageCall(rgchT+1/*strip off fRetval with +1*/);
-			}
-		if (!fGotSomething && n < 0)
-			{
-#ifdef VSS_WINDOWS
-			/* Don't complain: VSS probably just isn't running, that's all */
-#else
-			if (errno != ECONNREFUSED && errno != EWOULDBLOCK)
-				perror("VSS client: internal error, FMsgrcv recvfrom() failed");
-#endif
-			return fFalse;
-			}
-		return fTrue;
+	bool fGotSomething = false;
+	int n = 0;
+	unsigned clilen;
+	struct sockaddr cl_addr;
+	const size_t MAXMESG = 32768;
+	char rgchT[MAXMESG];
+	while (clilen = sizeof(cl_addr),
+		(n = recvfrom(o->sockfd, rgchT, MAXMESG, 0, &cl_addr, &clilen)) > 0) {
+		fGotSomething = true;
+		if (!pv)
+			/* really a 3.0 client, not a 2.3 client */
+			clientMessageCall(rgchT+1/*strip off fRetval with +1*/);
 		}
-	/* This should not happen */
-	fprintf(stderr, "VSS client: internal error 4\n");
-	return fFalse;
+	if (!fGotSomething && n < 0)
+		{
+#ifdef VSS_WINDOWS
+		/* Don't complain: VSS probably just isn't running, that's all */
+#else
+		if (errno != ECONNREFUSED && errno != EWOULDBLOCK)
+			perror("VSS client: internal error, FMsgrcv recvfrom() failed");
+#endif
+		return fFalse;
+		}
+	return fTrue;
 }
 
 int FMsgrcv()
