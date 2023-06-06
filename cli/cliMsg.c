@@ -25,7 +25,6 @@ static OBJ* vpobj;
 static OBJ vobjArray[MAX_NUM_SERVERS];
 static int numServers = 0;
 int	currentServerHandle = 0;
-static mm mmT;
 
 typedef struct
 {
@@ -291,7 +290,6 @@ static int FMsgrcvCore(OBJ pv)
 	timeout.tv_usec = vtimeout.tv_usec;
 
 	r = select(o->sockfd+1, &read_fds, (fd_set *)0, (fd_set *)0, &timeout);
-
 	if (r <= 0)
 		return fFalse;
 
@@ -461,6 +459,8 @@ extern "C"
 #endif
 int PingSoundServer()
 {
+	mm mmT;
+	mmT.fRetval = 0; // Ignored.
 	sprintf(mmT.rgch, "Ping");
         Msgsend(NULL, &mmT);
         return FMsgrcv();
@@ -481,12 +481,11 @@ void EndSoundServer()
 		fprintf(stderr, "VSS client error: Sound server not attached!\n\t(Did you call EndSoundServer() more than once?)\n");
 		return;
 		}
-
 	AUDterminateImplicit();
 	EndMsgsend(*vpobj);
-	*vpobj = 0;
+	*vpobj = NULL;
 	vpobj = NULL;
-	currentServerHandle = 0; /* NULL handle in this case */
+	currentServerHandle = 0; /* Null handle */
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
@@ -504,13 +503,14 @@ void EndAllSoundServers()
 	numServers = 0;
 }
 
+/* Returns a server handle, or on error the null handle 0. */
 static int BeginSoundServerCore(char* hostName)
 {
 	if (numServers >= MAX_NUM_SERVERS)
 		{
-		fprintf(stderr, "vss client error: Too many servers running to open another on %s. Sorry.\n",
-			hostName && *hostName ? hostName : "this machine");
-		return fFalse;
+		fprintf(stderr, "vss client error: Too many servers running to open another on %s.\n",
+			hostName && *hostName ? hostName : "this host");
+		return 0;
 		}
 
 	vpobj = NULL;
@@ -521,26 +521,22 @@ static int BeginSoundServerCore(char* hostName)
 	if (!PingSoundServer())
 		{
 LAbort:
-		printf("VSS client error: couldn't find vss running");
-		if (hostName && *hostName)
-			printf(" on \"%s\"", hostName);
-		else if (getenv("SOUNDSERVER"))
-			printf(" on \"%s\"", getenv("SOUNDSERVER"));
+		printf("VSS client error: no vss running on %s",
+			hostName && *hostName ? hostName : getenv("SOUNDSERVER") ? getenv("SOUNDSERVER") : "this host");
 		if (wSendChannel != 7999)
 			printf(", port %d", wSendChannel);
 		printf("\n");
-		return fFalse;
+		return 0;
 		}
 
-	numServers++;
-	currentServerHandle = numServers;
-	return numServers;     /* return a server handle */
+	currentServerHandle = ++numServers;
+	return currentServerHandle;
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- int BeginSoundServerAt(char * hostName)
+int BeginSoundServerAt(char* hostName)
 {
 	return BeginSoundServerCore(hostName);
 }
@@ -556,7 +552,7 @@ int BeginSoundServer()
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
- int SelectSoundServer(int serverHandle)
+int SelectSoundServer(int serverHandle)
 {
 	if (serverHandle > numServers)	return fFalse;
 	if (serverHandle < 1)		return fFalse;
@@ -564,7 +560,7 @@ extern "C"
 
 	vpobj = vobjArray + serverHandle - 1;
 	currentServerHandle = serverHandle;
-	return(fTrue);
+	return fTrue;
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
