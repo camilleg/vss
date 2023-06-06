@@ -31,12 +31,12 @@ void MsgsendObj(OBJ, struct sockaddr_in*, mm*);
 OBJ BgnMsgsend(const char *szHostname, int channel);
 
 void setAckPrint(int flag);
-int BeginSoundServer();
+int BeginSoundServer(void);
 int BeginSoundServerAt(char* hostName);
 int SelectSoundServer(int serverHandle);
-void EndSoundServer();
-void EndAllSoundServers();
-int PingSoundServer();
+void EndSoundServer(void);
+void EndAllSoundServers(void);
+int PingSoundServer(void);
 void Msgsend(struct sockaddr_in*, mm*);
 void MsgsendArgs1(struct sockaddr_in*, mm*, const char* msg, float z0);
 void MsgsendArgs2(struct sockaddr_in*, mm*, const char* msg, float z0, float z1);
@@ -44,8 +44,8 @@ void clientMessageCall(char*);
 int WMsgFromSz(char*);
 const char* SzMsgFromW(int);
 
-const char* GetVssLibVersion(); /* from vssBuild.c++ */
-const char* GetVssLibDate();
+const char* GetVssLibVersion(void); /* from vssBuild.c++ */
+const char* GetVssLibDate(void);
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 }
