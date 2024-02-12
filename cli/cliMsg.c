@@ -125,7 +125,7 @@ static void EndMsgsend(OBJ obj)
 static int sendudp(struct sockaddr_in* sp, int sockfd, size_t count, const void* b)
 {
 #ifdef NOISY
-	printf("sendto %s:%d '%s', cb=%ld\n", inet_ntoa(sp->sin_addr), ntohs(sp->sin_port), (const char*)b, count);
+	printf("sendto %s:%d '%s', cb=%lu\n", inet_ntoa(sp->sin_addr), ntohs(sp->sin_port), (const char*)b, count);
 #endif
 	return sendto(sockfd, b, count, 0, (const struct sockaddr*)sp, sizeof(*sp)) == count ? fTrue : fFalse;
 }
