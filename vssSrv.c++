@@ -48,7 +48,6 @@ VSSglobals::VSSglobals() :
 	msecAntidropout(0.0),
 	hostname("127.0.0.1"),
 	udp_port(7999),
-	dacfd(-1),
 	fdOfile(-1),
 	vcbBufOfile(0),
 	vibBufOfile(0),
@@ -62,17 +61,18 @@ VSSglobals::~VSSglobals() {
 	delete [] rgbBufOfile; // smart pointer? uniq pointer? (;;;; after schedulerMain args)
 }
 
+static struct sockaddr_in* vcl_addr = nullptr; // For replying immediately to a client.
+
 // Reply to a client's ping.
-void PingServer(struct sockaddr_in *cl_addr)
+static void PingServer()
 {
-	mm mmT;
-	mmT.fRetval = 0;
 #if 0
-	const auto addr = inet_ntoa(cl_addr->sin_addr);
-	cerr << "vss: ping from " << (strcmp(addr, "127.0.0.1") ? addr : "local client") << "\n";
+	const auto host_cli = inet_ntoa(vcl_addr->sin_addr);
+	cerr << "vss: ping from " << (strcmp(host_cli, "127.0.0.1") ? host_cli : "localhost")
+	     << ":" << ntohs(vcl_addr->sin_port)
+	     << "; replying on port " << vcl_addr->sin_port << "\n";
 #endif
-	sprintf(mmT.rgch, "AckNoteMsg %f", hNil);
-	Msgsend(cl_addr, &mmT);
+	Msgsend(vcl_addr, "AckNoteMsg -1.0"); // hardcoded hNil
 }
 
 void FlushServer()
@@ -152,7 +152,6 @@ int VSS_main(int argc,char *argv[])
 	ParseArgs(argc, argv, &globs.udp_port, &globs.liveaudio,
 		&globs.SampleRate, &globs.nchansVSS, &globs.nchansIn, &globs.nchansOut, &globs.hog, &globs.lwm, &globs.hwm, globs.ofile);
 	globs.OneOverSR = 1.0 / globs.SampleRate;
-	BgnMsgsend(globs.hostname, globs.udp_port);
 
 	fprintf(stderr, 
 		"%s, github.com/camilleg/vss, built %s\n",
@@ -199,8 +198,12 @@ float ClientReturnVal()
 	return vzReturnToClient;
 }
 
+#ifdef UNUSED
 // Data to return to client.
-static char vszReturnToClient[cchmm] = {0};
+// Used only by python/vssSrv_wrap.c++ made by SWIG from python/vssSrv.i, for PyActor that wraps a Python interpreter.
+// Kelly Fitz made PyActor Sept 1999 and used it (only himself) until Jun 2000.
+// It listened on its own TCP port, ignoring the rest of VSS.
+// Now that a native Python client interface is looming, this code is obsolete.
 const char* ClientReturnValString()
 {
 	if (vszReturnToClient[0] != '\0')
@@ -210,28 +213,27 @@ const char* ClientReturnValString()
 	sprintf(s, "%g", vzReturnToClient);
 	return s;
 }
+#endif
 
-static struct sockaddr_in* vcl_addr;
+const size_t MAXMESG = 500; // Small enough to avoid fragmentation when MTU is typically 1500 bytes.
+
 void ReturnFloatMsgToClient(float z, const char* msg)
 {
-	mm mmT;
-	mmT.fRetval = 0;
 	if (!strcmp(msg, "AckNoteMsg"))
 		{
-		sprintf(mmT.rgch, "%s %f", msg, z);
-		//printf("replying on port=%d\n", ((struct sockaddr_in *)vcl_addr)->sin_port );;
-		Msgsend(vcl_addr, &mmT);
+		char reply[MAXMESG];
+		sprintf(reply, "%s %f", msg, z);
+		Msgsend(vcl_addr, reply);
 		}
 	else
 		cerr << "vss: ignored ReturnFloatMsgToClient with unexpected args: " << msg << "\n";
 }
 
-void ReturnSzMsgToClient(const char* sz, const char* msg)
+static void ReturnSzMsgToClient(const char* sz, const char* msg)
 {
-	mm mmT;
-	mmT.fRetval = 0;
-	sprintf(mmT.rgch, "%s %s", msg, sz);
-	Msgsend(vcl_addr, &mmT);
+	char reply[MAXMESG];
+	sprintf(reply, "%s %s", msg, sz);
+	Msgsend(vcl_addr, reply);
 }
 
 // Called by scheduler.
@@ -253,27 +255,23 @@ extern void deleteActors()
 	VActor::flushActorList();
 }
 
-//===========================================================================
-//		internal message handling
-//	
 //	actorMessageMM() returns 1 almost always, zero means that we received a
 //	message that should cause vss to exit. Return whatever actorMessageHandler()
 //	returns.
+static char vszReturnToClient[16384] = {0};
 
 // Called only by AmplAlg::generateSamples.
 void ReturnStringToClient(const char* sz)
 {
-	strncpy(vszReturnToClient, sz, cchmm-1);
-	vszReturnToClient[cchmm-1] = '\0';
+	const auto cchMax = sizeof(vszReturnToClient)-1;
+	strncpy(vszReturnToClient, sz, cchMax);
+	vszReturnToClient[cchMax] = '\0';
 	ReturnSzMsgToClient(vszReturnToClient, "DataReply");
 }
 
 void ReturnFloatToClient(float aFloat)
 {
-	//	if it is a float to be returned, make sure the
-	//	string isn't hanging around.
-	//	-kel 12 Oct 99
-	vszReturnToClient[0] = '\0';
+	vszReturnToClient[0] = '\0'; // Clobber the string, just in case.
 	vzReturnToClient = aFloat; // in case we need to return it to client.
 }
 
@@ -286,14 +284,17 @@ float* PvzMessageGroupRecentHandle()
 static bool vfAlreadyLogged = false;
 
 // Called by LiveTick or BatchTick.
-int actorMessageMM(const void* pv, struct sockaddr_in* cl_addr)
+int actorMessageMM(const char* msg, struct sockaddr_in* cl_addr)
 {
-	const mm* pmm = (const mm*)pv;
-	const auto message = pmm->rgch;
-	const auto fReturnToClient = pmm->fRetval != 0;
-	// Save this for ReturnFloatMsgToClient, and rarely ReturnSzMsgToClient and PingServer.
-	// todo: replace this global with an arg to those and to actorMessageHandler, actorMessageHandlerCore.
-	vcl_addr = cl_addr;
+	const auto firstbyte = msg[0];
+	const auto message = firstbyte == 0x00 || firstbyte == 0x01 ?
+	  msg + 1 : // Old client sent an initial fRetval byte, now ignored.
+	  msg;      // New client sent an ASCII-only string.
+	const auto fReturnToClient =
+	  !strncmp(message, "Create ", 7) ||
+	  !strncmp(message, "BeginSound", 10 /* or BeginSoundPaused */);
+	  // Ping replies directly, not via ReturnFloatMsgToClient.
+	vcl_addr = cl_addr; // Save, for replying immediately via ReturnFloatMsgToClient, ReturnSzMsgToClient, or PingServer.
 
 	// Don't postpone the \n to append "= vzReturnToClient", because
 	// diagnostics from actorMessageHandler() would then start mid-line.
@@ -389,7 +390,7 @@ int actorMessageHandlerCore(const char* Message)
 		{ ifNil( fKeepRunning = 0 ); }
 
 	if (CommandIs("Ping"))
-		{ ifNil( PingServer(vcl_addr) ); }
+		{ ifNil( PingServer() ); }
 
 	// Backwards compatible.  Does nothing.
 	if (CommandIs("LoadDSO"))
@@ -428,8 +429,7 @@ int actorMessageHandlerCore(const char* Message)
 		return Uncatch();
 		}
 
-	// Not a vss builtin message, so see if it's sent to
-	// an individual actor instance.
+	// Not a vss builtin message, so forward it to individual actors.
 	return 2;
 }
 

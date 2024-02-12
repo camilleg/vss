@@ -1,6 +1,6 @@
 const char* GetVssLibVersion()
 {
-	return "Virtual Sound Server v4.2.1"
+	return "Virtual Sound Server v4.3.0"
 #ifdef DEBUG
 		" debug"
 #endif

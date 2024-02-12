@@ -7,16 +7,6 @@
 /* urp.. defined in actorMsg.h as well as in here. */
 #ifndef actorMsg_h
 typedef void* OBJ;
-
-#define cchmm 5120
-typedef struct mm
-{
-	char fRetval;
-	/* Nonzero iff srv should return float to client in response to this message. */
-	char rgch[cchmm];
-	/* The ascii string containing the message. */
-} mm;
-
 #endif
 
 #include <arpa/inet.h>
@@ -27,20 +17,20 @@ typedef struct mm
 extern "C" {
 #endif
 
-void MsgsendObj(OBJ, struct sockaddr_in*, mm*);
+void MsgsendObj(OBJ, struct sockaddr_in*, const char*);
 OBJ BgnMsgsend(const char *szHostname, int channel);
 
 void setAckPrint(int flag);
 int BeginSoundServer(void);
-int BeginSoundServerAt(char* hostName);
+int BeginSoundServerAt(const char* hostName);
 int SelectSoundServer(int serverHandle);
 void EndSoundServer(void);
 void EndAllSoundServers(void);
 int PingSoundServer(void);
-void Msgsend(struct sockaddr_in*, mm*);
-void MsgsendArgs1(struct sockaddr_in*, mm*, const char* msg, float z0);
-void MsgsendArgs2(struct sockaddr_in*, mm*, const char* msg, float z0, float z1);
-void clientMessageCall(char*);
+void Msgsend(struct sockaddr_in*, const char*);
+void MsgsendArgs1(struct sockaddr_in*, const char*, float);
+void MsgsendArgs2(struct sockaddr_in*, const char*, float, float);
+void clientMessageCall(const char*);
 int WMsgFromSz(char*);
 const char* SzMsgFromW(int);
 

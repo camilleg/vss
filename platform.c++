@@ -44,7 +44,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <poll.h>
+#include <poll.h> // struct pollfd
 #include <pwd.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
@@ -658,7 +658,7 @@ static void MaybeResetsynth()
 		return;
     Closesynth();
 	fWantToResetsynth = false;
-	globs.dacfd = globs.Initsynth();
+	(void)globs.Initsynth();
 	fWantToResetsynth = false;
 }
 
@@ -950,7 +950,7 @@ static void closeudp(int sockfd)
 	close(sockfd);
 }
 
-#define MAXMESG 16384
+const size_t MAXMESG = 500; // Small enough to avoid fragmentation when MTU is typically 1500 bytes.
 char mbuf[MAXMESG];
 int caught_sigint = 0;
 
@@ -969,7 +969,6 @@ void catch_sigint(SignalHandlerType)
 void doActors();
 void doActorsCleanup();
 void deleteActors();
-int actorMessageMM(void*, struct sockaddr_in*);
 #endif
 
 static int viGear = 1;
@@ -989,7 +988,7 @@ void VSS_SetGear(int iGear)
 }
 
 #ifndef VSS_WINDOWS
-struct pollfd pfds[2];
+struct pollfd vpfd; // vpfd.fd replaces the redundant udpDesc.sockfd
 #endif
 
 // Compute (c*MaxSampsPerBuffer) samples into the output buffer.
@@ -1193,13 +1192,7 @@ static int LiveTick(int sockfd)
 	if (vfDie)
 		return 0;
 	doSynth(Scount());
-	const auto nfds = 2;
-	//	pfds is an array of file descriptors, initialized
-	//	in schedulerMain(). The first one is the audio device,	
-	//	and doesn't need to be polled. The second one is 
-	//	where we listen for client messages.
-	//	(why poll the audio hardware under IRIX?)
-	if (poll(pfds+1, nfds-1, 0) < 0) // not using pfds[0]
+	if (poll(&vpfd, 1, 0) < 0)
 		return 1;
 
 	//	this call using the catchup argument (2)
@@ -1211,7 +1204,7 @@ static int LiveTick(int sockfd)
 		return 0;
 	const int r = Scount();
 	doSynth(r, 0, 2);
-	if (!(pfds[1].revents & POLLIN))
+	if (!(vpfd.revents & POLLIN))
 	{
 #ifdef EXPERIMENT
 		// don't soak the CPU if we're idle: take at least 
@@ -1251,6 +1244,7 @@ static int LiveTick(int sockfd)
 		(n = recvfrom(sockfd, mbuf, MAXMESG, 0, &cl_addr, &clilen)) >0)
 
 		{
+		mbuf[n] = '\0'; // Terminate the ascii string.
 #ifdef UNDER_CONSTRUCTION
 		if (FDrive())
 			{
@@ -1329,9 +1323,11 @@ static int BatchTick(int sockfd)
 	struct sockaddr cl_addr;
 	int clilen;
 #endif
+	int n;
 	while (clilen = sizeof(cl_addr),
-		recvfrom(sockfd, mbuf, MAXMESG, 0, &cl_addr, &clilen) > 0)
+		(n = recvfrom(sockfd, mbuf, MAXMESG, 0, &cl_addr, &clilen)) > 0)
 		{
+		mbuf[n] = '\0'; // Terminate the ascii string.
 		if (!actorMessageMM(mbuf, (SOCK*)&cl_addr))
 			return 0;
 		}
@@ -1370,20 +1366,15 @@ void schedulerMain()
 		return;
 	}
 
-	globs.dacfd = globs.Initsynth();
-	if (globs.liveaudio && globs.dacfd < 0)
+	if (globs.liveaudio && globs.Initsynth() < 0)
 		goto LDie;
 
 #ifndef VSS_WINDOWS
 	if (globs.liveaudio)
 		{
-		//;; probably we don't need to poll this first one, globs.dacfd.
-		pfds[0].fd = globs.dacfd;				// audio to audio-output port
-		pfds[0].events = POLLOUT;
-		pfds[0].revents = 0;
-		pfds[1].fd = sockfd;					// messages from clients
-		pfds[1].events = POLLIN /* | POLLOUT */;
-		pfds[1].revents = 0;
+		vpfd.fd = sockfd; // messages from clients
+		vpfd.events = POLLIN;
+		vpfd.revents = 0;
 		}
 #endif
 

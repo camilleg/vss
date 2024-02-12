@@ -31,7 +31,6 @@ public:
 	float msecAntidropout;// longest duration of cpu-starvation to endure
 	const char* hostname;
 	int udp_port; // listen to clients
-	int dacfd; // Was audio input.  Deprecated because it practically duplicates liveaudio.
 	int fdOfile;
 	int vcbBufOfile;
 	int vibBufOfile;
@@ -54,14 +53,6 @@ public:
 };
 
 extern VSSglobals globs;
-
-// conflict with vssclient.h's definitions of cchmm and struct mm?
-const int cchmm = 5 * 1024;
-typedef struct mm
-{
-	char fRetval; // Nonzero iff server should respond with a float.
-	char rgch[cchmm]; // Message.
-} mm;
 
 inline int Nchans() { return globs.nchansVSS; }
 inline int NchansIn() { return globs.nchansIn; }

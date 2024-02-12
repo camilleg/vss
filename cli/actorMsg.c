@@ -104,6 +104,7 @@ ExternC float actorGetReply(void)
 	return HnoteFromAckNote();
 }
 
+// To retrieve values from AmplAlg::generateSamples via ReturnStringToClient.
 ExternC const char* actorGetReplyData(void)
 {
 	if (!FMsgrcv())
@@ -116,76 +117,42 @@ ExternC const char* actorGetReplyData(void)
 
 /***********************************************/
 
-ExternC void actorMessage(char* messagename)
+ExternC void actorMessage(char* msg)
 {
 /*** Send the message to the server ***/
-	static mm mmT;
-	if (strlen(messagename) > 1498)
-		{
-		fprintf(stderr, "vss client error: actorMessage() argument too long.\n");
-		return;
-		}
-	strcpy(mmT.rgch, messagename);
-	mmT.fRetval = 0;
-	Msgsend(NULL, &mmT);
+	Msgsend(NULL, msg);
 }
 
-ExternC void actorMessageF(char* messagename, float f)
+ExternC void actorMessageF(const char* messagename, float f)
 {
 	char sz[1000];
 	sprintf(sz, messagename, f);
 	actorMessage(sz);
 }
 
-ExternC void actorMessageFD(char* messagename, float f, int d)
+ExternC void actorMessageFD(const char* messagename, float f, int d)
 {
 	char sz[1000];
 	sprintf(sz, messagename, f, d);
 	actorMessage(sz);
 }
 
-ExternC void actorMessageFDD(char* messagename, float f, int d1, int d2)
+ExternC void actorMessageFDD(const char* messagename, float f, int d1, int d2)
 {
 	char sz[1000];
 	sprintf(sz, messagename, f, d1, d2);
 	actorMessage(sz);
 }
 
-ExternC void actorMessageFS(char* messagename, float f, const char* sz)
+ExternC void actorMessageFS(const char* messagename, float f, const char* sz)
 {
 	char szCmd[1000];
 	sprintf(szCmd, messagename, f, sz);
 	actorMessage(szCmd);
 }
 
-ExternC float actorMessageRetval(char* messagename)
+ExternC float actorMessageRetval(char* msg)
 {
-/*** Send the message to the server ***/
-	static mm mmT;
-	if (strlen(messagename) > 1498)
-		{
-		fprintf(stderr, "vss client error: actorMessageRetval() argument too long.\n");
-		return -1.0;
-		}
-	strcpy(mmT.rgch, messagename);
-	mmT.fRetval = 1;
-	Msgsend(NULL, &mmT);
-
+	actorMessage(msg);
 	return actorGetReply();
-}
-
-ExternC const char* actorMessageReturnData(char* messagename)
-{
-/*** Send the message to the server ***/
-	static mm mmT;
-	if (strlen(messagename) > 1498)
-		{
-		fprintf(stderr, "vss client error: actorMessageReturnData() argument too long.\n");
-		return NULL;
-		}
-	strcpy(mmT.rgch, messagename);
-	mmT.fRetval = 1;
-	Msgsend(NULL, &mmT);
-
-	return actorGetReplyData();
 }

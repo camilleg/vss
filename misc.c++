@@ -1,75 +1,26 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
+#include <poll.h> // struct pollfd
 #include <unistd.h>
 
-#include "platform.h"
+#include "vssSrv.h"
 using std::cerr;
 
-// Create a socket for sending msgs back to clients.
-
-using desc = struct {
-	struct sockaddr_in addr;
-	int len;
-	int sockfd;
-	int port;
-};
-static desc udpDesc = {};
-// Set by BgnMsgsend().  Used by Msgsend().
-
-void BgnMsgsend(const char *hostname, int port) {
-	udpDesc.port = port;
-	memset(&udpDesc.addr, 0, sizeof udpDesc.addr);
-	udpDesc.addr.sin_family = AF_INET;
-	udpDesc.addr.sin_addr.s_addr = inet_addr(hostname);
-	udpDesc.addr.sin_port = htons(port);
-	udpDesc.sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (udpDesc.sockfd < 0) {
-		cerr << "failed to make socket\n";
+void Msgsend(struct sockaddr_in* addr /*always vcl_addr*/, const char* msg) {
+	if (!addr)
 		return;
-	}
-
-	struct sockaddr_in cl_addr = {};
-	cl_addr.sin_family = AF_INET;
-	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	cl_addr.sin_port = htons(0);
-	if (bind(udpDesc.sockfd, (struct sockaddr *)&cl_addr, sizeof cl_addr) < 0) {
-		perror("failed to bind");
-		close(udpDesc.sockfd);
-		udpDesc.sockfd = -1;
-		return;
-	}
-	udpDesc.len = sizeof udpDesc.addr;
-	fcntl(udpDesc.sockfd, F_SETFL, FNDELAY); // Non-blocking.
-}
-
 #if defined VSS_LINUX || defined VSS_CYGWIN32_NT40 || defined VSS_MAC
 #define SPOOGE (const struct sockaddr*)
 #else
 #define SPOOGE
 #endif
-
-static bool sendudp(const struct sockaddr_in* sp, int sockfd, long count, mm* pmm)
-{
-	if (sendto(sockfd, pmm, count, 0, SPOOGE sp, sizeof *sp) != count)
-		return false;
-#ifdef NOISY
-	printf("sendto %x:%d \"%s\", fd=%d, cb=%ld.",
-		sp->sin_addr.s_addr, sp->sin_port,
-		pmm->rgch, sockfd, count);
-#endif
-	return true;
-}
-#undef SPOOGE
-
-void Msgsend(struct sockaddr_in* addr /*always vcl_addr*/, mm* pmm) {
-	if (udpDesc.sockfd < 0)
-		return;
-	if (!addr)
-		addr = &udpDesc.addr; // Why would this be useful?
-	if(!sendudp(addr, udpDesc.sockfd, strlen(pmm->rgch)+1+1, pmm))
-		// extra +1 for fRetval field.
+	if (!sendto(vpfd.fd, msg, strlen(msg)+1, 0, SPOOGE addr, sizeof(*addr))) {
 		printf("send failed\n");
+		return;
+	}
+#undef SPOOGE
+	// printf("sendto %s:%d '%s'\n", inet_ntoa(addr->sin_addr), addr->sin_port, msg);
 }
 
 #ifdef VSS_WINDOWS

@@ -1,20 +1,3 @@
-/********************************************************************
- *                              actorMsg.h                          * 
- *------------------------------------------------------------------*
- *                                                                  *
- * Udp message codes for controlling actors, for inclusion in the   *
- * client side code.                                                *
- *                                                                  *
- * From the client, this protocol is accessed at the lowest level   *
- * through the actorMessage() call.
- *                                                                  *
- *------------------------------------------------------------------*
- * Copyright (C) 1994,  Sumit Das                                   *
- *                                                                  *
- * Redesigned June 1996 Camille Goudeseune.                         *
- *                                                                  *
- ********************************************************************/
-
 #if !defined(actorMsg_h)
 #define actorMsg_h
 
@@ -22,16 +5,6 @@
 typedef void* OBJ;
 #include <stdarg.h>
 #endif
-
-#define cchmm 5120 /* 5x1024, like in dev/srv/vssglobals.h */
-typedef struct mm
-{
-    char fRetval;
-    /* Nonzero iff srv should return float to client in response to this message. */
-    char rgch[cchmm];
-    /* The ascii string containing the message. */
-} mm;
-
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C" {
@@ -58,7 +31,6 @@ void	AUDEnableNoMessageGroupWarning(int fEnable);
 
 /*xx30 void	addEventRet(float seqHandle, float when, float returnID, int message, char *formatString, ... );*/
 /*xx30 void	addEvent(float seqHandle, float when, int message, char *formatString, ... );*/
-
 
 /*****************************
  *** useful shortcut stuff ***

@@ -46,5 +46,4 @@ void ParseArgs(int argc,char *argv[],int *udp_port, int *liveaudio,
 void schedulerMain();
 int Scount();
 
-void BgnMsgsend(const char* host, int port);
-void Msgsend(struct sockaddr_in*, mm*);
+void Msgsend(struct sockaddr_in*, const char*);

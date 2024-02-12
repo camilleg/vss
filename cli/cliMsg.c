@@ -25,15 +25,19 @@ static OBJ* vpobj;
 #define	MAX_NUM_SERVERS	100
 static OBJ vobjArray[MAX_NUM_SERVERS];
 static int numServers = 0;
-int	currentServerHandle = 0;
+int currentServerHandle = 0; // null value
 
 typedef struct
 {
 	struct sockaddr_in addr;
 	int len;
 	int sockfd;
-	int channel;
+	int channel; // UDP port
 } desc;
+
+// Small enough to avoid fragmentation when MTU is typically 1500 bytes.
+// Not a const int, because C not C++.
+#define MAXMESG 500
 
 #define fFalse 0
 #define fTrue 1
@@ -46,7 +50,8 @@ typedef struct
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-OBJ BgnMsgsend(const char *szHostname, int channel)
+// Caller is responsible for free()ing the return value.
+OBJ BgnMsgsend(const char *hostname, int channel)
 {
 	struct sockaddr_in  cl_addr;
 	int  sockfd;
@@ -83,7 +88,7 @@ LCleanup:
 	o->channel = channel;
 	memset((char *)&o->addr, 0, sizeof(o->addr));
 	o->addr.sin_family = AF_INET;
-	o->addr.sin_addr.s_addr = inet_addr(szHostname);
+	o->addr.sin_addr.s_addr = inet_addr(hostname);
 	o->addr.sin_port = htons(channel);
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0)
 		{
@@ -102,31 +107,11 @@ LCleanup:
 	else
 		printf("unable to make socket\n");
 
-#ifdef VSS_WINDOWS
-	/* Make the socket nonblocking, using the impoverished ioctl in Windows.
-	 * Don't let Windows manage the socket with its own message pump technique!
-	 */
-	fcntl(sockfd, F_SETFL, FNDELAY); /* Non-blocking I/O (man 5 fcntl) */
-	{
-	int f = 1;
-	if (ioctl(sockfd, FIONBIO, &f) < 0) perror("ioctl failed");
-#if defined(SET_SOCK_SND_BUF_SIZE)
-	setsockopt(sockfd, F_SETFL, FNDELAY);
-#endif
-	}
-#endif
-	
+	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking I/O
 	o->sockfd = sockfd;
 	o->len = sizeof(o->addr);
-#ifndef VSS_WINDOWS
-	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking I/O
-#endif
-#if defined(SET_SOCK_SND_BUF_SIZE)
-	setsockopt(sockfd, F_SETFL, FNDELAY);
-#endif
 #ifdef NOISY
-	printf("opened send socket fd %d on channel %d, obj %p\n",
-		o->sockfd, o->channel, (void*)o);
+	printf("will send to %s:%d\n", inet_ntoa(o->addr.sin_addr), o->channel);
 #endif
 	return o;
 }
@@ -137,27 +122,22 @@ static void EndMsgsend(OBJ obj)
 	free(obj);
 }
 
-static int sendudp(struct sockaddr_in *sp, int sockfd, long count, void  *b)
+static int sendudp(struct sockaddr_in* sp, int sockfd, size_t count, const void* b)
 {
 #ifdef NOISY
-	printf("sendto \"%s\", fd=%d, cb=%ld,\t",
-		((mm*)b)->rgch, sockfd, count);
-	/* sockaddr_in defined in /usr/include/netinet/in.h */
-	printf("port=%d, ipaddr=%x\n",
-		(int)ntohs(sp->sin_port),
-		(int)ntohl(sp->sin_addr.s_addr));
+	printf("sendto %s:%d '%s', cb=%ld\n", inet_ntoa(sp->sin_addr), ntohs(sp->sin_port), (const char*)b, count);
 #endif
-	if (sendto(sockfd, (const char*)b, (int)count, 0, (const struct sockaddr*)sp, sizeof(*sp)) != count)
-		return fFalse;
-	return fTrue;
+	return sendto(sockfd, b, count, 0, (const struct sockaddr*)sp, sizeof(*sp)) == count ? fTrue : fFalse;
 }
 
-/* This doesn't waste cpu, it just moves some of the parsing
-   from the server side to the client side. */
-
-void VSS_StripZerosInPlace(char* sz)
+// Shorten a message, at least for legibility when debugging.
+void VSS_StripZerosInPlace(const char* sz)
 {
-	char szT[sizeof(mm) + 5];
+#if 1
+	// Do nothing.
+#else
+	// todo: rewrite, not in place, because sz might be a literal, which is const or acts like const.
+	char szT[MAXMESG + 5];
 	char* pchSrc = sz;
 	char* pchDst = szT;
 
@@ -165,12 +145,10 @@ void VSS_StripZerosInPlace(char* sz)
 		{
 		while (*pchSrc && *pchSrc != '.')
 			*pchDst++ = *pchSrc++;
-
 		if (!*pchSrc) /* end of string */
 			break;
 
 		/* We've reached a decimal point. */
-
 		/* If it's NOT preceded by a space or a digit,
 		 * don't abbreviate as it's probably NOT a floating-point number.
 		 */
@@ -185,8 +163,7 @@ void VSS_StripZerosInPlace(char* sz)
 		if (*pchSrc == ' ' || !*pchSrc)
 			/* Aha! we reached a space.  Don't bother copying the ".000000". */
 			continue;
-#endif
-
+#else
 		/* This way is faster, safer, and works almost all the time. */
 		if (!strncmp(pchSrc, ".000000 ", 8))
 			{
@@ -197,64 +174,61 @@ void VSS_StripZerosInPlace(char* sz)
 		if (!strcmp(pchSrc, ".000000"))
 			/* end of string, just discard it. */
 			break;
+#endif
 		}
 
 	/* Copy back into original string. */
 	*pchDst = '\0';
 	strcpy(sz, szT);
+#endif
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void MsgsendObj(OBJ obj, struct sockaddr_in *paddr, mm* pmm)
+void MsgsendObj(OBJ obj, struct sockaddr_in* paddr, const char* msg)
 {
-	desc* o = (desc *)obj;
 	if (!obj)
 		return;
-
-	/* Strip trailing zeros for shorter more legible messages. */
-	/* in vi:  s/\.[0]* / /g */
-
-	VSS_StripZerosInPlace(pmm->rgch);
-
-	if (paddr == NULL)
+	desc* o = (desc*)obj;
+	if (!paddr)
 		paddr = &o->addr;
+	VSS_StripZerosInPlace(msg);
+	const size_t cb = strlen(msg) + 1; // +1 is the terminating null.
 #ifdef VERBOSE
-printf("\t\033[32msend %s \"%s\"\033[0m\n", pmm->fRetval ? "RET" : "   ", pmm->rgch);
+printf("\t\033[32msend \"%s\"\033[0m\n", msg);
 #endif
-	if(!sendudp(paddr, o->sockfd, (long)strlen(pmm->rgch)+1+1, pmm))
-		/* the second +1 is for the fRetval field. */
+	if (!sendudp(paddr, o->sockfd, cb, msg))
 		perror("VSS client error: MsgsendObj send failed");
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void Msgsend(struct sockaddr_in *paddr, mm* pmm)
+void Msgsend(struct sockaddr_in* paddr, const char* msg)
 {
-	if (vpobj != NULL)
-		MsgsendObj(*vpobj, paddr, pmm);
+	if (vpobj)
+		MsgsendObj(*vpobj, paddr, msg);
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void MsgsendArgs1(struct sockaddr_in *paddr, mm* pmm,
-				const char* msg, float z0)
+void MsgsendArgs1(struct sockaddr_in* paddr, const char* msg, float z0)
 {
-	sprintf(pmm->rgch, "%s %f", msg, z0);
-	Msgsend(paddr, pmm);
+	char sz[MAXMESG];
+	sprintf(sz, "%s %f", msg, z0);
+	Msgsend(paddr, sz);
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void MsgsendArgs2(struct sockaddr_in *paddr, mm* pmm,
-				const char* msg, float z0, float z1)
+void MsgsendArgs2(struct sockaddr_in* paddr, const char* msg, float z0, float z1)
 {
-	sprintf(pmm->rgch, "%s %f %f", msg, z0, z1);
-	Msgsend(paddr, pmm);
+	char sz[MAXMESG];
+	sprintf(sz, "%s %f %f", msg, z0, z1);
+	Msgsend(paddr, sz);
 }
 
 static struct timeval vtimeout = { 2L, 500000L };
@@ -265,16 +239,15 @@ extern "C"
 void SetReplyTimeout(float z)
 {
 	vtimeout.tv_sec = z;
-	vtimeout.tv_usec = 1000000. * (z - (long)z);
+	vtimeout.tv_usec = 1000000.0 * (z - (long)z);
 	fprintf(stderr, "VSS client remark: timeout set to %g seconds.\n", z);
 }
 
-static int FMsgrcvCore(OBJ pv)
+int FMsgrcv()
 {
-	if (!vpobj && !pv)
+	if (!vpobj)
 		return fFalse;
-
-	const desc* o = (desc *)(pv ? pv : *vpobj);
+	const desc* o = (desc*)(*vpobj);
 	fd_set read_fds;
 	FD_ZERO(&read_fds);
 	FD_SET(o->sockfd, &read_fds);            
@@ -295,15 +268,15 @@ static int FMsgrcvCore(OBJ pv)
 	bool fGotSomething = false;
 	int n = 0;
 	unsigned clilen;
-	struct sockaddr cl_addr;
-	const size_t MAXMESG = 32768;
+	struct sockaddr_in cl_addr;
 	char rgchT[MAXMESG];
 	while (clilen = sizeof(cl_addr),
-		(n = recvfrom(o->sockfd, rgchT, MAXMESG, 0, &cl_addr, &clilen)) > 0) {
+		(n = recvfrom(o->sockfd, rgchT, MAXMESG, 0, (struct sockaddr*)&cl_addr, &clilen)) > 0) {
 		fGotSomething = true;
-		if (!pv)
-			/* really a 3.0 client, not a 2.3 client */
-			clientMessageCall(rgchT+1/*strip off fRetval with +1*/);
+		// Accept messages from pre-2024 clients, which are prefixed with a byte that's now ignored.
+		const char firstbyte = rgchT[0];
+		const char* msg = firstbyte == 0x00 || firstbyte == 0x01 ? rgchT+1 : rgchT;
+		clientMessageCall(msg);
 		}
 	if (!fGotSomething && n < 0)
 		{
@@ -316,17 +289,6 @@ static int FMsgrcvCore(OBJ pv)
 		return fFalse;
 		}
 	return fTrue;
-}
-
-int FMsgrcv()
-{
-	return FMsgrcvCore(NULL);
-}
-
-/* Secret back door so we can be a vss 2.3 client also, e.g. vssKill. */
-int FMsgrcv23(void* pv)
-{
-	return FMsgrcvCore(pv);
 }
 
 #ifdef UNDER_CONSTRUCTION
@@ -347,14 +309,13 @@ struct hostent* schmoo(char* szHostname)
 
 int wSendChannel = 7999;
 
-/* set up the UDP connection.  szHostname defaults to localhost. */
-static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
+static int FInitUdp(OBJ* pobj, const char* szHostname, int wChannel)
 {
 	if (!szHostname || !*szHostname)
 		{
 		char* szEnv = getenv("SOUNDSERVER");
-		szHostname = szEnv ? szEnv : "127.0.0.1";
-		char* pch = strchr(szHostname, ':');
+		szHostname = szEnv ? szEnv : "127.0.0.1"; // Default to localhost.
+		const char* pch = strchr(szHostname, ':');
 		if (pch)
 			{
 			const int w = atoi(pch+1);
@@ -362,7 +323,7 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 				{
 				// What's after the colon is a port number.
 				if (w < 1000 || w > 65535)
-					fprintf(stderr, "VSS client error: port number %d is out of range 1000 to 65535.  Using default %d instead.\n",
+					fprintf(stderr, "VSS client warning: port %d out of range 1000 to 65535, defaulting to %d.\n",
 						w, wChannel);
 				else
 					{
@@ -371,28 +332,21 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 					}
 				}
 			else
-				fprintf(stderr, "VSS client error: host (and port?) name \"%s\" with colon unrecognized.\n", szHostname);
+				fprintf(stderr, "VSS client error: expected host or host:port, not \"%s\".\n", szHostname);
 			}
 		}
 
 	if (isalpha(szHostname[0]))
 		{
 #ifdef VSS_WINDOWS
-		fprintf(stderr, "VSS client error: Sorry, Windows needs a dotted-quad address, not a name\n");
+		fprintf(stderr, "VSS client error: Windows needs a dotted-quad address, not a name.\n");
 #else
 		struct hostent* myHostent = /*schmoo*/gethostbyname(szHostname);
 		if (!myHostent)
 			{
 			fprintf(stderr, "VSS client error: host name \"%s\" doesn't exist?\n",
 				szHostname);
-			/*
-				This "obsolete" (according to man pages on Linux)
-				function prints an error message associated with
-				the current value of h_errno on stderr.
-			*/
-#ifndef VSS_WINDOWS_OLDWAY
 			herror("VSS client error: probably an invalid value for $SOUNDSERVER");
-#endif
 			return fFalse;
 			}
 
@@ -408,7 +362,7 @@ static int FInitUdp(OBJ* pobj, char* szHostname, int wChannel)
 }
 
 static float vhnote = hNil;
-static char vszDataReply[cchmm] = {0};
+static char vszDataReply[MAXMESG] = {0};
 static int AckPrint = 0;
 static void AckNote(float returnVal)
 {
@@ -418,13 +372,12 @@ static void AckNote(float returnVal)
 	vhnote = returnVal;
 }
 
-static void AckDataReply(char* returnVal)
+static void AckDataReply(const char* returnVal)
 {
 	if(AckPrint)
 		printf("AckDataReply got \"%s\".\n", returnVal);
-	/* stuff it in this global */
-	strncpy(vszDataReply, returnVal, cchmm-1);
-	vszDataReply[cchmm-1] = '\0';
+	strncpy(vszDataReply, returnVal, MAXMESG-1);
+	vszDataReply[MAXMESG-1] = '\0';
 }
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
@@ -447,16 +400,12 @@ const char* SzFromDataReply()
 
 #include "vssClient_int.h"
 
-/* Send a Ping msg without args. */
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
 int PingSoundServer()
 {
-	mm mmT;
-	mmT.fRetval = 0; // Ignored.
-	sprintf(mmT.rgch, "Ping");
-        Msgsend(NULL, &mmT);
+        Msgsend(NULL, "Ping");
         return FMsgrcv();
 }
 
@@ -498,7 +447,7 @@ void EndAllSoundServers()
 }
 
 /* Returns a server handle, or on error the null handle 0. */
-static int BeginSoundServerCore(char* hostName)
+static int BeginSoundServerCore(const char* hostName)
 {
 	if (numServers >= MAX_NUM_SERVERS)
 		{
@@ -515,8 +464,8 @@ static int BeginSoundServerCore(char* hostName)
 	if (!PingSoundServer())
 		{
 LAbort:
-		printf("VSS client error: no vss running on %s",
-			hostName && *hostName ? hostName : getenv("SOUNDSERVER") ? getenv("SOUNDSERVER") : "this host");
+		printf("VSS client error: no vss on %s",
+			hostName && *hostName ? hostName : getenv("SOUNDSERVER") ? getenv("SOUNDSERVER") : "localhost");
 		if (wSendChannel != 7999)
 			printf(", port %d", wSendChannel);
 		printf("\n");
@@ -530,7 +479,7 @@ LAbort:
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-int BeginSoundServerAt(char* hostName)
+int BeginSoundServerAt(const char* hostName)
 {
 	return BeginSoundServerCore(hostName);
 }
@@ -560,7 +509,7 @@ int SelectSoundServer(int serverHandle)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void clientMessageCall(char* Message)
+void clientMessageCall(const char* Message)
 {
 	if (!strncmp(Message, "AckNoteMsg ", 11))
 		{

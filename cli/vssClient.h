@@ -16,13 +16,6 @@ typedef void *OBJ;
 #	define PI (3.14159265358979323)
 #endif
 
-#	define cchmm 5120 
-	typedef struct mm
-	{
-	char fRetval;
-	char rgch[cchmm];
-	} mm;
-
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C" {
 #endif
@@ -37,11 +30,11 @@ void AUDupdateTwo(int theFirst, int theSecond, char *messageGroupName, int numFl
 void AUDupdateMany(int numHandles, int * handleArray, char *messageGroupName, int numFloats, float *floatArray);
 void AUDqueue(int, float*, float);
 void AUDflushQueue(int, char *, int fPreserveQueueData );
-void actorMessage(char* messagename);
-void actorMessageF(char* messagename, float f);
-void actorMessageFD(char* messagename, float f, int d);
-void actorMessageFDD(char* messagename, float f, int d1, int d2);
-void actorMessageFS(char* messagename, float f, const char* sz);
+void actorMessage(const char* messagename);
+void actorMessageF(const char* messagename, float f);
+void actorMessageFD(const char* messagename, float f, int d);
+void actorMessageFDD(const char* messagename, float f, int d1, int d2);
+void actorMessageFS(const char* messagename, float f, const char* sz);
 float actorMessageRetval(char* messagename);
 float actorGetReply();
 const char* actorGetReplyData();
@@ -55,18 +48,18 @@ float beginNote(const float hactor); /* obsolete, use beginSound() */
 float beginSound(const float hactor);
 void killSoundServer();
 
-void MsgsendObj(OBJ, struct sockaddr_in*, mm*);
-OBJ BgnMsgsend(const char* szHostname, int channel);
+void MsgsendObj(OBJ, struct sockaddr_in*, char*);
+OBJ BgnMsgsend(const char* hostname, int channel);
 void setAckPrint(int flag);
 int BeginSoundServer();
-int BeginSoundServerAt(char* hostName);
+int BeginSoundServerAt(const char* hostName);
 int SelectSoundServer(int serverHandle);
 void EndSoundServer();
 void EndAllSoundServers();
 int PingSoundServer();
-void Msgsend(struct sockaddr_in*, mm*);
-void MsgsendArgs1(struct sockaddr_in*, mm*, const char* msg, float z0);
-void MsgsendArgs2(struct sockaddr_in*, mm*, const char* msg, float z0, float z1);
+void Msgsend(struct sockaddr_in*, const char*);
+void MsgsendArgs1(struct sockaddr_in*, const char*, float z0);
+void MsgsendArgs2(struct sockaddr_in*, const char*, float z0, float z1);
 void clientMessageCall(char*);
 int WMsgFromSz(char*);
 const char* SzMsgFromW(int);
