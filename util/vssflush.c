@@ -1,11 +1,8 @@
-/***************************************
- *              vssFlush.c             *
- * Delete all actors in server.        *
- ***************************************/
+// Delete all actors.
  
 #include "vssClient.h"
 
-int main()
+int main(int argc, char* argv[])
 {
 	if (!BeginSoundServer())
 		return 1;

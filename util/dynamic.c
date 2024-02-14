@@ -2,7 +2,7 @@
 
 #include "vssClient.h"
 
-int main()
+int main(int argc, char* argv[])
 {
 	int i;
 	float sounds[10];
