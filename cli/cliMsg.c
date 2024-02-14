@@ -243,7 +243,7 @@ void SetReplyTimeout(float z)
 	fprintf(stderr, "VSS client remark: timeout set to %g seconds.\n", z);
 }
 
-int FMsgrcv()
+int FMsgrcv(void)
 {
 	if (!vpobj)
 		return fFalse;
@@ -388,12 +388,12 @@ void setAckPrint(int flag)
 	AckPrint = flag;
 }
 
-float HnoteFromAckNote()
+float HnoteFromAckNote(void)
 {
 	return vhnote;
 }
 
-const char* SzFromDataReply()
+const char* SzFromDataReply(void)
 {
 	return vszDataReply;
 }
@@ -403,7 +403,7 @@ const char* SzFromDataReply()
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-int PingSoundServer()
+int PingSoundServer(void)
 {
         Msgsend(NULL, "Ping");
         return FMsgrcv();
@@ -412,12 +412,12 @@ int PingSoundServer()
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void AUDterminateImplicit();
+void AUDterminateImplicit(void);
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void EndSoundServer()
+void EndSoundServer(void)
 {
 	if (!vpobj)
 		{
@@ -434,7 +434,7 @@ void EndSoundServer()
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-void EndAllSoundServers()
+void EndAllSoundServers(void)
 {
 	int i;
 	for (i = 0; i < numServers; i++)
@@ -487,7 +487,7 @@ int BeginSoundServerAt(const char* hostName)
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 extern "C"
 #endif
-int BeginSoundServer()
+int BeginSoundServer(void)
 {
 	return BeginSoundServerCore(NULL);
 }

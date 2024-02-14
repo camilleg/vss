@@ -60,12 +60,12 @@ ExternC void dumpActor(const float actorHandle)
 	actorMessage(szT);
 }
 
-ExternC void dumpActors()
+ExternC void dumpActors(void)
 {
 	actorMessage("DumpAll");
 }
 
-ExternC void killSoundServer()
+ExternC void killSoundServer(void)
 {
 	actorMessage("KillServer");
 }

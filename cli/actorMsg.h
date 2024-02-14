@@ -10,7 +10,7 @@ typedef void* OBJ;
 extern "C" {
 #endif
 
-/********* Actor Messages **********/
+// Actor messages
 
 int 	AUDinit(const char *fileName);
 void	AUDterminate(int fileHandle);
@@ -32,17 +32,15 @@ void	AUDEnableNoMessageGroupWarning(int fEnable);
 /*xx30 void	addEventRet(float seqHandle, float when, float returnID, int message, char *formatString, ... );*/
 /*xx30 void	addEvent(float seqHandle, float when, int message, char *formatString, ... );*/
 
-/*****************************
- *** useful shortcut stuff ***
- *****************************/
+// Shortcuts
  
-float	createActor(const char* actorType);		/* Make one, return a handle */
-void	deleteActor(const float actorHandle);		/* Delete actor with this handle */
-void	setActorActive(const float actorHandle, const int active);	/* turn actor on or off */
-void	dumpActor(const float actorHandle);		/* Print out (on server) one actor */
-void	dumpActors();					/* Print out (on server) listing of all actors */
+float	createActor(const char* actorType); // returns a handle
+void	deleteActor(const float handle);
+void	setActorActive(const float handle, const int active);
+void	dumpActor(const float handle); // vss prints this actor
+void	dumpActors(void); // vss lists all actors
 float	beginNote(const float hactor);
-void	killSoundServer();
+void	killSoundServer(void);
 
 #if defined(_LANGUAGE_C_PLUS_PLUS) || defined(__cplusplus)
 } /* extern "C" */
