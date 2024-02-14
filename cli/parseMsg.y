@@ -119,7 +119,7 @@ Message:	tSTRING tEQUAL tCREATE_MESSAGE tSTRING {
 					}
 				{
 				char szT[1000];
-				sprintf(szT, "Delete %f", h);
+				snprintf(szT, sizeof(szT), "Delete %f", h);
 				if (!vfAbsorbText)
 					actorMessage(szT);
 				}
@@ -197,7 +197,7 @@ BeginNoteBody: aBeginNoteMessage tSTRING {
 						*vszhnote = '\0';
 						vhNote = -1;
 						}
-				sprintf(theArgs, "%s %f ",
+				snprintf(theArgs, sizeof(theArgs), "%s %f ",
 					vfPaused ? "BeginSoundPaused" : "BeginSound",
 					/*doesn't work... $1==tBEGIN_NOTE_MESSAGE ? "BeginSound" : "BeginSoundPaused", */
 					vhActor);
@@ -318,7 +318,7 @@ void AppendArg(const char* sz)
 void AppendFloat(float z)
 {
 	char sz[20];
-	sprintf(sz, "%f", z);
+	snprintf(sz, sizeof(sz), "%f", z);
 	AppendArg(sz);
 }
 
@@ -385,8 +385,7 @@ LAgain:
 			// and is often /usr/lib/cpp -P, sometimes then piped through sed.
 			char szCmd[1500];
 			unlink("/tmp/_-vss-_FiLtEr_--_");
-			sprintf(szCmd, "cat %s | %s > /tmp/_-vss-_FiLtEr_--_",
-				fileName, vszFilterCommand);
+			snprintf(szCmd, sizeof(szCmd), "cat %s | %s > /tmp/_-vss-_FiLtEr_--_", fileName, vszFilterCommand);
 			const int r = system(szCmd);
 			if (r != 0) {
 			  fprintf(stderr, "vss client error: filter '%s' failed on .aud file '%s'.", vszFilterCommand, fileName);
@@ -449,12 +448,12 @@ extern "C" void AUDterminate(int fdT)
 		// Inactivate all actors, so they can't send audEvents,
 		// in particular to a deleted actor.
 		for (auto h: handles) {
-			sprintf(szT, "Active %f 0", h);
+			snprintf(szT, sizeof(szT), "Active %f 0", h);
 			actorMessage(szT);
 		}
 		// Now it's safe to delete all actors.  Order doesn't matter.
 		for (auto h: handles) {
-			sprintf(szT, "Delete %f", h);
+			snprintf(szT, sizeof(szT), "Delete %f", h);
 			actorMessage(szT);
 		}
 	}
@@ -556,10 +555,10 @@ extern "C" float AUDupdate(int fdT, char* szActor, int numFloats, float* floatAr
 	}
 
 	char szT[5000];
-	sprintf(szT, "SendData %f [ ", h);
+	snprintf(szT, sizeof(szT), "SendData %f [ ", h);
 	for (int i=0; i<numFloats; ++i) {
 		char szT2[20];
-		sprintf(szT2, "%f ", floatArray[i]);
+		snprintf(szT2, sizeof(szT2), "%f ", floatArray[i]);
 		strcat(szT, szT2);
 	}
 	strcat(szT, "]");
@@ -640,13 +639,13 @@ extern "C" void AUDflushQueue(int fdT, char* szActor, int fPreserveQueueData)
 // printf("AUDflushQueue flushing %d\n", QdataCount);
 	// Start the message.
     char szT[5000];
-	sprintf(szT, "ScheduleData %f [ ", h);
+	snprintf(szT, sizeof(szT), "ScheduleData %f [ ", h);
 
 	// Build the time offset array.
 	int cqd;
 	char szT2[50];
 	for (cqd = 0; cqd < QdataCount; ++cqd) {
-		sprintf(szT2, "%f ", Qdata[cqd].time);
+		snprintf(szT2, sizeof(szT2), "%f ", Qdata[cqd].time);
 		strcat(szT, szT2);
 	}
 	strcat(szT, "]");
@@ -656,7 +655,7 @@ extern "C" void AUDflushQueue(int fdT, char* szActor, int fPreserveQueueData)
 		strcat(szT, " [");
 		for (int cdata = 0; cdata < Qdata[cqd].size; ++cdata)
 		{
-			sprintf(szT2, "%f ", Qdata[cqd].farray[cdata]);
+			snprintf(szT2, sizeof(szT2), "%f ", Qdata[cqd].farray[cdata]);
 			strcat(szT, szT2);
 		}
 		strcat(szT, "]");
