@@ -24,7 +24,7 @@ def get():
         exit(1)
     return r
 
-def getnum(s):
+def gethandle(s):
     send(s)
     return int(float(get().split()[1].decode()))
 
@@ -35,10 +35,10 @@ def main():
     send('SetPrintCommands 2')
     send('EnableOfile 1 /tmp/example.raw')
 
-    # Play a 1000 Hz tone that sweeps to 500 Hz and fades to silence.
+    # Play a 1000 Hz tone that sweeps to 500 Hz and simultaneously fades to silence.
 
-    fm = getnum('Create FmActor')
-    sound = getnum(f'BeginSound {fm}')
+    fm = gethandle('Create FmActor')
+    sound = gethandle(f'BeginSound {fm}')
 
     send(f'SetAmp {sound} 0.4')
     send(f'SetCarFreq {sound} 1000')

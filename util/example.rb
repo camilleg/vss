@@ -11,17 +11,17 @@ def send(s) $sock.send(s, 0) end
 
 def get() $sock.recvfrom(500)[0] end  # e.g., "AckNoteMsg 7.00"
 
-def getnum(s) send(s); get.split[1].to_i end
+def gethandle(s) send(s); get.split[1].to_i end
 
 def done() $sock.close end
 
 send 'SetPrintCommands 2'
 send 'EnableOfile 1 /tmp/example.raw'
 
-# Play a 1000 Hz tone that sweeps to 500 Hz and fades to silence.
+# Play a 1000 Hz tone that sweeps to 500 Hz and simultaneously fades to silence.
 
-fm = getnum 'Create FmActor'
-sound = getnum "BeginSound #{fm}"
+fm = gethandle 'Create FmActor'
+sound = gethandle "BeginSound #{fm}"
 
 send "SetAmp #{sound} 0.4"
 send "SetCarFreq #{sound} 1000"
