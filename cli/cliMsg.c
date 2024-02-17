@@ -57,7 +57,7 @@ OBJ BgnMsgsend(const char *hostname, int channel)
 	int  sockfd;
 	desc *o = (desc *)malloc(sizeof(desc));
 	if (!o)
-		return (OBJ)0;
+		return NULL;
 
 #ifdef VSS_WINDOWS_OLDWAY
 	{
@@ -92,16 +92,18 @@ LCleanup:
 	o->addr.sin_port = htons(channel);
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		printf("Failed to make socket.\n");
-		return (OBJ)0;
+		free(o);
+		return NULL;
 	}
 	memset((char *)&cl_addr, 0, sizeof(cl_addr));
 	cl_addr.sin_family = AF_INET;
 	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	cl_addr.sin_port = htons(0);
 	if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof(cl_addr)) < 0) {
-		close(sockfd);
 		perror("failed to bind socket");
-		return (OBJ)0;
+		close(sockfd);
+		free(o);
+		return NULL;
 	}
 
 	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking I/O
