@@ -28,6 +28,7 @@ float AUDupdateFloats(int fdT, char* szActor, int numFloats, ...);
 float AUDupdate(int fileHandle, char *messageGroupName, int numFloats, float *floatArray);
 void AUDupdateTwo(int theFirst, int theSecond, char *messageGroupName, int numFloats, float *floatArray);
 void AUDupdateMany(int numHandles, int * handleArray, char *messageGroupName, int numFloats, float *floatArray);
+void AUDupdateWaitForReply(int fWait);
 void AUDqueue(int, float*, float);
 void AUDflushQueue(int, char *, int fPreserveQueueData );
 void actorMessage(const char* messagename);

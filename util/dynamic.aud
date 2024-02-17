@@ -7,18 +7,18 @@ later = Create LaterActor;
 
 // Create a sound.
 NewX = Create MessageGroup;
-AddMessage NewX BeginSound fm SetAmp 0.05 SetCarFreq *0;
+AddMessage NewX BeginSound fm SetAmp 0.12 SetCarFreq *0;
 
-// Fade out and then delete a sound.
+// Modify it.
+ChangeFreqX = Create MessageGroup;
+AddMessage ChangeFreqX SetCarFreq *0 *1;
+
+// Fade out and then delete it.
 DeleteX = Create MessageGroup;
 AddMessage DeleteX SetAmp *0 0 .15;
 AddMessage DeleteX AddMessage later .16 Delete *0;
 
-// Modify a sound.
-ChangeFreqX = Create MessageGroup;
-AddMessage ChangeFreqX SetCarFreq *0 *1;
-
-// Save the output to an audio file.
+// Save to /tmp/audio-out.raw.aiff.
 EnableOfile 1 "/tmp/audio-out.raw";
 Done = Create MessageGroup;
 AddMessage Done EnableOfile 0;

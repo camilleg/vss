@@ -90,29 +90,24 @@ LCleanup:
 	o->addr.sin_family = AF_INET;
 	o->addr.sin_addr.s_addr = inet_addr(hostname);
 	o->addr.sin_port = htons(channel);
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0)
-		{
-		memset((char *)&cl_addr, 0, sizeof(cl_addr));
-		cl_addr.sin_family = AF_INET;
-		cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		cl_addr.sin_port = htons(0);
-		if (bind(sockfd, (struct sockaddr *)&cl_addr,
-			sizeof(cl_addr)) < 0)
-			{
-			perror("can't bind");
-			close(sockfd);
-			sockfd = -1;
-			}
-		}
-	else
-		printf("unable to make socket\n");
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		printf("Failed to make socket.\n");
+		return (OBJ)0;
+	}
+	memset((char *)&cl_addr, 0, sizeof(cl_addr));
+	cl_addr.sin_family = AF_INET;
+	cl_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	cl_addr.sin_port = htons(0);
+	if (bind(sockfd, (struct sockaddr *)&cl_addr, sizeof(cl_addr)) < 0) {
+		close(sockfd);
+		perror("failed to bind socket");
+		return (OBJ)0;
+	}
 
 	fcntl(sockfd, F_SETFL, FNDELAY); // Non-blocking I/O
 	o->sockfd = sockfd;
 	o->len = sizeof(o->addr);
-#ifdef NOISY
-	printf("will send to %s:%d\n", inet_ntoa(o->addr.sin_addr), o->channel);
-#endif
+	// printf("will send to %s:%d\n", inet_ntoa(o->addr.sin_addr), o->channel);
 	return o;
 }
 
@@ -195,7 +190,7 @@ void MsgsendObj(OBJ obj, struct sockaddr_in* paddr, const char* msg)
 		paddr = &o->addr;
 	VSS_StripZerosInPlace(msg);
 	const size_t cb = strlen(msg) + 1; // +1 is the terminating null.
-#ifdef VERBOSE
+#ifdef NOISY
 printf("\t\033[32msend \"%s\"\033[0m\n", msg);
 #endif
 	if (!sendudp(paddr, o->sockfd, cb, msg))

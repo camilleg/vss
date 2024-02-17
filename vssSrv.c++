@@ -443,7 +443,8 @@ int actorMessageHandler(const char* Message)
 	if (!fKeepRunning)
 		return 0;
 
-	if (printCommands >= 2 && !vfAlreadyLogged)
+	const auto fInternal = !vfAlreadyLogged; // Not already handled by LiveTick > actorMessageMM > actorMessageHandler.
+	if (fInternal && printCommands >= 2)
 		cerr << Message << " (internal)\n";
 	vfAlreadyLogged = false; // This was the 2nd time.  Permit later msgs to be printed.
 
@@ -451,13 +452,12 @@ int actorMessageHandler(const char* Message)
 		{
 	case 0:
 		cerr << "vss: ignored message with garbled args: " << Message << "\n";
-		return 1;
 	case 1:
 		return 1;
 	case 2:
 		break;
 	default:
-		cerr << "vss: actorMessageHandler internal error.\n";
+		cerr << "vss: actorMessageHandlerCore internal error.\n";
 		return 1;
 		}
 
@@ -478,9 +478,21 @@ int actorMessageHandler(const char* Message)
 		cerr << "vss: ignored message with unknown actor handle " << h << ": " << Message << "\n";
 		return 1;
 	}
+	// Infer whether or not to ReturnFloatMsgToClient, copied from actorMessageMM.
+	const auto fReturnToClient = fInternal &&
+	    (!strncmp(Message, "Create ", 7) || !strncmp(Message, "BeginSound", 10 /* or BeginSoundPaused */));
+	if (fInternal) cerr << "\nInternal msg will reply.\n";
 	if (!a->receiveMessage(Message)) {
 		// VActor::receiveMessage complained already.
 		return 1;
+	}
+	if (fReturnToClient) {
+		// hNil may mean an AUDupdate() "SendData mgFoo [...]" that wants a "*?".
+		if (vzReturnToClient == hNil)
+			vzReturnToClient = vzMessageGroupRecentHandle;
+		ReturnFloatMsgToClient(vzReturnToClient, "AckNoteMsg");
+		if (printCommands >= 1)
+			cerr << "  = " << vzReturnToClient << "\n";
 	}
 	if (a->delete_me() /* set by VActor::receiveMessage */)
 		delete a;

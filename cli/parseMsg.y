@@ -533,6 +533,13 @@ float AUDupdateFloats(int fdT, char* szActor, int numFloats, ...)
 
 extern "C" void VSS_StripZerosInPlace(char*); // in cliMsg.c
 
+// Call AUDupdateWaitForReply(true) before AUDupdateXXX'ing a MG to which you'd added
+// BeginSound's or Create's, whose returned handles you want.
+static int vfAUDupdateWaitForReply = false;
+extern "C" void AUDupdateWaitForReply(int fWait) {
+	vfAUDupdateWaitForReply = fWait;
+}
+
 // Send a data array to the message group called szActor at server fdT.
 // Complain if there is no such message group at fdT.
 extern "C" float AUDupdate(int fdT, char* szActor, int numFloats, float* floatArray)
@@ -563,7 +570,10 @@ extern "C" float AUDupdate(int fdT, char* szActor, int numFloats, float* floatAr
 	}
 	strcat(szT, "]");
 	VSS_StripZerosInPlace(szT);
-	return actorMessageRetval(szT);
+	if (vfAUDupdateWaitForReply) // Set only by AUDupdateWaitForReply.
+		return actorMessageRetval(szT);
+	actorMessage(szT);
+	return hNil; // ignored
 }
 
 // Call AUDupdate for two servers, e.g. for wet and dry localization.
